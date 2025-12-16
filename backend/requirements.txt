@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pandas
+python-multipart
+sqlalchemy
+python-jose[cryptography]
+python-dotenv
+langchain-chroma
+langchain-huggingface
+langchain-groq
+sentence-transformers
+chromadb
+bcrypt
+passlib
+requests
+aiohttp

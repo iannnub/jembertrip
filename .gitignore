@@ -1,0 +1,25 @@
+# Python
+backend/venv/
+backend/__pycache__/
+*.py[cod]
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Environment Variables (RAHASIA!)
+.env
+.env.local
+
+# Database (Opsional, kalau mau database fresh di server)
+*.db
+*.sqlite3
+
+# System
+.DS_Store
+
+# Abaikan folder Vector DB (Biar server build ulang fresh, & ga berat uploadnya)
+backend/db_jembertrip/
+
+# Abaikan folder Uploads (Biar foto avatar tes lokal ga ikut ke-upload)
+backend/uploads/

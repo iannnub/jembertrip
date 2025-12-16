@@ -1,0 +1,633 @@
+import os
+import shutil 
+import time
+import uvicorn
+import logging
+import pandas as pd
+import random
+import re
+import string
+import difflib # Untuk Fuzzy Matching & Smart Token
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+
+# --- FASTAPI IMPORTS ---
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer 
+from fastapi.staticfiles import StaticFiles 
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+from sqlalchemy import func 
+from jose import JWTError, jwt 
+from dotenv import load_dotenv
+
+# --- AI & LANGCHAIN ---
+from langchain_chroma import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_groq import ChatGroq 
+from langchain_core.prompts import ChatPromptTemplate
+
+# --- DATABASE SETUP ---
+import models 
+from database import engine, get_db
+import security
+
+# Load Environment
+load_dotenv()
+models.Base.metadata.create_all(bind=engine)
+logger = logging.getLogger("uvicorn")
+
+app = FastAPI(
+    title="JemberTrip AI API",
+    description="API: V24.0 - Grand Refactor (Smart Logic, Gen Z, Safety Guard)",
+    version="24.0.0 Final"
+)
+
+# --- KONFIGURASI GAMBAR ---
+os.makedirs("uploads", exist_ok=True)
+app.mount("/images", StaticFiles(directory="uploads"), name="images")
+
+# --- CORS ---
+origins = [
+    "http://localhost", "http://localhost:3000", "http://localhost:5173",
+    "http://127.0.0.1:3000", "http://127.0.0.1:5173",
+    "https://jembertrip.vercel.app"
+]
+app.add_middleware(
+    CORSMiddleware, allow_origins=origins, allow_credentials=True, 
+    allow_methods=["*"], allow_headers=["*"]
+)
+
+# --- GLOBAL VARS ---
+NAMA_MODEL_EMBEDDING = "sentence-transformers/all-MiniLM-L6-v2"
+PATH_DB_VEKTOR = "db_jembertrip"
+PATH_CSV_DATA = "data/destinasi_final.csv" 
+if not os.path.exists(PATH_CSV_DATA) and not os.path.exists(f"../{PATH_CSV_DATA}"):
+     PATH_CSV_DATA = "data/destinasi_processed.csv"
+PATH_KNOWLEDGE_BASE = "data/knowledge_base.csv"
+
+vector_db = None
+embedding_model = None
+data_wisata_csv = [] 
+GROQ_API_KEYS = []
+current_key_index = 0
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+# ==========================================
+#           STARTUP EVENT
+# ==========================================
+@app.on_event("startup")
+def startup_event():
+    global vector_db, embedding_model, data_wisata_csv, GROQ_API_KEYS
+    logger.info("--- SERVER STARTUP v24.0 (Grand Refactor) ---")
+
+    # 1. Load Keys
+    count_keys = 0
+    for i in range(1, 21):
+        key = os.getenv(f"GROQ_API_KEY_{i}")
+        if key: GROQ_API_KEYS.append(key); count_keys += 1
+    if count_keys == 0 and os.getenv("GROQ_API_KEY"):
+        GROQ_API_KEYS.append(os.getenv("GROQ_API_KEY"))
+    logger.info(f"Loaded {count_keys} Groq Keys.")
+
+    # 2. Load Vector DB & Data
+    try:
+        embedding_model = HuggingFaceEmbeddings(model_name=NAMA_MODEL_EMBEDDING, model_kwargs={'device': 'cpu'})
+        _ = embedding_model.embed_query("warmup")
+
+        final_csv_path = PATH_CSV_DATA if os.path.exists(PATH_CSV_DATA) else f"../{PATH_CSV_DATA}"
+        final_kb_path = PATH_KNOWLEDGE_BASE if os.path.exists(PATH_KNOWLEDGE_BASE) else f"../{PATH_KNOWLEDGE_BASE}"
+
+        if not os.path.exists(PATH_DB_VEKTOR):
+            logger.warning("Vector DB belum ada. Akan dibuat baru...")
+            
+        vector_db = Chroma(persist_directory=PATH_DB_VEKTOR, embedding_function=embedding_model)
+
+        # [A] Load Data Wisata
+        if os.path.exists(final_csv_path):
+            df = pd.read_csv(final_csv_path)
+            if 'id' in df.columns: df['id'] = df['id'].astype(str)
+            df = df.fillna("") 
+            data_wisata_csv = df.to_dict('records')
+            
+            if vector_db._collection.count() == 0:
+                logger.info("Mengisi Vector DB dengan Data Wisata...")
+                if 'combined_text' not in df.columns:
+                    df['combined_text'] = df['nama_wisata'] + " " + df['kategori'] + " " + df['deskripsi']
+                texts = df['combined_text'].tolist()
+                metadatas = df.to_dict('records')
+                vector_db.add_texts(texts=texts, metadatas=metadatas)
+            logger.info(f"{len(data_wisata_csv)} wisata loaded.")
+
+        # [B] Load Knowledge Base
+        if os.path.exists(final_kb_path):
+            df_kb = pd.read_csv(final_kb_path).fillna("")
+            logger.info(f"Knowledge Base siap ({len(df_kb)} items).")
+
+    except Exception as e:
+        logger.error(f"Startup Error: {e}")
+
+# ==========================================
+#           HELPER FUNCTIONS
+# ==========================================
+def get_groq_llm():
+    global GROQ_API_KEYS, current_key_index
+    if not GROQ_API_KEYS: raise HTTPException(500, "No API Key")
+    key = GROQ_API_KEYS[current_key_index]
+    current_key_index = (current_key_index + 1) % len(GROQ_API_KEYS)
+    # Temperature 0.7 agar kreatif tapi penurut soal format
+    return ChatGroq(temperature=0.7, model_name="llama-3.3-70b-versatile", api_key=key) 
+
+def save_csv_changes():
+    global data_wisata_csv
+    if data_wisata_csv:
+        df = pd.DataFrame(data_wisata_csv)
+        target_path = PATH_CSV_DATA if os.path.exists(PATH_CSV_DATA) else f"../{PATH_CSV_DATA}"
+        df.to_csv(target_path, index=False)
+
+# ==========================================
+#           MODEL PYDANTIC
+# ==========================================
+class UserCreate(BaseModel):
+    username: str; email: str; password: str; full_name: str
+class UserLogin(BaseModel):
+    username: str; password: str
+class UserUpdate(BaseModel):
+    full_name: str; email: str
+class PasswordChange(BaseModel):
+    old_password: str; new_password: str
+class GenerateDescRequest(BaseModel):
+    nama_wisata: str; kategori: str
+class ChatRequest(BaseModel):
+    question: str
+    session_id: Optional[int] = None
+    language: str = "id" 
+class RecommendationRequest(BaseModel):
+    query: str; k: int = 5
+class ChatMessageResponse(BaseModel):
+    id: int; session_id: int; sender: str; content: str
+    recommendations: Optional[List[Dict[str, Any]]] = None; sources: Optional[List[str]] = None
+    timestamp: datetime
+    class Config: from_attributes = True
+class ChatSessionResponse(BaseModel):
+    id: int; title: str; created_at: datetime
+    class Config: from_attributes = True
+class HistoryCreate(BaseModel):
+    wisata_id: str
+    wisata_name: str
+
+# ==========================================
+#           AUTH FUNCTIONS (RBAC)
+# ==========================================
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, security.SECRET_KEY, algorithms=[security.ALGORITHM])
+        username: str = payload.get("sub") 
+        if username is None: raise HTTPException(401, "Invalid token")
+    except JWTError: raise HTTPException(401, "Invalid token")
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if user is None: raise HTTPException(401, "User not found")
+    return user
+
+def get_current_admin(user: models.User = Depends(get_current_user)):
+    if user.role != "admin": raise HTTPException(status_code=403, detail="Akses Ditolak: Khusus Admin!")
+    return user
+
+@app.post("/api/auth/setup-admin")
+def setup_first_admin(username: str, secret_key: str, db: Session = Depends(get_db)):
+    if secret_key != "skripsi2025_master_key": raise HTTPException(403, "Salah kunci master!")
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user: raise HTTPException(404, "User tidak ditemukan. Daftar dulu!")
+    user.role = "admin"
+    db.commit()
+    return {"status": "success", "message": f"{username} sekarang adalah ADMIN."}
+
+@app.post("/api/auth/register", status_code=201)
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    if db.query(models.User).filter(models.User.username == user.username).first():
+        raise HTTPException(400, "Username sudah dipakai!")
+    if db.query(models.User).filter(models.User.email == user.email).first():
+        raise HTTPException(400, "Email sudah terdaftar!")
+    new_user = models.User(
+        username=user.username, email=user.email, full_name=user.full_name, 
+        hashed_password=security.get_password_hash(user.password), role="user"
+    )
+    db.add(new_user); db.commit()
+    return {"status": "success"}
+
+@app.post("/api/auth/login")
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if not db_user or not security.verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(401, "Username atau Password salah")
+    token = security.create_access_token({"sub": db_user.username, "id": db_user.id, "role": db_user.role})
+    return {
+        "status": "success", "access_token": token, 
+        "user": {
+            "username": db_user.username, "full_name": db_user.full_name,
+            "email": db_user.email, "role": db_user.role, "avatar": db_user.avatar
+        }
+    }
+
+# ==========================================
+#       USER PROFILE & HISTORY
+# ==========================================
+@app.put("/api/users/me")
+def update_profile(data: UserUpdate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if data.email != current_user.email:
+        if db.query(models.User).filter(models.User.email == data.email).first():
+            raise HTTPException(400, "Email sudah digunakan user lain!")
+    current_user.full_name = data.full_name
+    current_user.email = data.email
+    db.commit()
+    return {"status": "success", "message": "Profil diperbarui", "user": {"username": current_user.username, "full_name": current_user.full_name, "email": current_user.email, "role": current_user.role, "avatar": current_user.avatar}}
+
+@app.post("/api/users/avatar")
+def upload_avatar(file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        clean_name = f"avatar_{current_user.id}_{int(time.time())}.jpg" 
+        file_location = f"uploads/{clean_name}"
+        with open(file_location, "wb") as buffer: shutil.copyfileobj(file.file, buffer)
+        avatar_url = f"http://localhost:8000/images/{clean_name}"
+        current_user.avatar = avatar_url
+        db.commit()
+        return {"status": "success", "avatar_url": avatar_url}
+    except Exception as e: raise HTTPException(500, f"Gagal upload: {str(e)}")
+
+@app.put("/api/users/change-password")
+def change_password(data: PasswordChange, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not security.verify_password(data.old_password, current_user.hashed_password):
+        raise HTTPException(400, "Password lama salah!")
+    current_user.hashed_password = security.get_password_hash(data.new_password)
+    db.commit()
+    return {"status": "success", "message": "Password diubah!"}
+
+@app.post("/api/history")
+def add_history(item: HistoryCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        new_history = models.History(
+            user_id=current_user.id, wisata_id=item.wisata_id, wisata_name=item.wisata_name, timestamp=datetime.utcnow()
+        )
+        db.add(new_history); db.commit()
+        return {"status": "success", "message": "History saved"}
+    except Exception as e:
+        logger.error(f"Save History Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save history")
+
+@app.get("/api/history")
+def get_my_history(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    history_list = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(10).all()
+    return {"status": "success", "data": history_list}
+
+@app.get("/api/v1/recommendations/personal")
+def get_personal_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    global vector_db, data_wisata_csv
+    last_history = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(5).all()
+    if not last_history: return {"status": "success", "data": []}
+    
+    active_ids = set([str(w['id']) for w in data_wisata_csv])
+    query_text = " ".join([h.wisata_name for h in last_history])
+    try:
+        docs = vector_db.similarity_search(query_text, k=20)
+        seen_ids = [str(h.wisata_id) for h in last_history]
+        recommendations = []
+        for doc in docs:
+            doc_id = str(doc.metadata.get("id"))
+            if 'id' in doc.metadata and doc_id not in seen_ids and doc_id in active_ids:
+                recommendations.append(doc.metadata)
+        return {"status": "success", "data": recommendations[:6]} 
+    except Exception as e:
+        logger.error(f"Personal Rek Error: {e}"); return {"status": "error", "data": []}
+
+# =========================================================
+#      CHAT & REKOMENDASI (V24.0 - SMART LOGIC & GEN Z)
+# =========================================================
+@app.post("/api/v1/chat")
+def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    global vector_db, data_wisata_csv
+    try:
+        llm = get_groq_llm()
+        session_id = req.session_id
+        if not session_id:
+            new_session = models.ChatSession(user_id=current_user.id, title=req.question[:30])
+            db.add(new_session); db.commit(); db.refresh(new_session)
+            session_id = new_session.id
+
+        user_query = req.question.lower()
+        clean_user_query = re.sub(r'[^\w\s]', ' ', user_query)
+        
+        # --- [STEP 1: DETEKSI NIAT USER (INTENT DETECTION)] ---
+        is_asking_rec = any(x in user_query for x in ["saran", "rekomendasi", "wisata", "kemana", "ndi", "tujuan", "tempat", "liburan", "main"])
+        
+        # Detect Rain/Bad Weather
+        is_complaining_weather = any(x in user_query for x in ["udan", "hujan", "gerimis", "mendung", "banjir", "licin", "petir", "badai"])
+        
+        # Detect Stress/Burnout
+        is_stressed = any(x in user_query for x in ["pusing", "stres", "tugas", "healing", "penat", "mumet", "capek", "lelah", "galau", "burnout"])
+        
+        # Detect Souvenir
+        is_asking_souvenir = any(x in user_query for x in ["oleh", "jajan", "souvenir", "belanja", "khas"])
+
+        # --- [STEP 2: SMART FILTERING CONFIG] ---
+        # Definisi Kategori
+        outdoor_categories = ["Pantai", "Air Terjun", "Alam", "Gunung", "Bukit", "Camping", "Panorama"]
+        boring_categories = ["Situs", "Edukasi", "Sejarah", "Makam", "Religi"] # Kurang cocok buat healing stress
+        indoor_categories = ["Rekreasi"] # Relatif aman hujan
+
+        search_query = req.question 
+        active_ids = set([str(w['id']) for w in data_wisata_csv])
+
+        # --- [STEP 3: SMART TOKEN MATCHING (SOLUSI PAPUMA/NANGGELAN/TYPO)] ---
+        specific_matches = []
+        stop_words = ["wisata", "pantai", "taman", "air", "terjun", "bukit", "gunung", "puncak", "danau", "pemandian", "kebun", "desa", "kampung", "situs", "candi", "di", "ke", "nang", "jember", "kabupaten", "kota", "pingin", "pengen", "rencana", "aku", "dong"]
+        
+        # Tokenize query user
+        user_tokens = clean_user_query.split()
+        
+        for item in data_wisata_csv:
+            db_name_clean = re.sub(r'[^\w\s]', '', item['nama_wisata'].lower())
+            db_tokens = [t for t in db_name_clean.split() if t not in stop_words and len(t) > 2]
+            
+            is_match = False
+            # 1. Exact Token Match (Misal: 'Papuma' ada di query user)
+            for token in db_tokens:
+                if token in user_tokens:
+                    is_match = True
+                    break
+            
+            # 2. Fuzzy Match (Misal: 'Bandealet' mirip 'Bandealit')
+            if not is_match:
+                for u_token in user_tokens:
+                    if len(u_token) < 4: continue # Skip kata pendek
+                    for db_token in db_tokens:
+                        ratio = difflib.SequenceMatcher(None, u_token, db_token).ratio()
+                        if ratio > 0.85: # Toleransi typo
+                            is_match = True
+                            break
+            
+            if is_match:
+                specific_matches.append(item)
+
+        # Hapus duplikat matches
+        specific_matches = [dict(t) for t in {tuple(d.items()) for d in specific_matches}]
+        
+        # --- [STEP 4: RETRIEVAL & FILTERING] ---
+        docs = vector_db.similarity_search(search_query, k=50) # Ambil banyak
+        knowledge_docs = [d for d in docs if 'topik' in d.metadata]
+        wisata_docs = [d for d in docs if 'nama_wisata' in d.metadata]
+        
+        final_candidates = []
+        seen_ids = set()
+
+        # Prioritas 1: Match Spesifik (Papuma, Nanggelan, dll) -> SELALU MASUK
+        for item in specific_matches:
+            final_candidates.append(item)
+            seen_ids.add(str(item['id']))
+
+        # Prioritas 2: Filter Logic (Hujan/Stres) dari RAG
+        for d in wisata_docs:
+            wid = str(d.metadata.get('id'))
+            kat = d.metadata.get('kategori')
+            
+            if wid not in active_ids: continue
+            if wid in seen_ids: continue 
+            
+            # [LOGIC HUJAN]
+            if is_complaining_weather and kat in outdoor_categories: continue 
+            
+            # [LOGIC STRES]
+            if is_stressed and kat in boring_categories: continue
+            
+            # [LOGIC OLEH-OLEH]
+            if is_asking_souvenir and kat not in ["Belanja", "Kuliner", "Pusat Oleh-Oleh"]: continue
+
+            final_candidates.append(d.metadata)
+
+        # Limit Context Candidates
+        top_picks = final_candidates[:6]
+
+        # --- [STEP 5: CARD DISPLAY CONTROL] ---
+        # Kartu hanya muncul jika: 1. Ada Match Spesifik, ATAU 2. User minta rekomendasi
+        show_cards = False
+        final_recs = []
+
+        if specific_matches:
+            show_cards = True
+            final_recs = specific_matches
+        elif is_asking_rec and top_picks:
+            # Pastikan rekomendasi aman (double check)
+            safe_picks = top_picks
+            if is_complaining_weather:
+                safe_picks = [p for p in top_picks if p['kategori'] not in outdoor_categories]
+            if is_stressed:
+                safe_picks = [p for p in safe_picks if p['kategori'] not in boring_categories]
+            
+            if safe_picks:
+                show_cards = True
+                final_recs = safe_picks[:5]
+
+        # --- [STEP 6: PROMPT ENGINEERING (GEN Z & STRICT FORMAT)] ---
+        context_list = []
+        if top_picks:
+            for item in top_picks:
+                context_list.append(f"- [ID:{item.get('id')}] Nama: {item.get('nama_wisata')} ({item.get('kategori')}) | Desc: {item.get('deskripsi')}")
+        else:
+            context_list.append("TIDAK ADA DATA WISATA YANG COCOK. (Misal: User cari indoor saat hujan, tapi data kosong).")
+        
+        for kd in knowledge_docs[:2]:
+            context_list.append(f"- [INFO]: {kd.page_content}")
+            
+        context_text = "\n".join(context_list)
+
+        base_instruction = """
+ROLE & TUJUAN:
+Kamu adalah AI Virtual Tour Guide resmi untuk wisata di Kabupaten Jember.
+Tugas utama kamu adalah membantu wisatawan memilih destinasi wisata yang paling sesuai dengan kondisi mereka secara akurat, aman, dan relevan.
+Utamakan kejelasan informasi, keselamatan, dan kecocokan dengan kebutuhan user.
+
+DATA PENGETAHUAN (CONTEXT):
+{context}
+
+ATURAN DATA (WAJIB / ANTI-HALU):
+- Gunakan DATA PENGETAHUAN (Context) sebagai sumber informasi utama.
+- DILARANG menambah, menebak, atau mengarang informasi di luar Context.
+- Jika detail tertentu tidak tersedia di Context, sampaikan dengan jujur tanpa berspekulasi.
+
+GAYA BAHASA (GEN Z TERKONTROL):
+- Gunakan Bahasa Gen Z yang santai, ramah, dan kekinian, tetapi tetap profesional.
+- Boleh menggunakan istilah seperti: Healing, Vibes, Worth it, Burnout, Bestie (secukupnya).
+- Jangan kaku, tapi hindari gaya berlebihan atau alay.
+- Prioritaskan kejelasan informasi dibanding gaya bahasa.
+
+FORMAT JAWABAN (WAJIB):
+- Jika memberikan rekomendasi tempat, WAJIB menggunakan Numbering List (1. 2. 3.).
+- DILARANG menggabungkan semua rekomendasi dalam satu paragraf panjang (wall of text).
+- Berikan spasi antar poin agar mudah dibaca.
+
+STRUKTUR TIAP REKOMENDASI:
+Setiap poin rekomendasi WAJIB memuat:
+- Nama tempat
+- Alasan singkat (vibes / cocok untuk siapa)
+- Tips praktis (waktu terbaik, catatan keselamatan, atau kondisi penting)
+
+LOGIC KONDISIONAL:
+- Jika user mengeluh HUJAN atau cuaca buruk: JANGAN merekomendasikan pantai atau wisata alam terbuka. Prioritaskan tempat indoor atau ngopi, dan ingatkan risiko petir/banjir secara singkat.
+- Jika user merasa STRES, BURNOUT, atau CAPEK: Prioritaskan tempat healing (alam atau pantai). JANGAN merekomendasikan museum, situs sejarah, atau wisata edukatif.
+- Jika tempat yang ditanyakan user tersedia di Context, WAJIB jelaskan berdasarkan data tersebut dan jangan mengatakan “tidak tahu”.
+
+FORCED TRANSLATION (WAJIB):
+- Jika user meminta Bahasa Jawa atau Bahasa Madura, WAJIB menerjemahkan seluruh isi Context dan jawaban ke bahasa tersebut secara natural.
+- DILARANG menyalin kalimat Bahasa Indonesia mentah-mentah.
+- Jaga konsistensi bahasa, jangan mencampur bahasa lain.
+- Jika user tidak minta Jawa/Madura, gunakan Bahasa Indonesia gaul yang asik dan relatable.
+
+"""
+
+        # Persona Selector
+        if req.language == "jowo":
+            persona = f"""
+Peran: Kamu adalah “Cak Jember” versi Gen Z Jowo, berperan sebagai pemandu wisata lokal yang ramah dan informatif.
+User: {current_user.full_name}
+Input User: "{req.question}"
+CATATAN PENTING: Persona ini HANYA mengatur gaya bahasa dan karakter. Semua aturan logika, data, dan keselamatan tetap mengikuti instruksi utama.
+
+ATURAN BAHASA (JAWA TIMURAN):
+1. Gunakan Boso Jowo Suroboyoan/Jemberan yang medok, santai, tapi tetap sopan.
+2. Terjemahkan seluruh data konteks ke Bahasa Jawa. DILARANG mencampur Bahasa Indonesia.
+3. Gunakan sapaan yang wajar seperti: “Lur”, “Rek”, atau “Bestie”.
+4. Hindari gaya berlebihan atau bercanda pada topik keselamatan.
+"""
+        elif req.language == "madura":
+            persona = f"""
+Peran: Kamu adalah “Cak Jember” versi Gen Z Madura, berperan sebagai pemandu wisata lokal yang ramah dan informatif.
+User: {current_user.full_name}
+Input User: "{req.question}"
+
+CATATAN PENTING: Persona ini HANYA mengatur gaya bahasa dan karakter. Semua aturan logika, data, dan keselamatan tetap mengikuti instruksi utama.
+
+ATURAN BAHASA (MADURA):
+1. Gunakan Boso Madura Pandalungan yang natural dan mudah dipahami.
+2. Terjemahkan seluruh data konteks ke Bahasa Madura. DILARANG mencampur Bahasa Indonesia.
+3. Gunakan sapaan yang wajar seperti: “Tretan”, “Cah”, atau “Kancah”.
+4. Hindari gaya berlebihan atau bercanda pada topik keselamatan.
+"""
+        else: # Indo
+            persona = f"""
+Peran: Kamu adalah “Cak Jember” versi Gen Z Indonesia, berperan sebagai pemandu wisata lokal yang ramah dan informatif.
+User: {current_user.full_name}
+Input User: "{req.question}"
+
+CATATAN PENTING: Persona ini HANYA mengatur gaya bahasa dan karakter. Semua aturan logika, data, dan keselamatan tetap mengikuti instruksi utama.
+
+ATURAN BAHASA:
+1. Gunakan Bahasa Indonesia yang santai, gaul, dan mudah dipahami.
+2. Gunakan sapaan secara wajar seperti: “Kak”, “Bestie”, atau “Bro”.
+3. Hindari gaya berlebihan atau candaan yang mengurangi kejelasan informasi.
+"""
+
+        final_system_prompt = persona + base_instruction.format(context=context_text)
+
+        prompt = ChatPromptTemplate.from_messages([("system", final_system_prompt), ("human", "{question}")])
+        chain = prompt | llm
+        response = chain.invoke({"question": req.question})
+        
+        final_answer = response.content.replace("[SHOW_CARDS]", "").strip()
+
+        # Simpan Chat
+        db.add(models.ChatMessage(session_id=session_id, sender="user", content=req.question))
+        saved_recs = final_recs if show_cards else []
+        db.add(models.ChatMessage(session_id=session_id, sender="ai", content=final_answer, recommendations=saved_recs))
+        db.commit()
+        
+        return {"status": "success", "session_id": session_id, "answer": final_answer, "recommendations": saved_recs}
+    except Exception as e:
+        logger.error(str(e)); raise HTTPException(500, str(e))
+
+# ... (Sisa Endpoint Sama) ...
+@app.post("/api/v1/rekomendasi")
+def get_rekomendasi(req: RecommendationRequest):
+    global vector_db
+    docs = vector_db.similarity_search(req.query, k=req.k)
+    return {"status": "success", "results": [{"metadata": d.metadata} for d in docs if 'nama_wisata' in d.metadata]}
+
+@app.get("/api/v1/list-wisata")
+def list_wisata():
+    global data_wisata_csv
+    return {"status": "success", "data": data_wisata_csv}
+
+@app.get("/api/v1/wisata/{id}")
+def detail_wisata(id: str):
+    res = next((i for i in data_wisata_csv if str(i["id"]) == id), None)
+    if res: return {"status": "success", "data": res}
+    raise HTTPException(404, "Not found")
+
+@app.get("/api/chat/sessions")
+def get_sessions(user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return {"status": "success", "data": [ChatSessionResponse.from_orm(s) for s in db.query(models.ChatSession).filter(models.ChatSession.user_id == user.id).order_by(models.ChatSession.created_at.desc()).all()]}
+
+@app.get("/api/chat/{sid}/messages")
+def get_messages(sid: int, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return {"status": "success", "data": [ChatMessageResponse.from_orm(m) for m in db.query(models.ChatMessage).filter(models.ChatMessage.session_id == sid).order_by(models.ChatMessage.timestamp.asc()).all()]}
+
+# --- ADMIN ENDPOINTS ---
+@app.post("/api/admin/generate-desc")
+def generate_description_ai(req: GenerateDescRequest, admin_user: models.User = Depends(get_current_admin)):
+    try:
+        llm = get_groq_llm()
+        prompt = f"Buatkan deskripsi wisata menarik untuk: {req.nama_wisata} ({req.kategori}). Gaya bahasa santai dan emosional."
+        response = llm.invoke(prompt)
+        return {"status": "success", "description": response.content}
+    except Exception: raise HTTPException(500, "Gagal generate.")
+
+@app.get("/api/admin/stats")
+def get_admin_stats(admin_user: models.User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    try:
+        popular = db.query(models.History.wisata_name, func.count(models.History.id).label('count')).group_by(models.History.wisata_name).order_by(func.count(models.History.id).desc()).first()
+        return {"status": "success", "data": {"total_users": db.query(models.User).count(), "total_wisata": len(data_wisata_csv), "total_chats": db.query(models.ChatSession).count(), "popular_wisata": popular[0] if popular else "-", "popular_count": popular[1] if popular else 0}}
+    except Exception: return {"status": "error"}
+
+@app.post("/api/admin/add-wisata")
+def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
+    global data_wisata_csv
+    try:
+        filename = ""
+        if gambar:
+            clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
+            path = f"uploads/{clean}"
+            with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
+            filename = f"http://localhost:8000/images/{clean}"
+        new_entry = {"id": str(len(data_wisata_csv) + 1), "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": filename, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
+        data_wisata_csv.append(new_entry)
+        save_csv_changes()
+        if vector_db: vector_db.add_texts(texts=[new_entry["combined_text"]], metadatas=[new_entry])
+        return {"status": "success", "message": "Berhasil", "data": new_entry}
+    except Exception as e: raise HTTPException(500, str(e))
+
+@app.put("/api/admin/wisata/{id}")
+def edit_wisata_admin(id: str, nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
+    idx = next((i for i, d in enumerate(data_wisata_csv) if str(d["id"]) == id), None)
+    if idx is None: raise HTTPException(404, "Not found")
+    try:
+        current = data_wisata_csv[idx]
+        img = current.get("gambar", "")
+        if gambar:
+            clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
+            path = f"uploads/{clean}"
+            with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
+            img = f"http://localhost:8000/images/{clean}"
+        updated = {**current, "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": img, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
+        data_wisata_csv[idx] = updated
+        save_csv_changes()
+        return {"status": "success", "data": updated}
+    except Exception as e: raise HTTPException(500, str(e))
+
+@app.delete("/api/admin/wisata/{id}")
+def delete_wisata_admin(id: str, admin_user: models.User = Depends(get_current_admin)):
+    global data_wisata_csv
+    data_wisata_csv = [d for d in data_wisata_csv if str(d['id']) != id]
+    save_csv_changes()
+    return {"status": "success", "message": "Dihapus"}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
