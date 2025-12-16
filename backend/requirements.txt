@@ -8,9 +8,17 @@ python-dotenv
 langchain-chroma
 langchain-huggingface
 langchain-groq
+# Ganti sentence-transformers biasa dengan versi yang lebih ringan atau biarkan
 sentence-transformers
 chromadb
 bcrypt
 passlib
 requests
 aiohttp
+
+# --- DIET KETAT PYTORCH (CPU ONLY) ---
+# Kita paksa install versi CPU biar ga download driver Nvidia bergiga-giga
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+torchaudio
