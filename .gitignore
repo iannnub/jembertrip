@@ -11,10 +11,6 @@ frontend/dist/
 .env
 .env.local
 
-# Database (Opsional, kalau mau database fresh di server)
-*.db
-*.sqlite3
-
 # System
 .DS_Store
 
