@@ -366,6 +366,9 @@ def get_personal_recommendations(current_user: models.User = Depends(get_current
 # =========================================================
 #       CHAT & REKOMENDASI (V25.1 - MEMORY & SMART FILTER)
 # =========================================================
+# =========================================================
+#       CHAT & REKOMENDASI (FINAL FIX: MEMORY & LOGIC)
+# =========================================================
 @app.post("/api/v1/chat")
 def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     global vector_db, data_wisata_csv
@@ -379,21 +382,20 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
             db.add(new_session); db.commit(); db.refresh(new_session)
             session_id = new_session.id
 
-        # --- [UPDATE 1: CHAT HISTORY INJECTION] ---
-        # Ambil 6 pesan terakhir biar AI ingat konteks (misal: user udah bilang belum makan)
+        # --- [FIX 1: CHAT HISTORY INJECTION] ---
+        # Ambil 6 pesan terakhir agar AI ingat konteks sebelumnya
         recent_chats = db.query(models.ChatMessage).filter(models.ChatMessage.session_id == session_id).order_by(models.ChatMessage.timestamp.desc()).limit(6).all()
-        # Format jadi teks: "USER: belum makan\nAI: oke cari makan..."
         history_text = "\n".join([f"{msg.sender.upper()}: {msg.content}" for msg in reversed(recent_chats)])
         if not history_text: history_text = "Belum ada riwayat chat."
 
         user_query = req.question.lower()
         clean_user_query = re.sub(r'[^\w\s]', ' ', user_query)
         
-        # --- [STEP 1: DETEKSI NIAT USER (INTENT DETECTION)] ---
+        # --- [STEP 1: DETEKSI NIAT USER] ---
         is_asking_rec = any(x in user_query for x in ["saran", "rekomendasi", "wisata", "kemana", "ndi", "tujuan", "tempat", "liburan", "main", "jalan"])
         
-        # [UPDATE 2: DETEKSI NIAT SANTAI/HEALING]
-        is_casual_walk = any(x in user_query for x in ["jalan", "nyantai", "santai", "healing", "main", "refreshing", "gabut"])
+        # Deteksi Niat Santai/Healing (Untuk memfilter tempat sejarah)
+        is_casual_walk = any(x in user_query for x in ["jalan", "nyantai", "santai", "healing", "refreshing", "gabut", "main"])
 
         # Detect Rain/Bad Weather
         is_complaining_weather = any(x in user_query for x in ["udan", "hujan", "gerimis", "mendung", "banjir", "licin", "petir", "badai"])
@@ -405,19 +407,18 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         is_asking_souvenir = any(x in user_query for x in ["oleh", "jajan", "souvenir", "belanja", "khas"])
 
         # --- [STEP 2: SMART FILTERING CONFIG] ---
-        # Definisi Kategori
         outdoor_categories = ["Pantai", "Air Terjun", "Alam", "Gunung", "Bukit", "Camping", "Panorama"]
-        indoor_categories = ["Rekreasi"] 
+        indoor_categories = ["Rekreasi"]
         
-        # [UPDATE 3: KATEGORI BERAT (YANG HARUS DIHINDARI SAAT HEALING)]
+        # Kategori berat yang harus dihindari saat healing
         heavy_categories = ["Situs", "Edukasi", "Sejarah", "Makam", "Religi"] 
 
         search_query = req.question 
         active_ids = set([str(w['id']) for w in data_wisata_csv])
 
-        # --- [STEP 3: SMART TOKEN MATCHING] ---
+        # --- [STEP 3: SMART TOKEN MATCHING (Cari Nama Spesifik)] ---
         specific_matches = []
-        stop_words = ["wisata", "pantai", "taman", "air", "terjun", "bukit", "gunung", "puncak", "danau", "pemandian", "kebun", "desa", "kampung", "situs", "candi", "di", "ke", "nang", "jember", "kabupaten", "kota", "pingin", "pengen", "rencana", "aku", "dong"]
+        stop_words = ["wisata", "pantai", "taman", "air", "terjun", "bukit", "gunung", "puncak", "danau", "pemandian", "kebun", "desa", "kampung", "situs", "candi", "di", "ke", "nang", "jember", "kabupaten", "kota", "pingin", "pengen", "rencana", "aku", "dong", "halo", "pagi"]
         
         user_tokens = clean_user_query.split()
         
@@ -435,10 +436,8 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
                 for u_token in user_tokens:
                     if len(u_token) < 4: continue 
                     for db_token in db_tokens:
-                        ratio = difflib.SequenceMatcher(None, u_token, db_token).ratio()
-                        if ratio > 0.85: 
-                            is_match = True
-                            break
+                        if difflib.SequenceMatcher(None, u_token, db_token).ratio() > 0.85: 
+                            is_match = True; break
             
             if is_match:
                 specific_matches.append(item)
@@ -446,7 +445,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         specific_matches = [dict(t) for t in {tuple(d.items()) for d in specific_matches}]
         
         # --- [STEP 4: RETRIEVAL & FILTERING] ---
-        docs = vector_db.similarity_search(search_query, k=60) # Ambil lebih banyak kandidat untuk difilter
+        docs = vector_db.similarity_search(search_query, k=60) 
         knowledge_docs = [d for d in docs if 'topik' in d.metadata]
         wisata_docs = [d for d in docs if 'nama_wisata' in d.metadata]
         
@@ -458,7 +457,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
             final_candidates.append(item)
             seen_ids.add(str(item['id']))
 
-        # Prioritas 2: Filter Logic
+        # Prioritas 2: Filter Logic (Hujan/Stres) dari RAG
         for d in wisata_docs:
             wid = str(d.metadata.get('id'))
             kat = d.metadata.get('kategori')
@@ -469,8 +468,8 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
             # [LOGIC HUJAN]
             if is_complaining_weather and kat in outdoor_categories: continue 
             
-            # [LOGIC STRES / JALAN-JALAN SANTAI] -> UPDATE PENTING DISINI
-            # Jika user mau healing, santai, atau jalan-jalan, SKIP kategori Sejarah/Makam
+            # [FIX 3: LOGIC HEALING vs SEJARAH]
+            # Jika user mau healing/jalan-jalan, JANGAN masukkan kategori Sejarah/Makam
             if (is_stressed or is_casual_walk) and kat in heavy_categories: continue
             
             # [LOGIC OLEH-OLEH]
@@ -481,18 +480,23 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         # Limit Context Candidates
         top_picks = final_candidates[:6]
 
-        # --- [STEP 5: CARD DISPLAY CONTROL] ---
+        # --- [FIX 2: STRICT CARD DISPLAY LOGIC] ---
         show_cards = False
         final_recs = []
 
-        if specific_matches:
+        # KASUS A: Ada match spesifik (User sebut nama tempat) -> TAMPILKAN ITU SAJA
+        if len(specific_matches) > 0:
             show_cards = True
-            final_recs = specific_matches
+            final_recs = specific_matches # Jangan campur dengan top_picks lain
+        
+        # KASUS B: User minta rekomendasi umum -> Tampilkan Top Picks (yang sudah difilter)
         elif is_asking_rec and top_picks:
+            # Filter ulang top_picks untuk tampilan kartu agar aman
             safe_picks = top_picks
             if is_complaining_weather:
                 safe_picks = [p for p in top_picks if p['kategori'] not in outdoor_categories]
-            # Double protection di card display juga
+            
+            # Pastikan kartu yang muncul bukan kuburan/sejarah kalau lagi healing
             if is_stressed or is_casual_walk:
                 safe_picks = [p for p in safe_picks if p['kategori'] not in heavy_categories]
             
@@ -502,14 +506,14 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 
         # --- [STEP 6: PROMPT ENGINEERING] ---
         context_list = []
-        if top_picks:
-            for item in top_picks:
+        # Masukkan info kartu yang akan ditampilkan ke context AI
+        if final_recs:
+            for item in final_recs:
                 context_list.append(f"- [ID:{item.get('id')}] Nama: {item.get('nama_wisata')} ({item.get('kategori')}) | Desc: {item.get('deskripsi')}")
         else:
-            context_list.append("TIDAK ADA DATA WISATA YANG COCOK.")
-        
-        for kd in knowledge_docs[:2]:
-            context_list.append(f"- [INFO]: {kd.page_content}")
+            # Jika tidak ada kartu, ambil context umum dari knowledge base
+            for kd in knowledge_docs[:2]:
+                context_list.append(f"- [INFO]: {kd.page_content}")
             
         context_text = "\n".join(context_list)
 
@@ -529,10 +533,13 @@ DATA PENGETAHUAN (CONTEXT):
 ATURAN DATA (WAJIB / ANTI-HALU):
 - Gunakan DATA PENGETAHUAN (Context) sebagai sumber informasi utama.
 - DILARANG menambah, menebak, atau mengarang informasi di luar Context.
+- Jika detail tertentu tidak tersedia di Context, sampaikan dengan jujur tanpa berspekulasi.
 
 GAYA BAHASA (GEN Z TERKONTROL):
 - Gunakan Bahasa Gen Z yang santai, ramah, dan kekinian, tetapi tetap profesional.
 - Boleh menggunakan istilah seperti: Healing, Vibes, Worth it, Burnout, Bestie (secukupnya).
+- Jangan kaku, tapi hindari gaya berlebihan atau alay.
+- Prioritaskan kejelasan informasi dibanding gaya bahasa.
 
 FORMAT JAWABAN (WAJIB):
 - Jika memberikan rekomendasi tempat, WAJIB menggunakan Numbering List (1. 2. 3.).
@@ -545,43 +552,58 @@ Setiap poin rekomendasi WAJIB memuat:
 - Alasan singkat (vibes / cocok untuk siapa)
 - Tips praktis (waktu terbaik, catatan keselamatan, atau kondisi penting)
 
-LOGIC KONDISIONAL (STRICT):
-1. JANGAN PERNAH menyarankan tempat Sejarah, Makam, Situs, atau Edukasi jika user meminta "Jalan-jalan", "Healing", "Nyantai", atau "Main", KECUALI user memintanya secara spesifik. Arahkan ke Alam, Pantai, atau Rekreasi.
-2. Jika user mengeluh HUJAN: Prioritaskan tempat indoor/ngopi.
-3. Jika user sudah memberikan informasi di RIWAYAT CHAT (misal: "belum sarapan"), respons sesuai info tersebut (jangan tanya lagi, langsung sarankan tempat makan/wisata kuliner).
+LOGIC KONDISIONAL:
+- Jika user mengeluh HUJAN atau cuaca buruk: JANGAN merekomendasikan pantai atau wisata alam terbuka. Prioritaskan tempat indoor atau ngopi, dan ingatkan risiko petir/banjir secara singkat.
+- Jika user merasa STRES, BURNOUT, atau CAPEK (Ingin Healing/Jalan-jalan): Prioritaskan tempat alam atau pantai. JANGAN merekomendasikan museum, situs sejarah, makam, atau wisata edukatif KECUALI diminta.
+- Jika user sudah memberikan informasi di RIWAYAT CHAT (misal: "belum sarapan"), respons sesuai info tersebut (jangan tanya lagi).
 
 FORCED TRANSLATION (WAJIB):
 - Jika user meminta Bahasa Jawa atau Bahasa Madura, WAJIB menerjemahkan seluruh isi Context dan jawaban ke bahasa tersebut secara natural.
 - DILARANG menyalin kalimat Bahasa Indonesia mentah-mentah.
+- Jaga konsistensi bahasa, jangan mencampur bahasa lain.
 - Jika user tidak minta Jawa/Madura, gunakan Bahasa Indonesia gaul yang asik dan relatable.
 """
 
         # Persona Selector
         if req.language == "jowo":
             persona = f"""
-Peran: Kamu adalah “Cak Jember” versi Gen Z Jowo.
+Peran: Kamu adalah “Cak Jember” versi Gen Z Jowo, berperan sebagai pemandu wisata lokal yang ramah dan informatif.
 User: {current_user.full_name}
 Input User: "{req.question}"
+CATATAN PENTING: Persona ini HANYA mengatur gaya bahasa dan karakter. Semua aturan logika, data, dan keselamatan tetap mengikuti instruksi utama.
+
 ATURAN BAHASA (JAWA TIMURAN):
-1. Gunakan Boso Jowo Suroboyoan/Jemberan yang medok.
-2. Terjemahkan seluruh jawaban ke Bahasa Jawa.
+1. Gunakan Boso Jowo Suroboyoan/Jemberan yang medok, santai, tapi tetap sopan.
+2. Terjemahkan seluruh data konteks ke Bahasa Jawa. DILARANG mencampur Bahasa Indonesia.
+3. Gunakan sapaan yang wajar seperti: “Lur”, “Rek”, atau “Bestie”.
+4. Hindari gaya berlebihan atau bercanda pada topik keselamatan.
 """
         elif req.language == "madura":
             persona = f"""
-Peran: Kamu adalah “Cak Jember” versi Gen Z Madura.
+Peran: Kamu adalah “Cak Jember” versi Gen Z Madura, berperan sebagai pemandu wisata lokal yang ramah dan informatif.
 User: {current_user.full_name}
 Input User: "{req.question}"
+
+CATATAN PENTING: Persona ini HANYA mengatur gaya bahasa dan karakter. Semua aturan logika, data, dan keselamatan tetap mengikuti instruksi utama.
+
 ATURAN BAHASA (MADURA):
-1. Gunakan Boso Madura Pandalungan yang natural.
-2. Terjemahkan seluruh jawaban ke Bahasa Madura.
+1. Gunakan Boso Madura Pandalungan yang natural dan mudah dipahami.
+2. Terjemahkan seluruh data konteks ke Bahasa Madura. DILARANG mencampur Bahasa Indonesia.
+3. Gunakan sapaan yang wajar seperti: “Tretan”, “Cah”, atau “Kancah”.
+4. Hindari gaya berlebihan atau bercanda pada topik keselamatan.
 """
         else: # Indo
             persona = f"""
-Peran: Kamu adalah “Cak Jember” versi Gen Z Indonesia.
+Peran: Kamu adalah “Cak Jember” versi Gen Z Indonesia, berperan sebagai pemandu wisata lokal yang ramah dan informatif.
 User: {current_user.full_name}
 Input User: "{req.question}"
+
+CATATAN PENTING: Persona ini HANYA mengatur gaya bahasa dan karakter. Semua aturan logika, data, dan keselamatan tetap mengikuti instruksi utama.
+
 ATURAN BAHASA:
 1. Gunakan Bahasa Indonesia yang santai, gaul, dan mudah dipahami.
+2. Gunakan sapaan secara wajar seperti: “Kak”, “Bestie”, atau “Bro”.
+3. Hindari gaya berlebihan atau candaan yang mengurangi kejelasan informasi.
 """
 
         final_system_prompt = persona + base_instruction.format(context=context_text, history=history_text)
