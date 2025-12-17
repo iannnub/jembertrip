@@ -366,7 +366,13 @@ function ChatPage() {
 
                               <div className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} min-w-0`}>
                                   {/* Bubble Chat */}
-                                  <div className={`px-5 py-3.5 text-sm leading-relaxed shadow-sm relative break-words w-full ${msg.sender === 'user' ? 'bg-primary text-white rounded-2xl rounded-br-none' : msg.isError ? 'bg-red-50 text-red-600 border border-red-100 rounded-2xl rounded-bl-none' : 'bg-white text-text-main border border-gray-200 rounded-2xl rounded-bl-none'}`}>
+                                    <div className={`px-5 py-3.5 text-sm leading-relaxed shadow-sm relative break-words w-full ${
+                                      msg.sender === 'user'
+                                        ? 'bg-blue-600 text-white rounded-2xl rounded-br-none' // <--- GANTI DI SINI
+                                        : msg.isError
+                                          ? 'bg-red-50 text-red-600 border border-red-100 rounded-2xl rounded-bl-none'
+                                          : 'bg-white text-text-main border border-gray-200 rounded-2xl rounded-bl-none'
+                                    }`}>
                                       <ReactMarkdown 
                                         remarkPlugins={[remarkGfm]}
                                         components={{

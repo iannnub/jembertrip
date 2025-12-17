@@ -391,20 +391,22 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         user_query = req.question.lower()
         clean_user_query = re.sub(r'[^\w\s]', ' ', user_query)
         
+        trigger_words = ["saran", "rekomendasi", "wisata", "kemana", "ndi", "tujuan", "tempat", "liburan", "main", "jalan", "pantai", "laut", "mana", "referensi", "kunjungi", "datangi", "enak"]
+
         # --- [STEP 1: DETEKSI NIAT USER] ---
-        is_asking_rec = any(x in user_query for x in ["saran", "rekomendasi", "wisata", "kemana", "ndi", "tujuan", "tempat", "liburan", "main", "jalan"])
+        is_asking_rec = any(x in user_query for x in trigger_words)
         
         # Deteksi Niat Santai/Healing (Untuk memfilter tempat sejarah)
-        is_casual_walk = any(x in user_query for x in ["jalan", "nyantai", "santai", "healing", "refreshing", "gabut", "main"])
+        is_casual_walk = any(x in user_query for x in ["jalan", "nyantai", "santai", "healing", "refreshing", "gabut", "main", "nongkrong", "hangout", "leyeh-leyeh", "relax"])
 
         # Detect Rain/Bad Weather
-        is_complaining_weather = any(x in user_query for x in ["udan", "hujan", "gerimis", "mendung", "banjir", "licin", "petir", "badai"])
+        is_complaining_weather = any(x in user_query for x in ["udan", "hujan", "gerimis", "mendung", "banjir", "licin", "petir", "badai", "angin", "angin kencang", "cuaca buruk", "cuaca jelek"])
         
         # Detect Stress/Burnout
-        is_stressed = any(x in user_query for x in ["pusing", "stres", "tugas", "healing", "penat", "mumet", "capek", "lelah", "galau", "burnout"])
+        is_stressed = any(x in user_query for x in ["pusing", "stres", "tugas", "healing", "penat", "mumet", "capek", "lelah", "galau", "burnout", "stress", "tekanan", "beban"])
         
         # Detect Souvenir
-        is_asking_souvenir = any(x in user_query for x in ["oleh", "jajan", "souvenir", "belanja", "khas"])
+        is_asking_souvenir = any(x in user_query for x in ["oleh", "jajan", "souvenir", "belanja", "khas",])
 
         # --- [STEP 2: SMART FILTERING CONFIG] ---
         outdoor_categories = ["Pantai", "Air Terjun", "Alam", "Gunung", "Bukit", "Camping", "Panorama"]
@@ -418,7 +420,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 
         # --- [STEP 3: SMART TOKEN MATCHING (Cari Nama Spesifik)] ---
         specific_matches = []
-        stop_words = ["wisata", "pantai", "taman", "air", "terjun", "bukit", "gunung", "puncak", "danau", "pemandian", "kebun", "desa", "kampung", "situs", "candi", "di", "ke", "nang", "jember", "kabupaten", "kota", "pingin", "pengen", "rencana", "aku", "dong", "halo", "pagi"]
+        stop_words = ["wisata", "pantai", "taman", "air", "terjun", "bukit", "gunung", "puncak", "danau", "pemandian", "kebun", "desa", "kampung", "situs", "candi", "di", "ke", "nang", "jember", "kabupaten", "kota", "pingin", "pengen", "rencana", "aku", "dong", "halo", "pagi","malam", "siang", "mau", "ingin", "tempat", "tujuan", "rekreasi", "liburan", "jalan", "main", "enak", "bagus", "indah", "seru", "asik", "keren", "hits", "viral", "populer", "favorit"]
         
         user_tokens = clean_user_query.split()
         
@@ -521,7 +523,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 ROLE & TUJUAN:
 Kamu adalah AI Virtual Tour Guide resmi untuk wisata di Kabupaten Jember.
 Tugas utama kamu adalah membantu wisatawan memilih destinasi wisata yang paling sesuai dengan kondisi mereka secara akurat, aman, dan relevan.
-Utamakan kejelasan informasi, keselamatan, dan kecocokan dengan kebutuhan user.
+Utamakan kejelasan informasi, keselamatan, dan kecocokan dengan kebutuhan user. 
 
 RIWAYAT CHAT (PENTING):
 Gunakan informasi ini agar tidak bertanya hal yang sama berulang kali.
@@ -534,6 +536,10 @@ ATURAN DATA (WAJIB / ANTI-HALU):
 - Gunakan DATA PENGETAHUAN (Context) sebagai sumber informasi utama.
 - DILARANG menambah, menebak, atau mengarang informasi di luar Context.
 - Jika detail tertentu tidak tersedia di Context, sampaikan dengan jujur tanpa berspekulasi.
+- Utamakan keselamatan user. Jika ada risiko bahaya (cuaca buruk, banjir, petir), ingatkan user dengan sopan.
+- Jika user mengeluh hujan atau cuaca buruk, JANGAN rekomendasikan tempat outdoor seperti pantai atau wisata alam terbuka. Utamakan tempat indoor atau kafe.
+- Jika user merasa stres, burnout, atau capek (ingin healing/jalan-jalan), prioritaskan tempat alam atau pantai. JANGAN rekomendasikan tempat sejarah, makam, atau wisata edukatif KECUALI diminta.
+- jangan pernah merekomendasikan makanan atau tempat kuliner karena ini adalah khusus untuk wisata alam dan rekreasi.
 
 GAYA BAHASA (GEN Z TERKONTROL):
 - Gunakan Bahasa Gen Z yang santai, ramah, dan kekinian, tetapi tetap profesional.
@@ -541,16 +547,19 @@ GAYA BAHASA (GEN Z TERKONTROL):
 - Jangan kaku, tapi hindari gaya berlebihan atau alay.
 - Prioritaskan kejelasan informasi dibanding gaya bahasa.
 
+
 FORMAT JAWABAN (WAJIB):
 - Jika memberikan rekomendasi tempat, WAJIB menggunakan Numbering List (1. 2. 3.).
 - DILARANG menggabungkan semua rekomendasi dalam satu paragraf panjang (wall of text).
 - Berikan spasi antar poin agar mudah dibaca.
+
 
 STRUKTUR TIAP REKOMENDASI:
 Setiap poin rekomendasi WAJIB memuat:
 - Nama tempat
 - Alasan singkat (vibes / cocok untuk siapa)
 - Tips praktis (waktu terbaik, catatan keselamatan, atau kondisi penting)
+
 
 LOGIC KONDISIONAL:
 - Jika user mengeluh HUJAN atau cuaca buruk: JANGAN merekomendasikan pantai atau wisata alam terbuka. Prioritaskan tempat indoor atau ngopi, dan ingatkan risiko petir/banjir secara singkat.
@@ -573,10 +582,20 @@ Input User: "{req.question}"
 CATATAN PENTING: Persona ini HANYA mengatur gaya bahasa dan karakter. Semua aturan logika, data, dan keselamatan tetap mengikuti instruksi utama.
 
 ATURAN BAHASA (JAWA TIMURAN):
-1. Gunakan Boso Jowo Suroboyoan/Jemberan yang medok, santai, tapi tetap sopan.
+1. Gunakan Boso Jowo Suroboyoan/Jemberan yang natural dan mudah dipahami.
 2. Terjemahkan seluruh data konteks ke Bahasa Jawa. DILARANG mencampur Bahasa Indonesia.
 3. Gunakan sapaan yang wajar seperti: “Lur”, “Rek”, atau “Bestie”.
 4. Hindari gaya berlebihan atau bercanda pada topik keselamatan.
+5. Gunakan kosakata khas Jawa Timur seperti: "Nang", "Kowe", "Aku", "Arep", "Mangan", "Mlaku-mlaku".
+6. Hindari penggunaan kata-kata kasar atau slang yang tidak pantas.
+7. Jaga kesopanan dalam berkomunikasi, sesuai dengan budaya Jawa Timur.
+8. Gunakan ungkapan-ungkapan yang umum digunakan dalam percakapan sehari-hari di Jawa Timur.
+9. Sesuaikan gaya bahasa dengan konteks wisata dan budaya lokal Jawa Timur.
+10. Pastikan pesan yang disampaikan tetap jelas dan mudah dimengerti oleh semua kalangan.
+11. Hindari penggunaan bahasa yang terlalu formal atau kaku, tetap santai namun sopan.
+12. Gunakan idiom atau peribahasa Jawa Timur jika relevan untuk menambah kekayaan bahasa.
+
+
 """
         elif req.language == "madura":
             persona = f"""
@@ -591,6 +610,14 @@ ATURAN BAHASA (MADURA):
 2. Terjemahkan seluruh data konteks ke Bahasa Madura. DILARANG mencampur Bahasa Indonesia.
 3. Gunakan sapaan yang wajar seperti: “Tretan”, “Cah”, atau “Kancah”.
 4. Hindari gaya berlebihan atau bercanda pada topik keselamatan.
+5. Gunakan kosakata khas Madura seperti: "Badeh", "Sampeyan", "Engkok", "Areh", "Makan", "Jalan-jalan".
+6. Hindari penggunaan kata-kata kasar atau slang yang tidak pantas.
+7. Jaga kesopanan dalam berkomunikasi, sesuai dengan budaya Madura.
+8. Gunakan ungkapan-ungkapan yang umum digunakan dalam percakapan sehari-hari di Madura.
+9. Sesuaikan gaya bahasa dengan konteks wisata dan budaya lokal Madura.
+10. Pastikan pesan yang disampaikan tetap jelas dan mudah dimengerti oleh semua kalangan.
+11. Hindari penggunaan bahasa yang terlalu formal atau kaku, tetap santai namun sopan.
+12. Gunakan idiom atau peribahasa Madura jika relevan untuk menambah kekayaan bahasa.
 """
         else: # Indo
             persona = f"""
@@ -604,6 +631,14 @@ ATURAN BAHASA:
 1. Gunakan Bahasa Indonesia yang santai, gaul, dan mudah dipahami.
 2. Gunakan sapaan secara wajar seperti: “Kak”, “Bestie”, atau “Bro”.
 3. Hindari gaya berlebihan atau candaan yang mengurangi kejelasan informasi.
+4. Sesuaikan gaya bahasa dengan konteks wisata dan budaya lokal Indonesia.
+5. Pastikan pesan yang disampaikan tetap jelas dan mudah dimengerti oleh semua kalangan.
+6. Hindari penggunaan bahasa yang terlalu formal atau kaku, tetap santai namun sopan
+7. Gunakan idiom atau ungkapan gaul jika relevan untuk menambah kekayaan bahasa.
+8. Jaga kesopanan dalam berkomunikasi sesuai dengan norma sosial di Indonesia.
+9. Hindari penggunaan kata-kata kasar atau slang yang tidak pantas.
+10. Gunakan ungkapan-ungkapan yang umum digunakan dalam percakapan sehari-hari di Indonesia.
+11. Pastikan gaya bahasa tetap profesional meskipun santai.
 """
 
         final_system_prompt = persona + base_instruction.format(context=context_text, history=history_text)
