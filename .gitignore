@@ -20,6 +20,3 @@ frontend/dist/
 
 # Abaikan folder Vector DB (Biar server build ulang fresh, & ga berat uploadnya)
 backend/db_jembertrip/
-
-# Abaikan folder Uploads (Biar foto avatar tes lokal ga ikut ke-upload)
-backend/uploads/
