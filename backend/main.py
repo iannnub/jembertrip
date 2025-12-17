@@ -30,7 +30,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 # --- DATABASE SETUP ---
 import models 
-from database import engine, get_db
+from database import engine, get_db, SessionLocal
 import security
 
 # Load Environment
@@ -43,6 +43,43 @@ app = FastAPI(
     description="API: V24.0 - Grand Refactor (Smart Logic, Gen Z, Safety Guard)",
     version="24.0.0 Final"
 )
+
+# ==========================================
+#           AUTO-ADMIN GENERATOR
+# ==========================================
+@app.on_event("startup")
+def create_default_admin():
+    db = SessionLocal()
+    try:
+        # Cek apakah user 'admin' sudah ada
+        existing_admin = db.query(models.User).filter(models.User.username == "admin").first()
+        
+        if not existing_admin:
+            print("⚠️ ADMIN BELUM ADA! Membuat akun Admin default...")
+            
+            # Buat akun admin baru
+            new_admin = models.User(
+                username="admin",
+                email="admin@jembertrip.com",
+                full_name="Super Admin",
+                # Menggunakan password 'adminn' sesuai requestmu
+                hashed_password=security.get_password_hash("adminn"), 
+                role="admin",
+                avatar="" # Kosongkan default avatar
+            )
+            
+            db.add(new_admin)
+            db.commit()
+            print("✅ SUKSES! Akun Admin dibuat.")
+            print("👉 Username: admin")
+            print("👉 Password: adminn")
+        else:
+            print("ℹ️ Akun Admin sudah ada. Aman.")
+            
+    except Exception as e:
+        print(f"❌ Gagal membuat admin otomatis: {e}")
+    finally:
+        db.close()
 
 # --- KONFIGURASI GAMBAR ---
 os.makedirs("uploads", exist_ok=True)
@@ -249,7 +286,7 @@ def upload_avatar(file: UploadFile = File(...), current_user: models.User = Depe
         clean_name = f"avatar_{current_user.id}_{int(time.time())}.jpg" 
         file_location = f"uploads/{clean_name}"
         with open(file_location, "wb") as buffer: shutil.copyfileobj(file.file, buffer)
-        avatar_url = f"http://localhost:8000/images/{clean_name}"
+        avatar_url = f"https://jembertrip-api.up.railway.app/images/{clean_name}"
         current_user.avatar = avatar_url
         db.commit()
         return {"status": "success", "avatar_url": avatar_url}
@@ -596,7 +633,7 @@ def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), k
             clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
             path = f"uploads/{clean}"
             with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
-            filename = f"http://localhost:8000/images/{clean}"
+            filename = f"https://jembertrip-api.up.railway.app/images/{clean}"
         new_entry = {"id": str(len(data_wisata_csv) + 1), "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": filename, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
         data_wisata_csv.append(new_entry)
         save_csv_changes()
@@ -615,7 +652,7 @@ def edit_wisata_admin(id: str, nama_wisata: str = Form(...), deskripsi: str = Fo
             clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
             path = f"uploads/{clean}"
             with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
-            img = f"http://localhost:8000/images/{clean}"
+            img = f"https://jembertrip-api.up.railway.app/images/{clean}"
         updated = {**current, "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": img, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
         data_wisata_csv[idx] = updated
         save_csv_changes()
