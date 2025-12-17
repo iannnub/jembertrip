@@ -666,5 +666,26 @@ def delete_wisata_admin(id: str, admin_user: models.User = Depends(get_current_a
     save_csv_changes()
     return {"status": "success", "message": "Dihapus"}
 
+# ==========================================
+#      CHEAT CODE: FORCE ADMIN (DARURAT)
+# ==========================================
+@app.get("/api/cheat/jadi-admin/{username}")
+def force_user_to_admin(username: str, db: Session = Depends(get_db)):
+    # 1. Cari user berdasarkan username
+    user = db.query(models.User).filter(models.User.username == username).first()
+    
+    # 2. Kalau user gak ketemu
+    if not user:
+        return {"status": "error", "message": f"Waduh, user '{username}' gak ditemukan bro!"}
+    
+    # 3. UBAH ROLE JADI ADMIN
+    user.role = "admin"
+    db.commit()
+    
+    return {
+        "status": "success", 
+        "message": f"🎉 SELAMAT! Akun '{username}' sekarang resmi jadi ADMIN (Role: {user.role}). Silakan login ulang!"
+    }
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
