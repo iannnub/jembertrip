@@ -689,3 +689,5 @@ def force_user_to_admin(username: str, db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+    # Update cheat code admin v2
