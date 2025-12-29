@@ -476,20 +476,22 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         logger.error(str(e)); raise HTTPException(500, str(e))
 
 # ... (Sisa Endpoint Sama) ...
+# Di backend/main.py pada bagian rekomendasi
 @app.post("/api/v1/rekomendasi")
 def get_similar_wisata(req: RecommendationRequest):
-    """SINKRON DENGAN: WisataDetail.jsx (fetchRekomendasiAI)"""
     global vector_db
     try:
-        # Cari wisata serupa berdasarkan nama & kategori
-        docs = vector_db.similarity_search(req.query, k=10)
+        # Tambahkan filter metadata 'type': 'tourism'
+        # Biar PDF gak ikutan muncul jadi kartu
+        docs = vector_db.similarity_search(
+            req.query, 
+            k=10, 
+            filter={"type": "tourism"} # <--- Kuncinya di sini!
+        )
         
-        # Format sesuai ekspektasi Frontend: item.metadata
         formatted_results = [{"metadata": d.metadata} for d in docs]
-        
-        return {"status": "success", "results": formatted_results} # Balikin field 'results'
+        return {"status": "success", "results": formatted_results}
     except Exception as e:
-        logger.error(f"Error Similar Rek: {e}")
         return {"status": "success", "results": []}
 
 @app.get("/api/v1/list-wisata")
