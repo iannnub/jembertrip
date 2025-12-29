@@ -344,30 +344,39 @@ def get_my_history(current_user: models.User = Depends(get_current_user), db: Se
 
 @app.get("/api/v1/recommendations/personal")
 def get_personal_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """SINKRON DENGAN: WisataHome.jsx (setPersonalRek)"""
+    """SINKRON DENGAN FRONTEND: Menampilkan 6 Rekomendasi Spesial"""
     global vector_db
     try:
-        # 1. Ambil history klik terakhir user dari SQL
+        # 1. Ambil history klik terakhir user
         history = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(5).all()
         
         if not history:
             return {"status": "success", "data": []}
         
-        # 2. Cari kemiripan di Vector DB
+        # 2. Gabungkan nama wisata yang pernah diklik jadi query pencarian AI
         query_text = " ".join([h.wisata_name for h in history])
-        # Gunakan similarity_search biasa tanpa threshold tinggi dulu biar data muncul
-        docs = vector_db.similarity_search(query_text, k=6)
         
-        # 3. Filter agar tidak muncul yang sudah ada di history
+        # 3. Cari kemiripan di Vector DB dengan FILTER 'tourism'
+        # Kita ambil 'k' lebih banyak (misal 20) buat cadangan setelah difilter
+        docs = vector_db.similarity_search(
+            query_text, 
+            k=20, 
+            filter={"type": "tourism"} # <--- WAJIB: Biar gak ngambil data PDF
+        )
+        
+        # 4. Filter agar tidak muncul wisata yang sedang/sudah dilihat (opsional)
         visited_ids = [str(h.wisata_id) for h in history]
         results = []
         for d in docs:
+            # Pastikan ID unik dan field metadata lengkap
             if str(d.metadata.get('id')) not in visited_ids:
                 results.append(d.metadata)
+                
+        # 5. Kembalikan TEPAT 6 DATA sesuai permintaan lo
+        return {"status": "success", "data": results[:6]}
         
-        return {"status": "success", "data": results[:4]} # Balikin field 'data'
     except Exception as e:
-        logger.error(f"Error Personal Rek: {e}")
+        print(f"Error Personal Rek: {e}")
         return {"status": "success", "data": []}
     
 
