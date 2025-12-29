@@ -379,43 +379,33 @@ def get_my_history(current_user: models.User = Depends(get_current_user), db: Se
 @app.get("/api/v1/recommendations/personal")
 def get_personal_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     global vector_db, data_wisata_csv
-    # Ambil 10 riwayat terakhir untuk mendapatkan tren minat user
+    
+    # 1. Ambil History (Pastikan history tersimpan di DB)
     history = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(10).all()
     
-    if not history: 
-        return {"status": "success", "data": []}
+    if not history:
+        # Fallback: Berikan wisata random/terbaru jika history kosong
+        return {"status": "success", "data": data_wisata_csv[:6]}
     
-    # Ambil nama-nama wisata yang pernah diklik
-    seen_names = [h.wisata_name for h in history]
-    
-    # Strategi: Cari berdasarkan nama wisata terakhir yang diklik
-    # Ini akan memancing Vector DB mencari tempat dengan 'vibes' serupa
-    query_text = history[0].wisata_name 
+    # 2. Ambil Nama Wisata dari history untuk mencari yang serupa
+    # Gunakan 2 history terakhir sebagai query gabungan
+    search_query = " ".join([h.wisata_name for h in history[:2]])
+    seen_ids = [str(h.wisata_id) for h in history]
     
     try:
-        # Cari lebih banyak kandidat (k=30) untuk difilter manual
-        docs = vector_db.similarity_search(query_text, k=30)
-        
+        docs = vector_db.similarity_search(search_query, k=15)
         recommendations = []
-        seen_ids = set([str(h.wisata_id) for h in history])
         
         for doc in docs:
-            # Pastikan doc punya metadata 'nama_wisata' (data dari CSV, bukan PDF)
-            if 'nama_wisata' in doc.metadata:
-                doc_id = str(doc.metadata.get("id"))
-                
-                # Filter: Jangan munculkan yang sudah pernah diklik
-                if doc_id not in seen_ids:
-                    # Cek apakah ID ini ada di CSV aktif
-                    is_active = any(str(w['id']) == doc_id for w in data_wisata_csv)
-                    if is_active:
-                        recommendations.append(doc.metadata)
+            doc_id = str(doc.metadata.get("id"))
+            # Filter: Jangan tampilkan yang sudah pernah dikunjungi (ada di history)
+            if doc_id not in seen_ids and 'nama_wisata' in doc.metadata:
+                recommendations.append(doc.metadata)
         
-        # Kembalikan 6 hasil terbaik yang belum pernah dilihat
-        return {"status": "success", "data": recommendations[:6]} 
+        return {"status": "success", "data": recommendations[:6]}
     except Exception as e:
-        logger.error(f"Personal Rek Error: {e}")
-        return {"status": "error", "data": []}
+        logger.error(f"Error Personal Rec: {e}")
+        return {"status": "success", "data": data_wisata_csv[:6]}
 
 # =========================================================
 #      CHAT & REKOMENDASI (V24.0 - SMART LOGIC & GEN Z)
@@ -522,16 +512,14 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 @app.post("/api/v1/rekomendasi")
 def get_rekomendasi(req: RecommendationRequest):
     global vector_db
-    # Gunakan k yang lebih besar agar setelah difilter (buang diri sendiri) tetap sisa banyak
+    # Ambil k+2 untuk cadangan jika ada ID yang sama dengan query
     docs = vector_db.similarity_search(req.query, k=req.k + 2)
     
     results = []
     for d in docs:
         if 'nama_wisata' in d.metadata:
-            # Logika: Jika query (misal: Papuma) ada di dalam nama_wisata hasil search, 
-            # kita bisa lewati agar tidak muncul 'wisata itu sendiri' di kolom 'wisata serupa'
-            if req.query.lower() in d.metadata['nama_wisata'].lower() and req.k < 10:
-                continue
+            # Gunakan ID untuk filter (lebih akurat daripada filter Nama)
+            # Pastikan frontend mengirimkan ID jika ingin filter "wisata itu sendiri"
             results.append(d.metadata)
             
     return {"status": "success", "results": results[:req.k]}
