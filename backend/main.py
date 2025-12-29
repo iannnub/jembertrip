@@ -324,16 +324,18 @@ def change_password(data: PasswordChange, current_user: models.User = Depends(ge
     return {"status": "success", "message": "Password diubah!"}
 
 @app.post("/api/history")
-def add_history(item: HistoryCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def record_history(item: HistoryCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
-        new_history = models.History(
-            user_id=current_user.id, wisata_id=item.wisata_id, wisata_name=item.wisata_name, timestamp=datetime.utcnow()
+        new_h = models.History(
+            user_id=current_user.id, 
+            wisata_id=str(item.wisata_id), # Simpan sebagai string
+            wisata_name=item.wisata_name, 
+            timestamp=datetime.utcnow()
         )
-        db.add(new_history); db.commit()
-        return {"status": "success", "message": "History saved"}
-    except Exception as e:
-        logger.error(f"Save History Error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to save history")
+        db.add(new_h); db.commit()
+        return {"status": "success"}
+    except Exception:
+        raise HTTPException(500, "Gagal simpan history")
 
 @app.get("/api/history")
 def get_my_history(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -342,29 +344,31 @@ def get_my_history(current_user: models.User = Depends(get_current_user), db: Se
 
 @app.get("/api/v1/recommendations/personal")
 def get_personal_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """SINKRON DENGAN: WisataHome.jsx (setPersonalRek)"""
     global vector_db
-    # Ambil history klik terakhir user
-    history = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(3).all()
-    
-    if not history:
+    try:
+        # 1. Ambil history klik terakhir user dari SQL
+        history = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(5).all()
+        
+        if not history:
+            return {"status": "success", "data": []}
+        
+        # 2. Cari kemiripan di Vector DB
+        query_text = " ".join([h.wisata_name for h in history])
+        # Gunakan similarity_search biasa tanpa threshold tinggi dulu biar data muncul
+        docs = vector_db.similarity_search(query_text, k=6)
+        
+        # 3. Filter agar tidak muncul yang sudah ada di history
+        visited_ids = [str(h.wisata_id) for h in history]
+        results = []
+        for d in docs:
+            if str(d.metadata.get('id')) not in visited_ids:
+                results.append(d.metadata)
+        
+        return {"status": "success", "data": results[:4]} # Balikin field 'data'
+    except Exception as e:
+        logger.error(f"Error Personal Rek: {e}")
         return {"status": "success", "data": []}
-    
-    # Gabungin nama wisata yang pernah diklik buat jadi bahan cari AI
-    search_query = " ".join([h.wisata_name for h in history])
-    
-    # Cari di Vector DB
-    docs = vector_db.similarity_search(search_query, k=8)
-    
-    # Filter: Jangan tampilin yang emang udah pernah diklik (id ada di history)
-    visited_ids = [str(h.wisata_id) for h in history]
-    
-    recommendations = []
-    for d in docs:
-        doc_id = str(d.metadata.get('id'))
-        if doc_id not in visited_ids and 'nama_wisata' in d.metadata:
-            recommendations.append(d.metadata)
-            
-    return {"status": "success", "data": recommendations[:4]}
     
 
     # ==========================================
@@ -474,17 +478,19 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 # ... (Sisa Endpoint Sama) ...
 @app.post("/api/v1/rekomendasi")
 def get_similar_wisata(req: RecommendationRequest):
+    """SINKRON DENGAN: WisataDetail.jsx (fetchRekomendasiAI)"""
     global vector_db
-    # Gunakan similarity search tapi ambil metadatanya aja
-    docs = vector_db.similarity_search(req.query, k=req.k)
-    
-    results = []
-    for d in docs:
-        # Pastikan kita hanya ambil doc yang punya 'nama_wisata' (data dari CSV)
-        if 'nama_wisata' in d.metadata:
-            results.append({"metadata": d.metadata})
-            
-    return {"status": "success", "results": results}
+    try:
+        # Cari wisata serupa berdasarkan nama & kategori
+        docs = vector_db.similarity_search(req.query, k=10)
+        
+        # Format sesuai ekspektasi Frontend: item.metadata
+        formatted_results = [{"metadata": d.metadata} for d in docs]
+        
+        return {"status": "success", "results": formatted_results} # Balikin field 'results'
+    except Exception as e:
+        logger.error(f"Error Similar Rek: {e}")
+        return {"status": "success", "results": []}
 
 @app.get("/api/v1/list-wisata")
 def list_wisata():

@@ -1,76 +1,81 @@
 import os
 import pandas as pd
-from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+import shutil
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
+from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# 1. SETUP PATH SESUAI STRUKTUR LO
-load_dotenv()
-# Karena script ini biasanya di run dari folder 'backend', maka:
-DATA_PATH = "datasets"           # Tempat PDF lo
-CSV_PATH = "data/destinasi_final.csv" # Pastikan nama filenya bener ya!
+# --- CONFIG PATH ---
+PDF_PATH = "datasets"            # Folder PDF lo
+CSV_PATH = "data/destinasi_final.csv"
 CHROMA_PATH = "db_jembertrip_v2"
-EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 def run_ingestion():
-    print("🚀 Memulai Ingestion JemberTrip v25.5...")
+    print("🚀 Rebuilding Vector DB (PDF + CSV)...")
     
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
+    if os.path.exists(CHROMA_PATH):
+        shutil.rmtree(CHROMA_PATH)
+        print("🧹 DB lama dihapus.")
+
+    embeddings = HuggingFaceEmbeddings(model_name=MODEL_NAME)
     all_docs = []
 
-    # 2. PROSES PDF (DARI FOLDER DATASETS)
-    if os.path.exists(DATA_PATH):
-        print(f"📄 Memproses PDF di folder: {DATA_PATH}...")
-        loader = DirectoryLoader(DATA_PATH, glob="./*.pdf", loader_cls=PyPDFLoader)
+    # --- 1. PROSES PDF (KNOWLEDGE BASE) ---
+    if os.path.exists(PDF_PATH):
+        print(f"📄 Reading PDFs from {PDF_PATH}...")
+        loader = DirectoryLoader(PDF_PATH, glob="./*.pdf", loader_cls=PyPDFLoader)
         pdf_docs = loader.load()
         
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        # Pecah PDF jadi chunks biar AI gampang carinya
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000, 
+            chunk_overlap=200,
+            separators=["\n\n", "\n", " ", ""]
+        )
         pdf_chunks = splitter.split_documents(pdf_docs)
+        
+        # Tambahin label biar AI tau ini sumbernya dari PDF
+        for chunk in pdf_chunks:
+            chunk.metadata["type"] = "knowledge"
+        
         all_docs.extend(pdf_chunks)
-        print(f"✅ {len(pdf_chunks)} chunks dari PDF berhasil dibuat.")
+        print(f"✅ {len(pdf_chunks)} chunks dari PDF masuk.")
 
-    # 3. PROSES CSV (DARI FOLDER DATA DENGAN METADATA LENGKAP)
+    # --- 2. PROSES CSV (TOURISM DATA) ---
     if os.path.exists(CSV_PATH):
-        print(f"📊 Memproses CSV di: {CSV_PATH}...")
+        print(f"📊 Reading CSV from {CSV_PATH}...")
         df = pd.read_csv(CSV_PATH).fillna("")
         
         for _, row in df.iterrows():
-            # Content: Isinya harus lengkap buat dicari AI
-            content = f"Nama Wisata: {row['nama_wisata']}. Kategori: {row['kategori']}. Deskripsi: {row['deskripsi']}. Alamat: {row['alamat']}"
+            content = f"Wisata: {row['nama_wisata']}. Kategori: {row['kategori']}. Deskripsi: {row['deskripsi']}. Alamat: {row['alamat']}"
             
-            # Metadata: Sekarang kita masukin SEMUA field biar Frontend lo dapet data lengkap
+            # Metadata lengkap buat Frontend
             metadata = {
-                "id": str(row['id']), # Pastikan ID ada dan jadi string
-                "nama_wisata": str(row['nama_wisata']), 
+                "id": str(row['id']),
+                "nama_wisata": str(row['nama_wisata']),
                 "kategori": str(row['kategori']),
                 "gambar": str(row['gambar']),
                 "alamat": str(row['alamat']),
-                "deskripsi": str(row['deskripsi']), # WAJIB MASUK biar detail terbaca
+                "deskripsi": str(row['deskripsi']),
                 "harga_tiket": str(row['harga_tiket']),
-                "source": "destinasi_final.csv"
+                "type": "tourism" # Bedain sama PDF
             }
-            
             all_docs.append(Document(page_content=content, metadata=metadata))
-        print(f"✅ Data Wisata CSV berhasil dikonversi ke Vector Document.")
+        print(f"✅ Data Wisata CSV masuk.")
 
-    # 4. SIMPAN KE CHROMA DB
+    # --- 3. SAVE TO CHROMA ---
     if all_docs:
-        if os.path.exists(CHROMA_PATH):
-            import shutil
-            shutil.rmtree(CHROMA_PATH)
-            print("🧹 Database lama dibersihkan.")
-
         vector_db = Chroma.from_documents(
-            documents=all_docs,
-            embedding=embeddings,
+            documents=all_docs, 
+            embedding=embeddings, 
             persist_directory=CHROMA_PATH
         )
-        print(f"✨ DATABASE READY! {len(all_docs)} total data ter-index.")
+        print(f"✨ SUCCESS! Total {len(all_docs)} dokumen siap tempur di {CHROMA_PATH}!")
     else:
-        print("❌ Gagal: Folder datasets kosong atau CSV tidak ditemukan!")
+        print("❌ Error: Gak ada data yang kebaca sama sekali!")
 
 if __name__ == "__main__":
     run_ingestion()

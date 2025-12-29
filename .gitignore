@@ -13,6 +13,3 @@ frontend/dist/
 
 # System
 .DS_Store
-
-# Abaikan folder Vector DB (Biar server build ulang fresh, & ga berat uploadnya)
-backend/db_jembertrip/

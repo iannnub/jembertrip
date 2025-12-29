@@ -3,25 +3,22 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# 1. Ambil URL dari Variable Railway. Kalau gak ada, pake SQLite (Laptop)
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./backend/jembertrip.db")
+# Mengunci alamat folder agar tidak nyasar di Railway
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DB_PATH = os.path.join(BASE_DIR, "jembertrip.db")
 
-# 2. Fix Bug Railway: Kadang dia ngasih 'postgres://', padahal SQLAlchemy maunya 'postgresql://'
+# Jika di Railway ada DATABASE_URL (Postgres), pake itu. Kalau gak ada, pake SQLite
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
+
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# 3. Pilih Mesin (Engine)
 if "sqlite" in DATABASE_URL:
-    # Settingan KHUSUS Laptop (SQLite)
-    engine = create_engine(
-        DATABASE_URL, connect_args={"check_same_thread": False}
-    )
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    # Settingan KHUSUS Railway (PostgreSQL)
     engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 def get_db():
