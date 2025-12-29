@@ -6,6 +6,7 @@ import logging
 import pandas as pd
 import random
 import re
+import uuid 
 import string
 import difflib # Untuk Fuzzy Matching & Smart Token
 from datetime import datetime
