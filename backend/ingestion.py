@@ -43,13 +43,13 @@ def run_ingestion():
             
             # Metadata: Sekarang kita masukin SEMUA field biar Frontend lo dapet data lengkap
             metadata = {
-                "id": str(row.get('id', '')),
-                "nama_wisata": row['nama_wisata'],
-                "kategori": row['kategori'],
-                "gambar": row.get('gambar', ''),
-                "harga_tiket": str(row.get('harga_tiket', '')),
-                "alamat": row.get('alamat', ''),      # <-- Kita tambahin ini
-                "deskripsi": row.get('deskripsi', ''), # <-- Dan ini
+                "id": str(row['id']), # Pastikan ID ada dan jadi string
+                "nama_wisata": str(row['nama_wisata']), 
+                "kategori": str(row['kategori']),
+                "gambar": str(row['gambar']),
+                "alamat": str(row['alamat']),
+                "deskripsi": str(row['deskripsi']), # WAJIB MASUK biar detail terbaca
+                "harga_tiket": str(row['harga_tiket']),
                 "source": "destinasi_final.csv"
             }
             

@@ -342,23 +342,29 @@ def get_my_history(current_user: models.User = Depends(get_current_user), db: Se
 
 @app.get("/api/v1/recommendations/personal")
 def get_personal_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    global vector_db, data_wisata_csv
-    last_history = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(5).all()
-    if not last_history: return {"status": "success", "data": []}
+    global vector_db
+    # Ambil history klik terakhir user
+    history = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(3).all()
     
-    active_ids = set([str(w['id']) for w in data_wisata_csv])
-    query_text = " ".join([h.wisata_name for h in last_history])
-    try:
-        docs = vector_db.similarity_search(query_text, k=20)
-        seen_ids = [str(h.wisata_id) for h in last_history]
-        recommendations = []
-        for doc in docs:
-            doc_id = str(doc.metadata.get("id"))
-            if 'id' in doc.metadata and doc_id not in seen_ids and doc_id in active_ids:
-                recommendations.append(doc.metadata)
-        return {"status": "success", "data": recommendations[:6]} 
-    except Exception as e:
-        logger.error(f"Personal Rek Error: {e}"); return {"status": "error", "data": []}
+    if not history:
+        return {"status": "success", "data": []}
+    
+    # Gabungin nama wisata yang pernah diklik buat jadi bahan cari AI
+    search_query = " ".join([h.wisata_name for h in history])
+    
+    # Cari di Vector DB
+    docs = vector_db.similarity_search(search_query, k=8)
+    
+    # Filter: Jangan tampilin yang emang udah pernah diklik (id ada di history)
+    visited_ids = [str(h.wisata_id) for h in history]
+    
+    recommendations = []
+    for d in docs:
+        doc_id = str(d.metadata.get('id'))
+        if doc_id not in visited_ids and 'nama_wisata' in d.metadata:
+            recommendations.append(d.metadata)
+            
+    return {"status": "success", "data": recommendations[:4]}
     
 
     # ==========================================
@@ -467,10 +473,18 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 
 # ... (Sisa Endpoint Sama) ...
 @app.post("/api/v1/rekomendasi")
-def get_rekomendasi(req: RecommendationRequest):
+def get_similar_wisata(req: RecommendationRequest):
     global vector_db
+    # Gunakan similarity search tapi ambil metadatanya aja
     docs = vector_db.similarity_search(req.query, k=req.k)
-    return {"status": "success", "results": [{"metadata": d.metadata} for d in docs if 'nama_wisata' in d.metadata]}
+    
+    results = []
+    for d in docs:
+        # Pastikan kita hanya ambil doc yang punya 'nama_wisata' (data dari CSV)
+        if 'nama_wisata' in d.metadata:
+            results.append({"metadata": d.metadata})
+            
+    return {"status": "success", "results": results}
 
 @app.get("/api/v1/list-wisata")
 def list_wisata():
