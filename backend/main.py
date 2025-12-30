@@ -120,73 +120,102 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 @app.on_event("startup")
 def startup_event():
     global vector_db, embedding_model, data_wisata_csv, GROQ_API_KEYS
-    logger.info("--- SERVER STARTUP v25.0 (Fix Knowledge Base) ---")
+    logger.info("--- 🚀 SERVER STARTUP: Hybrid Knowledge Engine v25.0 ---")
 
-    # 1. Load Keys
+    # 1. Load API Keys (Tetap menggunakan logic lo yang lama)
+    GROQ_API_KEYS = []
     count_keys = 0
     for i in range(1, 21):
         key = os.getenv(f"GROQ_API_KEY_{i}")
-        if key: GROQ_API_KEYS.append(key); count_keys += 1
+        if key: 
+            GROQ_API_KEYS.append(key)
+            count_keys += 1
     if count_keys == 0 and os.getenv("GROQ_API_KEY"):
         GROQ_API_KEYS.append(os.getenv("GROQ_API_KEY"))
-    logger.info(f"Loaded {count_keys} Groq Keys.")
+        count_keys = 1
+    logger.info(f"🔑 Terdeteksi {count_keys} Groq API Keys siap digunakan.")
 
-    # 2. Load Vector DB & Data
+    # 2. Inisialisasi AI & Vector DB
     try:
-        embedding_model = HuggingFaceEmbeddings(model_name=NAMA_MODEL_EMBEDDING, model_kwargs={'device': 'cpu'})
+        # Load Embedding Model
+        embedding_model = HuggingFaceEmbeddings(
+            model_name=NAMA_MODEL_EMBEDDING, 
+            model_kwargs={'device': 'cpu'}
+        )
         
-        # Pancingan model biar panas
-        _ = embedding_model.embed_query("warmup")
+        # Pancingan model (Warmup)
+        _ = embedding_model.embed_query("warmup jembertrip")
 
+        # Resolve Paths
         final_csv_path = PATH_CSV_DATA if os.path.exists(PATH_CSV_DATA) else f"../{PATH_CSV_DATA}"
         final_kb_path = PATH_KNOWLEDGE_BASE if os.path.exists(PATH_KNOWLEDGE_BASE) else f"../{PATH_KNOWLEDGE_BASE}"
 
+        # Load ChromaDB
         vector_db = Chroma(persist_directory=PATH_DB_VEKTOR, embedding_function=embedding_model)
-
-        # Cek apakah DB masih kosong? Kalau kosong, kita isi ulang SEMUANYA.
-        db_is_empty = vector_db._collection.count() == 0
         
-        # [A] Load Data Wisata
-        if os.path.exists(final_csv_path):
-            df = pd.read_csv(final_csv_path)
-            if 'id' in df.columns: df['id'] = df['id'].astype(str)
-            df = df.fillna("") 
-            data_wisata_csv = df.to_dict('records')
-            
-            if db_is_empty:
-                logger.info("📥 Mengisi Vector DB dengan DATA WISATA...")
-                if 'combined_text' not in df.columns:
-                    df['combined_text'] = df['nama_wisata'] + " " + df['kategori'] + " " + df['deskripsi']
-                texts = df['combined_text'].tolist()
-                metadatas = df.to_dict('records')
-                vector_db.add_texts(texts=texts, metadatas=metadatas)
-                logger.info("✅ Data Wisata Masuk!")
+        # Cek jumlah data saat ini
+        db_count = vector_db._collection.count()
+        db_is_empty = db_count == 0
 
-        # [B] Load Knowledge Base (INI YANG DULU HILANG!)
-        if os.path.exists(final_kb_path):
-            df_kb = pd.read_csv(final_kb_path).fillna("")
+        # [A] PROSES DATA WISATA (CSV)
+        if os.path.exists(final_csv_path):
+            logger.info(f"📊 Membaca Data Destinasi: {final_csv_path}")
+            df = pd.read_csv(final_csv_path).fillna("Tidak ada data")
+            if 'id' in df.columns: 
+                df['id'] = df['id'].astype(str)
             
+            # Simpan ke memori untuk kebutuhan list-wisata
+            data_wisata_csv = df.to_dict('records')
+
+            # HANYA INDEX ULANG JIKA DB KOSONG
+            # Pro-tip: Jika lo update CSV, hapus folder 'db_jembertrip_v2' dulu baru start server!
             if db_is_empty:
-                logger.info("📥 Mengisi Vector DB dengan KNOWLEDGE BASE...")
-                # Asumsi CSV Knowledge punya kolom: 'question', 'answer', 'topik'
-                # Kita gabung jadi satu teks biar bisa dicari
-                texts_kb = []
-                metas_kb = []
+                logger.info("📥 Mengisi Vector DB dengan Detail Wisata (CSV)...")
+                texts_tourism = []
+                metas_tourism = []
                 
-                for _, row in df_kb.iterrows():
-                    # Format Teks: "Topik: Bupati Jember. Tanya: Siapa bupati? Jawab: Hendy Siswanto"
-                    combined = f"Topik: {row.get('topik', 'Umum')} | Tanya: {row.get('question', '')} | Jawab: {row.get('answer', '')}"
-                    texts_kb.append(combined)
-                    # Metadata penting buat filtering 'knowledge_docs'
-                    metas_kb.append({"topik": row.get('topik', 'Umum'), "content": combined})
-                
-                vector_db.add_texts(texts=texts_kb, metadatas=metas_kb)
-                logger.info(f"✅ Knowledge Base ({len(texts_kb)} items) Masuk!")
-            else:
-                logger.info(f"ℹ️ Knowledge Base siap ({len(df_kb)} items di memori).")
+                for _, row in df.iterrows():
+                    # KUNCI UTAMA: Gabungkan semua info agar AI tahu "Dimana", "Apa", dan "Kategori"
+                    # Teks ini yang bakal dicari AI pas user nanya.
+                    content = (
+                        f"Nama Wisata: {row['nama_wisata']}. "
+                        f"Kategori: {row['kategori']}. "
+                        f"Alamat: {row['alamat']}. "
+                        f"Deskripsi: {row['deskripsi']}. "
+                        f"Harga Tiket: {row['harga_tiket']}."
+                    )
+                    texts_tourism.append(content)
+                    
+                    # Metadata lengkap buat kebutuhan Frontend Showcard
+                    meta = row.to_dict()
+                    meta['type'] = 'tourism' # Label agar tidak tertukar dengan PDF
+                    metas_tourism.append(meta)
+
+                vector_db.add_texts(texts=texts_tourism, metadatas=metas_tourism)
+                logger.info(f"✅ {len(texts_tourism)} destinasi dari CSV berhasil di-index.")
+
+        # [B] PROSES KNOWLEDGE BASE (CSV Tambahan jika ada)
+        if os.path.exists(final_kb_path) and db_is_empty:
+            logger.info("📥 Mengisi Vector DB dengan Knowledge Base (CSV)...")
+            df_kb = pd.read_csv(final_kb_path).fillna("")
+            texts_kb = []
+            metas_kb = []
+            
+            for _, row in df_kb.iterrows():
+                combined = f"Topik: {row.get('topik', 'Umum')} | Tanya: {row.get('question', '')} | Jawab: {row.get('answer', '')}"
+                texts_kb.append(combined)
+                metas_kb.append({"type": "knowledge", "topik": row.get('topik', 'Umum'), "content": combined})
+            
+            vector_db.add_texts(texts=texts_kb, metadatas=metas_kb)
+            logger.info(f"✅ {len(texts_kb)} item Knowledge Base berhasil di-index.")
+
+        if not db_is_empty:
+            logger.info(f"ℹ️ Vector DB sudah berisi {db_count} item. Menggunakan data yang ada.")
+
+        logger.info("✨ Hybrid Knowledge Engine siap tempur, Lur!")
 
     except Exception as e:
-        logger.error(f"Startup Error: {e}")
+        logger.error(f"❌ Startup Error: {e}")
 
 # ==========================================
 #           HELPER FUNCTIONS
@@ -410,79 +439,108 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         llm = get_groq_llm()
         session_id = req.session_id
         
-        # 1. Handle Session
+        # 1. Handle Session (Tetap)
         if not session_id:
             new_session = models.ChatSession(user_id=current_user.id, title=req.question[:30])
             db.add(new_session); db.commit(); db.refresh(new_session)
             session_id = new_session.id
 
-        # 2. Pandalungan Normalization (Fase 3)
+        # 2. Pandalungan Normalization
         normalized_query = pandalungan_normalizer(req.question)
         user_query_lower = normalized_query.lower()
 
-        # 3. Domain Boundary Guardrail (Satpam)
-        # Cek apakah query ada hubungannya sama Jember atau sekadar sapaan
-        jember_keywords = ["jember", "pandalungan", "papuma", "rembangan", "jfc", "tretan", "lur", "suwar-suwir"]
-        is_about_jember = any(k in user_query_lower for k in jember_keywords) or len(normalized_query.split()) < 3
+        # 3. Hybrid Search dengan Relevance Scores
+        # Kita ambil k=10 agar info dari CSV dan PDF bisa masuk semua ke otak AI
+        docs_with_scores = vector_db.similarity_search_with_relevance_scores(normalized_query, k=10)
         
-        # 4. History Injection
+        # 4. History Injection (Memori Chat Sebelumnya)
         recent_chats = db.query(models.ChatMessage).filter(models.ChatMessage.session_id == session_id).order_by(models.ChatMessage.timestamp.desc()).limit(6).all()
         history_text = "\n".join([f"{msg.sender.upper()}: {msg.content}" for msg in reversed(recent_chats)])
 
-        # 5. Intent Detection & Filtering
+        # 5. Intent Detection: Cek kondisi luar (Cuaca/Stres)
         is_complaining_weather = any(x in user_query_lower for x in ["hujan", "udan", "mendung", "badai"])
         is_stressed = any(x in user_query_lower for x in ["stres", "pusing", "healing", "capek"])
-        
-        # 6. Hybrid Search & Thresholding (Fase 3: Anti-Hallucination)
-        # Gunakan similarity_search_with_relevance_scores 
-        docs_with_scores = vector_db.similarity_search_with_relevance_scores(normalized_query, k=15)
-        
-        # Guardrail: Jika skor terlalu rendah dan tidak ada keyword Jember, tolak!
-        if not is_about_jember and (not docs_with_scores or docs_with_scores[0][1] < 0.35):
-            return {
-                "status": "success", "session_id": session_id,
-                "answer": "Waduh Tretan, sori banget. JemberTrip AI didesain khusus buat info wisata & budaya di Jember aja nih. Ada pertanyaan lain soal Jember?",
-                "recommendations": []
-            }
 
-        final_candidates = []
+        # 6. Membangun Konteks Pintar & List Rekomendasi
+        context_list = []
+        final_candidates = [] # Untuk Showcard di Frontend
         seen_ids = set()
-        for doc, score in docs_with_scores:
-            if 'id' in doc.metadata:
-                wid = str(doc.metadata['id'])
-                kat = doc.metadata.get('kategori', '')
-                # Filter cerdas: Kalau hujan jangan kasih pantai
-                if is_complaining_weather and kat in ["Pantai", "Alam"]: continue
-                # Kalau stres jangan kasih tempat yang 'berat' (misal makam/situs sejarah yang gersang)
-                if is_stressed and kat in ["Sejarah", "Makam"]: continue
-                
-                if wid not in seen_ids:
-                    final_candidates.append(doc.metadata)
-                    seen_ids.add(wid)
 
-        # 7. Prompt Engineering (Persona Cak Jember)
-        context_text = "\n".join([f"- {d.get('nama_wisata')}: {d.get('deskripsi')}" for d in final_candidates[:5]])
-        
+        for doc, score in docs_with_scores:
+            # Threshold Akurasi: Ambil data yang kemiripannya di atas 0.3
+            if score > 0.3:
+                # Masukkan SEMUA isi dokumen ke konteks agar AI bisa baca (PDF + CSV)
+                context_list.append(doc.page_content)
+                
+                # Jika dokumen bertipe 'tourism' (dari CSV), masukkan ke daftar Showcard
+                if doc.metadata.get('type') == 'tourism' or 'id' in doc.metadata:
+                    wid = str(doc.metadata.get('id'))
+                    kat = doc.metadata.get('kategori', '')
+
+                    # Filter cerdas berdasarkan kondisi
+                    if is_complaining_weather and kat in ["Pantai", "Alam"]: continue
+                    if is_stressed and kat in ["Sejarah", "Makam"]: continue
+
+                    if wid not in seen_ids:
+                        final_candidates.append(doc.metadata)
+                        seen_ids.add(wid)
+
+        context_text = "\n\n".join(context_list)
+
+        # 7. Domain Guardrail Otomatis (Tanpa Hardcoded Keywords)
+        # Jika skor pencarian sangat rendah (< 0.3), AI akan menolak halus
+        if not docs_with_scores or docs_with_scores[0][1] < 0.3:
+            # Kecuali sapaan singkat
+            if len(normalized_query.split()) >= 3:
+                return {
+                    "status": "success", "session_id": session_id,
+                    "answer": "Waduh Tretan, sori banget. Cak Jember belum nemu info spesifik soal itu di data JemberTrip. Ada pertanyaan lain soal wisata atau budaya Jember, Lur?",
+                    "recommendations": []
+                }
+
+        # 8. Prompt Engineering: Persona Cak Jember yang Detail
+        # Kita instruksikan AI untuk mencari "Alamat" dan "Detail" di context
         base_prompt = f"""
-        ROLE: Virtual Tour Guide Jember (Cak Jember).
-        RULES: Anti-halusinasi, gunakan context JemberTrip, dilarang bahas di luar Jember.
-        CONTEXT: {context_text}
-        HISTORY: {history_text}
-        GAYA BAHASA: Santai Gen Z, panggil 'Tretan' atau 'Lur'.
+        ROLE: Kamu adalah 'Cak Jember', asisten virtual pariwisata Jember yang paling mbois, ramah, dan tahu segalanya tentang Jember.
+        
+        INSTRUKSI UTAMA:
+        1. Gunakan KONTEKS di bawah untuk menjawab. Konteks ini berisi data lengkap dari CSV Wisata dan PDF Sejarah.
+        2. Jika user bertanya lokasi/dimana, JAWAB DENGAN ALAMAT LENGKAP yang ada di konteks.
+        3. Jika user bertanya detail/apa itu, JAWAB DENGAN DESKRIPSI yang ada di konteks.
+        4. Gunakan gaya bahasa santai Gen Z, panggil user dengan 'Tretan' atau 'Lur'.
+        5. Selalu jujur. Jika data tidak ada di konteks, jangan mengarang (anti-halusinasi).
+        6. jangan terlalu sering tiap kata memanggil lur atau tretan terus
+
+        KONTEKS DATA:
+        {context_text}
+
+        RIWAYAT CHAT:
+        {history_text}
         """
 
         prompt = ChatPromptTemplate.from_messages([("system", base_prompt), ("human", "{question}")])
         chain = prompt | llm
         response = chain.invoke({"question": req.question})
 
-        # Save to DB
+        # 9. Simpan Log Percakapan ke Database
         db.add(models.ChatMessage(session_id=session_id, sender="user", content=req.question))
-        db.add(models.ChatMessage(session_id=session_id, sender="ai", content=response.content, recommendations=final_candidates[:5]))
+        db.add(models.ChatMessage(
+            session_id=session_id, 
+            sender="ai", 
+            content=response.content, 
+            recommendations=final_candidates[:5] # Munculkan maksimal 5 kartu wisata
+        ))
         db.commit()
 
-        return {"status": "success", "session_id": session_id, "answer": response.content, "recommendations": final_candidates[:5]}
+        return {
+            "status": "success", 
+            "session_id": session_id, 
+            "answer": response.content, 
+            "recommendations": final_candidates[:5]
+        }
     except Exception as e:
-        logger.error(str(e)); raise HTTPException(500, str(e))
+        logger.error(str(e))
+        raise HTTPException(500, f"Error di Otak Cak Jember: {str(e)}")
 
 # ... (Sisa Endpoint Sama) ...
 # Di backend/main.py pada bagian rekomendasi
@@ -586,14 +644,9 @@ def delete_wisata_admin(id: str, admin_user: models.User = Depends(get_current_a
 # ==========================================
 @app.get("/api/cheat/jadi-admin/{username}")
 def force_user_to_admin(username: str, db: Session = Depends(get_db)):
-    # 1. Cari user berdasarkan username
     user = db.query(models.User).filter(models.User.username == username).first()
-    
-    # 2. Kalau user gak ketemu
     if not user:
         return {"status": "error", "message": f"Waduh, user '{username}' gak ditemukan bro!"}
-    
-    # 3. UBAH ROLE JADI ADMIN
     user.role = "admin"
     db.commit()
     
@@ -604,5 +657,3 @@ def force_user_to_admin(username: str, db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-
-    # Update cheat code admin v2
