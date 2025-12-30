@@ -449,8 +449,8 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         normalized_query = pandalungan_normalizer(req.question)
         user_query_lower = normalized_query.lower()
 
-        # 3. Hybrid Search dengan k=15 (Lebih luas biar AI punya banyak pilihan)
-        docs_with_scores = vector_db.similarity_search_with_relevance_scores(normalized_query, k=15)
+        # 3. Hybrid Search: k=20 agar semua tempat yang disebut user terambil datanya
+        docs_with_scores = vector_db.similarity_search_with_relevance_scores(normalized_query, k=20)
         
         # 4. History Injection
         recent_chats = db.query(models.ChatMessage).filter(models.ChatMessage.session_id == session_id).order_by(models.ChatMessage.timestamp.desc()).limit(6).all()
@@ -466,7 +466,8 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         seen_ids = set()
 
         for doc, score in docs_with_scores:
-            if score > 0.3:
+            # Threshold diturunkan sedikit (0.25) agar nama spesifik tidak terfilter
+            if score > 0.25:
                 context_list.append(doc.page_content)
                 
                 if doc.metadata.get('type') == 'tourism' or 'id' in doc.metadata:
@@ -482,24 +483,20 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 
         context_text = "\n\n".join(context_list)
 
-        # 7. PROMPT ENGINEERING (High Accuracy & Format Pro)
-        # Gue buat strukturnya mirip ChatGPT: Persona -> Context -> Constraint -> Formatting
+        # 7. PROMPT ENGINEERING (Itinerary & Professional Style)
         base_prompt = f"""
-        Identitas: Kamu adalah 'Cak Jember', pemandu wisata cerdas berbasis AI yang ahli dalam pariwisata Jember. 
+        Identitas: Kamu adalah 'Cak Jember', pemandu wisata cerdas berbasis AI yang ahli menyusun rute perjalanan (itinerary) di Jember. 
         Gaya bicara: Santai, cerdas, membantu, dan menggunakan dialek Pandalungan yang natural.
 
-        [INSTRUKSI UTAMA]
-        - Jawab pertanyaan menggunakan DATA KONTEKS di bawah. Jika informasi ada di konteks, sampaikan dengan detail.
-        - Gunakan Markdown (Bold, Bullet Points) untuk memperjelas jawaban agar enak dibaca seperti ChatGPT.
-        - Jika ditanya lokasi, sebutkan alamat lengkap dengan format tebal.
-        - Batasi penggunaan kata 'Lur' atau 'Tretan'. Gunakan hanya di pembuka atau penutup agar tidak mengganggu aliran kalimat.
-        - Jika jawaban TIDAK ADA dalam konteks, jangan berhalusinasi. Katakan dengan jujur tapi tawarkan bantuan lain soal Jember.
+        [INSTRUKSI KHUSUS ITINERARY]
+        - Jika pengguna menyebutkan beberapa tempat (misal: Papuma, Watu Ulo, dan Dira), JANGAN hanya memilih satu.
+        - Susunlah URUTAN KUNJUNGAN yang logis (Itinerary). Berikan alasan kenapa tempat A harus dikunjungi duluan (misal: karena searah atau mengejar waktu operasional).
+        - Gunakan format list (1, 2, 3) untuk menjelaskan rute tersebut.
 
-        [STRUKTUR JAWABAN]
-        1. Pembuka: Empati/salam singkat.
-        2. Inti Jawaban: Informasi utama yang dicari user.
-        3. Detail Tambahan: Jika ada (harga tiket/fasilitas).
-        4. Penutup: Kalimat ajakan atau saran tambahan.
+        [INSTRUKSI FORMATTING]
+        - Gunakan Markdown (Bold, Bullet Points). Sebutkan alamat lengkap dengan format **Tebal**.
+        - Batasi penggunaan kata 'Lur' atau 'Tretan'. Jangan di setiap kalimat.
+        - Jika informasi TIDAK ADA dalam konteks, katakan jujur dan jangan berhalusinasi.
 
         [KONTEKS DATA]
         {context_text}
@@ -513,22 +510,30 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         response = chain.invoke({"question": req.question})
         ai_answer = response.content
 
-        # 8. SMART SYNC LOGIC (Singkronisasi Kartu vs Teks)
-        # Kita filter kartu yang beneran disebut oleh AI saja
+        # 8. ADVANCED SMART SYNC (Sinkronisasi & Urutan Kartu)
         synced_recommendations = []
+        added_ids = set()
+
+        # Mencocokkan nama wisata yang ada di teks jawaban AI dengan metadata
         for cand in final_candidates:
             nama_wisata = cand.get('nama_wisata', '')
-            # Cek apakah nama wisata ada dalam teks jawaban AI
-            if nama_wisata.lower() in ai_answer.lower():
-                synced_recommendations.append(cand)
+            wid = str(cand.get('id', ''))
+            
+            # Fuzzy/Partial Match: Cek apakah nama wisata (atau bagian darinya) disebut AI
+            if (nama_wisata.lower() in ai_answer.lower() or 
+                any(word in ai_answer.lower() for word in nama_wisata.lower().split() if len(word) > 3)):
+                if wid not in added_ids:
+                    synced_recommendations.append(cand)
+                    added_ids.add(wid)
         
-        # Fallback: Jika AI memberikan saran umum tanpa menyebutkan nama spesifik dari kandidat,
-        # kita tampilkan 3 kandidat teratas dari hasil pencarian vektor.
+        # Urutkan kartu berdasarkan posisi penyebutan pertama kali di teks jawaban AI
+        synced_recommendations.sort(key=lambda x: ai_answer.lower().find(x.get('nama_wisata', '').lower()))
+
+        # Fallback: Jika tidak ada yang cocok, ambil 3 teratas dari hasil vektor
         if not synced_recommendations:
             synced_recommendations = final_candidates[:3]
         else:
-            # Batasi maksimal 5 agar UI tetap rapi
-            synced_recommendations = synced_recommendations[:5]
+            synced_recommendations = synced_recommendations[:6]
 
         # 9. Simpan ke Database
         db.add(models.ChatMessage(session_id=session_id, sender="user", content=req.question))
