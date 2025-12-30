@@ -439,7 +439,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         llm = get_groq_llm()
         session_id = req.session_id
         
-        # 1. Handle Session (Tetap)
+        # 1. Handle Session
         if not session_id:
             new_session = models.ChatSession(user_id=current_user.id, title=req.question[:30])
             db.add(new_session); db.commit(); db.refresh(new_session)
@@ -449,35 +449,30 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         normalized_query = pandalungan_normalizer(req.question)
         user_query_lower = normalized_query.lower()
 
-        # 3. Hybrid Search dengan Relevance Scores
-        # Kita ambil k=10 agar info dari CSV dan PDF bisa masuk semua ke otak AI
-        docs_with_scores = vector_db.similarity_search_with_relevance_scores(normalized_query, k=10)
+        # 3. Hybrid Search dengan k=15 (Lebih luas biar AI punya banyak pilihan)
+        docs_with_scores = vector_db.similarity_search_with_relevance_scores(normalized_query, k=15)
         
-        # 4. History Injection (Memori Chat Sebelumnya)
+        # 4. History Injection
         recent_chats = db.query(models.ChatMessage).filter(models.ChatMessage.session_id == session_id).order_by(models.ChatMessage.timestamp.desc()).limit(6).all()
         history_text = "\n".join([f"{msg.sender.upper()}: {msg.content}" for msg in reversed(recent_chats)])
 
-        # 5. Intent Detection: Cek kondisi luar (Cuaca/Stres)
+        # 5. Intent Detection (Weather & Stress)
         is_complaining_weather = any(x in user_query_lower for x in ["hujan", "udan", "mendung", "badai"])
         is_stressed = any(x in user_query_lower for x in ["stres", "pusing", "healing", "capek"])
 
-        # 6. Membangun Konteks Pintar & List Rekomendasi
+        # 6. Membangun Konteks & Kandidat Rekomendasi
         context_list = []
-        final_candidates = [] # Untuk Showcard di Frontend
+        final_candidates = [] 
         seen_ids = set()
 
         for doc, score in docs_with_scores:
-            # Threshold Akurasi: Ambil data yang kemiripannya di atas 0.3
             if score > 0.3:
-                # Masukkan SEMUA isi dokumen ke konteks agar AI bisa baca (PDF + CSV)
                 context_list.append(doc.page_content)
                 
-                # Jika dokumen bertipe 'tourism' (dari CSV), masukkan ke daftar Showcard
                 if doc.metadata.get('type') == 'tourism' or 'id' in doc.metadata:
                     wid = str(doc.metadata.get('id'))
                     kat = doc.metadata.get('kategori', '')
 
-                    # Filter cerdas berdasarkan kondisi
                     if is_complaining_weather and kat in ["Pantai", "Alam"]: continue
                     if is_stressed and kat in ["Sejarah", "Makam"]: continue
 
@@ -487,59 +482,72 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 
         context_text = "\n\n".join(context_list)
 
-        # 7. Domain Guardrail Otomatis (Tanpa Hardcoded Keywords)
-        # Jika skor pencarian sangat rendah (< 0.3), AI akan menolak halus
-        if not docs_with_scores or docs_with_scores[0][1] < 0.3:
-            # Kecuali sapaan singkat
-            if len(normalized_query.split()) >= 3:
-                return {
-                    "status": "success", "session_id": session_id,
-                    "answer": "Waduh Tretan, sori banget. Cak Jember belum nemu info spesifik soal itu di data JemberTrip. Ada pertanyaan lain soal wisata atau budaya Jember, Lur?",
-                    "recommendations": []
-                }
-
-        # 8. Prompt Engineering: Persona Cak Jember yang Detail
-        # Kita instruksikan AI untuk mencari "Alamat" dan "Detail" di context
+        # 7. PROMPT ENGINEERING (High Accuracy & Format Pro)
+        # Gue buat strukturnya mirip ChatGPT: Persona -> Context -> Constraint -> Formatting
         base_prompt = f"""
-        ROLE: Kamu adalah 'Cak Jember', asisten virtual pariwisata Jember yang paling mbois, ramah, dan tahu segalanya tentang Jember.
-        
-        INSTRUKSI UTAMA:
-        1. Gunakan KONTEKS di bawah untuk menjawab. Konteks ini berisi data lengkap dari CSV Wisata dan PDF Sejarah.
-        2. Jika user bertanya lokasi/dimana, JAWAB DENGAN ALAMAT LENGKAP yang ada di konteks.
-        3. Jika user bertanya detail/apa itu, JAWAB DENGAN DESKRIPSI yang ada di konteks.
-        4. Gunakan gaya bahasa santai Gen Z, panggil user dengan 'Tretan' atau 'Lur'.
-        5. Selalu jujur. Jika data tidak ada di konteks, jangan mengarang (anti-halusinasi).
-        6. jangan terlalu sering tiap kata memanggil lur atau tretan terus
+        Identitas: Kamu adalah 'Cak Jember', pemandu wisata cerdas berbasis AI yang ahli dalam pariwisata Jember. 
+        Gaya bicara: Santai, cerdas, membantu, dan menggunakan dialek Pandalungan yang natural.
 
-        KONTEKS DATA:
+        [INSTRUKSI UTAMA]
+        - Jawab pertanyaan menggunakan DATA KONTEKS di bawah. Jika informasi ada di konteks, sampaikan dengan detail.
+        - Gunakan Markdown (Bold, Bullet Points) untuk memperjelas jawaban agar enak dibaca seperti ChatGPT.
+        - Jika ditanya lokasi, sebutkan alamat lengkap dengan format tebal.
+        - Batasi penggunaan kata 'Lur' atau 'Tretan'. Gunakan hanya di pembuka atau penutup agar tidak mengganggu aliran kalimat.
+        - Jika jawaban TIDAK ADA dalam konteks, jangan berhalusinasi. Katakan dengan jujur tapi tawarkan bantuan lain soal Jember.
+
+        [STRUKTUR JAWABAN]
+        1. Pembuka: Empati/salam singkat.
+        2. Inti Jawaban: Informasi utama yang dicari user.
+        3. Detail Tambahan: Jika ada (harga tiket/fasilitas).
+        4. Penutup: Kalimat ajakan atau saran tambahan.
+
+        [KONTEKS DATA]
         {context_text}
 
-        RIWAYAT CHAT:
+        [RIWAYAT PERCAKAPAN]
         {history_text}
         """
 
         prompt = ChatPromptTemplate.from_messages([("system", base_prompt), ("human", "{question}")])
         chain = prompt | llm
         response = chain.invoke({"question": req.question})
+        ai_answer = response.content
 
-        # 9. Simpan Log Percakapan ke Database
+        # 8. SMART SYNC LOGIC (Singkronisasi Kartu vs Teks)
+        # Kita filter kartu yang beneran disebut oleh AI saja
+        synced_recommendations = []
+        for cand in final_candidates:
+            nama_wisata = cand.get('nama_wisata', '')
+            # Cek apakah nama wisata ada dalam teks jawaban AI
+            if nama_wisata.lower() in ai_answer.lower():
+                synced_recommendations.append(cand)
+        
+        # Fallback: Jika AI memberikan saran umum tanpa menyebutkan nama spesifik dari kandidat,
+        # kita tampilkan 3 kandidat teratas dari hasil pencarian vektor.
+        if not synced_recommendations:
+            synced_recommendations = final_candidates[:3]
+        else:
+            # Batasi maksimal 5 agar UI tetap rapi
+            synced_recommendations = synced_recommendations[:5]
+
+        # 9. Simpan ke Database
         db.add(models.ChatMessage(session_id=session_id, sender="user", content=req.question))
         db.add(models.ChatMessage(
             session_id=session_id, 
             sender="ai", 
-            content=response.content, 
-            recommendations=final_candidates[:5] # Munculkan maksimal 5 kartu wisata
+            content=ai_answer, 
+            recommendations=synced_recommendations
         ))
         db.commit()
 
         return {
             "status": "success", 
             "session_id": session_id, 
-            "answer": response.content, 
-            "recommendations": final_candidates[:5]
+            "answer": ai_answer, 
+            "recommendations": synced_recommendations
         }
     except Exception as e:
-        logger.error(str(e))
+        logger.error(f"Error Audit: {str(e)}")
         raise HTTPException(500, f"Error di Otak Cak Jember: {str(e)}")
 
 # ... (Sisa Endpoint Sama) ...
