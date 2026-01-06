@@ -23,11 +23,11 @@ def calculate_similarity(text1, text2):
 # --- LOAD DATA CHAT (SQL) ---
 def get_chat_history():
     conn = sqlite3.connect(DB_PATH)
-    # Sesuaikan nama tabel chat lo, misal 'messages' atau 'chat_history'
+   
     try:
         df = pd.read_sql_query("SELECT user_message, ai_response, context_used FROM chat_logs ORDER BY id DESC LIMIT 10", conn)
     except:
-        # Fallback kalau tabel belum ada/beda nama
+      
         df = pd.DataFrame(columns=['user_message', 'ai_response', 'context_used'])
     conn.close()
     return df
@@ -40,7 +40,7 @@ tab1, tab2 = st.tabs(["🎯 Rekomendasi Spesial", "💬 Chatbot RAG Evaluation"]
 
 with tab1:
     st.header("Sistem Rekomendasi (Precision@6)")
-    # (Gunakan logic script sebelumnya di sini...)
+    
     st.info("Menghitung akurasi berdasarkan kategori 'tourism' di Vector DB.")
 
 with tab2:
