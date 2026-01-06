@@ -7,7 +7,7 @@ import pandas as pd
 import random
 import re
 import string
-import difflib # Untuk Fuzzy Matching & Smart Token
+import difflib 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
@@ -51,7 +51,7 @@ app = FastAPI(
 def create_default_admin():
     db = SessionLocal()
     try:
-        # Cek apakah user 'admin' sudah ada
+        # Cek user 'admin' sudah ada or jot
         existing_admin = db.query(models.User).filter(models.User.username == "admin").first()
         
         if not existing_admin:
@@ -114,15 +114,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 # ==========================================
 #           STARTUP EVENT
 # ==========================================
-# ==========================================
-#          STARTUP EVENT (YANG SUDAH DIPERBAIKI)
-# ==========================================
+
 @app.on_event("startup")
 def startup_event():
     global vector_db, embedding_model, data_wisata_csv, GROQ_API_KEYS
     logger.info("--- 🚀 SERVER STARTUP: Hybrid Knowledge Engine v25.0 ---")
 
-    # 1. Load API Keys (Tetap menggunakan logic lo yang lama)
+    # 1. Load API Keys
     GROQ_API_KEYS = []
     count_keys = 0
     for i in range(1, 21):
@@ -143,10 +141,10 @@ def startup_event():
             model_kwargs={'device': 'cpu'}
         )
         
-        # Pancingan model (Warmup)
+        
         _ = embedding_model.embed_query("warmup jembertrip")
 
-        # Resolve Paths
+        
         final_csv_path = PATH_CSV_DATA if os.path.exists(PATH_CSV_DATA) else f"../{PATH_CSV_DATA}"
         final_kb_path = PATH_KNOWLEDGE_BASE if os.path.exists(PATH_KNOWLEDGE_BASE) else f"../{PATH_KNOWLEDGE_BASE}"
 
@@ -157,7 +155,7 @@ def startup_event():
         db_count = vector_db._collection.count()
         db_is_empty = db_count == 0
 
-        # [A] PROSES DATA WISATA (CSV)
+        # PROSES DATA WISATA (CSV)
         if os.path.exists(final_csv_path):
             logger.info(f"📊 Membaca Data Destinasi: {final_csv_path}")
             df = pd.read_csv(final_csv_path).fillna("Tidak ada data")
@@ -167,16 +165,15 @@ def startup_event():
             # Simpan ke memori untuk kebutuhan list-wisata
             data_wisata_csv = df.to_dict('records')
 
-            # HANYA INDEX ULANG JIKA DB KOSONG
-            # Pro-tip: Jika lo update CSV, hapus folder 'db_jembertrip_v2' dulu baru start server!
+            # db jembertrip 
+            
             if db_is_empty:
                 logger.info("📥 Mengisi Vector DB dengan Detail Wisata (CSV)...")
                 texts_tourism = []
                 metas_tourism = []
                 
                 for _, row in df.iterrows():
-                    # KUNCI UTAMA: Gabungkan semua info agar AI tahu "Dimana", "Apa", dan "Kategori"
-                    # Teks ini yang bakal dicari AI pas user nanya.
+                    
                     content = (
                         f"Nama Wisata: {row['nama_wisata']}. "
                         f"Kategori: {row['kategori']}. "
@@ -186,15 +183,15 @@ def startup_event():
                     )
                     texts_tourism.append(content)
                     
-                    # Metadata lengkap buat kebutuhan Frontend Showcard
+                    # showcard
                     meta = row.to_dict()
-                    meta['type'] = 'tourism' # Label agar tidak tertukar dengan PDF
+                    meta['type'] = 'tourism' 
                     metas_tourism.append(meta)
 
                 vector_db.add_texts(texts=texts_tourism, metadatas=metas_tourism)
                 logger.info(f"✅ {len(texts_tourism)} destinasi dari CSV berhasil di-index.")
 
-        # [B] PROSES KNOWLEDGE BASE (CSV Tambahan jika ada)
+        # PROSES KNOWLEDGE BASE
         if os.path.exists(final_kb_path) and db_is_empty:
             logger.info("📥 Mengisi Vector DB dengan Knowledge Base (CSV)...")
             df_kb = pd.read_csv(final_kb_path).fillna("")
@@ -225,7 +222,7 @@ def get_groq_llm():
     if not GROQ_API_KEYS: raise HTTPException(500, "No API Key")
     key = GROQ_API_KEYS[current_key_index]
     current_key_index = (current_key_index + 1) % len(GROQ_API_KEYS)
-    # Temperature 0.7 agar kreatif tapi penurut soal format
+    
     return ChatGroq(temperature=0.7, model_name="llama-3.3-70b-versatile", api_key=key) 
 
 def save_csv_changes():
@@ -357,7 +354,7 @@ def record_history(item: HistoryCreate, current_user: models.User = Depends(get_
     try:
         new_h = models.History(
             user_id=current_user.id, 
-            wisata_id=str(item.wisata_id), # Simpan sebagai string
+            wisata_id=str(item.wisata_id),
             wisata_name=item.wisata_name, 
             timestamp=datetime.utcnow()
         )
@@ -386,22 +383,22 @@ def get_personal_recommendations(current_user: models.User = Depends(get_current
         query_text = " ".join([h.wisata_name for h in history])
         
         # 3. Cari kemiripan di Vector DB dengan FILTER 'tourism'
-        # Kita ambil 'k' lebih banyak (misal 20) buat cadangan setelah difilter
+        
         docs = vector_db.similarity_search(
             query_text, 
             k=20, 
-            filter={"type": "tourism"} # <--- WAJIB: Biar gak ngambil data PDF
+            filter={"type": "tourism"}
         )
         
-        # 4. Filter agar tidak muncul wisata yang sedang/sudah dilihat (opsional)
+        # 4. Filter agar tidak muncul wisata yang sedang/sudah dilihat
         visited_ids = [str(h.wisata_id) for h in history]
         results = []
         for d in docs:
-            # Pastikan ID unik dan field metadata lengkap
+            
             if str(d.metadata.get('id')) not in visited_ids:
                 results.append(d.metadata)
                 
-        # 5. Kembalikan TEPAT 6 DATA sesuai permintaan lo
+        # 5. rekom spesial
         return {"status": "success", "data": results[:6]}
         
     except Exception as e:
@@ -409,10 +406,7 @@ def get_personal_recommendations(current_user: models.User = Depends(get_current
         return {"status": "success", "data": []}
     
 
-    # ==========================================
-#           KAMUS PANDALUNGAN (NEW FASE 3)
-# ==========================================
-# Ini buat normalisasi input sebelum masuk ke Vector Search
+    
 KAMUS_PANDALUNGAN = {
     "nandi": "dimana", "nang": "ke", "nggon": "tempat", "dolan": "wisata",
     "mangan": "kuliner", "mbadog": "makan", "mbois": "keren", "tretan": "saudara",
@@ -428,8 +422,7 @@ def pandalungan_normalizer(text: str) -> str:
     normalized = [KAMUS_PANDALUNGAN.get(w, w) for w in words]
     return " ".join(normalized)
 
-# =========================================================
-#      CHAT & REKOMENDASI (V24.0 - SMART LOGIC & GEN Z)
+# Chat dan rekom
 # =========================================================
 
 @app.post("/api/v1/chat")
@@ -466,7 +459,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         seen_ids = set()
 
         for doc, score in docs_with_scores:
-            # Threshold diturunkan sedikit (0.25) agar nama spesifik tidak terfilter
+            # Threshold
             if score > 0.25:
                 context_list.append(doc.page_content)
                 
@@ -483,7 +476,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 
         context_text = "\n\n".join(context_list)
 
-        # 7. PROMPT ENGINEERING (Itinerary & Professional Style)
+        # 7. PROMPT ENGINEERING 
         base_prompt = f"""
         Identitas: Kamu adalah 'Cak Jember', pemandu wisata cerdas berbasis AI yang ahli menyusun rute perjalanan (itinerary) di Jember. 
         Gaya bicara: Santai, cerdas, membantu, dan menggunakan dialek Pandalungan yang natural.
@@ -519,7 +512,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
             nama_wisata = cand.get('nama_wisata', '')
             wid = str(cand.get('id', ''))
             
-            # Fuzzy/Partial Match: Cek apakah nama wisata (atau bagian darinya) disebut AI
+            
             if (nama_wisata.lower() in ai_answer.lower() or 
                 any(word in ai_answer.lower() for word in nama_wisata.lower().split() if len(word) > 3)):
                 if wid not in added_ids:
@@ -555,18 +548,17 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         logger.error(f"Error Audit: {str(e)}")
         raise HTTPException(500, f"Error di Otak Cak Jember: {str(e)}")
 
-# ... (Sisa Endpoint Sama) ...
-# Di backend/main.py pada bagian rekomendasi
+
+# rekomendasi
 @app.post("/api/v1/rekomendasi")
 def get_similar_wisata(req: RecommendationRequest):
     global vector_db
     try:
-        # Tambahkan filter metadata 'type': 'tourism'
-        # Biar PDF gak ikutan muncul jadi kartu
+        
         docs = vector_db.similarity_search(
             req.query, 
             k=10, 
-            filter={"type": "tourism"} # <--- Kuncinya di sini!
+            filter={"type": "tourism"}
         )
         
         formatted_results = [{"metadata": d.metadata} for d in docs]
@@ -653,7 +645,7 @@ def delete_wisata_admin(id: str, admin_user: models.User = Depends(get_current_a
     return {"status": "success", "message": "Dihapus"}
 
 # ==========================================
-#      CHEAT CODE: FORCE ADMIN (DARURAT)
+#    FORCE ADMIN
 # ==========================================
 @app.get("/api/cheat/jadi-admin/{username}")
 def force_user_to_admin(username: str, db: Session = Depends(get_db)):
