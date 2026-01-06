@@ -3,11 +3,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Mengunci alamat folder agar tidak nyasar di Railway
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_DB_PATH = os.path.join(BASE_DIR, "jembertrip.db")
 
-# Jika di Railway ada DATABASE_URL (Postgres), pake itu. Kalau gak ada, pake SQLite
+
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
 
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
