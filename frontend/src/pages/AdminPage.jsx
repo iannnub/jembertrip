@@ -429,7 +429,14 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
                             {report.user_info.id}
                         </div>
                         <div>
-                            <h3 className="font-bold text-text-main">{report.user_info.full_name} (@{report.user_info.username})</h3>
+                            <h3 className="font-bold text-text-main flex items-center gap-2">
+                              {report.user_info.full_name} 
+                              {/* Ini tambahan ID-nya pake badge kecil biar estetik */}
+                              <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 font-mono">
+                                ID: {report.user_info.id}
+                              </span>
+                              <span className="text-primary-soft text-sm font-normal">(@{report.user_info.username})</span>
+                            </h3>
                             <p className="text-xs text-text-muted">{report.total_clicks} Wisata diklik</p>
                         </div>
                     </div>
