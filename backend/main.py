@@ -652,6 +652,59 @@ def delete_wisata_admin(id: str, admin_user: models.User = Depends(get_current_a
     save_csv_changes()
     return {"status": "success", "message": "Dihapus"}
 
+
+# --- ENDPOINT MONITORING UNTUK ADMIN ---
+
+# ==========================================
+#      NEW ADMIN MONITORING ENDPOINTS
+# ==========================================
+
+@app.get("/api/admin/users")
+def get_all_users(admin_user: models.User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    """Melihat daftar user lengkap dengan ID-nya"""
+    users = db.query(models.User).all()
+    # Kita mapping agar password tidak ikut terkirim (Security First!)
+    return {
+        "status": "success", 
+        "data": [
+            {
+                "id": u.id, 
+                "username": u.username, 
+                "full_name": u.full_name, 
+                "email": u.email, 
+                "role": u.role
+            } for u in users
+        ]
+    }
+
+@app.get("/api/admin/activities")
+def get_all_activities(admin_user: models.User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    """Melihat log siapa (ID) klik wisata apa (ID)"""
+    activities = db.query(
+        models.History.id,
+        models.History.user_id,
+        models.User.username,
+        models.History.wisata_id,
+        models.History.wisata_name,
+        models.History.timestamp
+    ).join(models.User, models.History.user_id == models.User.id)\
+     .order_by(models.History.timestamp.desc()).all()
+    
+    # Kita format sesuai request lu: Nama (ID)
+    result = [
+        {
+            "id": a.id, 
+            "user_display": f"{a.username} ({a.user_id})", 
+            "wisata_display": f"{a.wisata_name} ({a.wisata_id})", 
+            "waktu": a.timestamp
+        } for a in activities
+    ]
+    return {"status": "success", "data": result}
+
+
+
+
+
 # ==========================================
 #      CHEAT CODE: FORCE ADMIN (DARURAT)
 # ==========================================

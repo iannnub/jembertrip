@@ -19,6 +19,8 @@ function AdminPage() {
   const [wisataList, setWisataList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
   const [search, setSearch] = useState("");
+  const [userList, setUserList] = useState([]);
+  const [activityLog, setActivityLog] = useState([]);
   
   // State untuk Statistik
   const [stats, setStats] = useState({
@@ -48,7 +50,8 @@ function AdminPage() {
   // --- 1. LOAD DATA AWAL ---
   useEffect(() => {
     fetchData();
-    fetchStats(); 
+    fetchStats();
+    fetchAdminMonitoring(); // <--- Jangan lupa panggil ini
   }, []);
 
   useEffect(() => {
@@ -87,6 +90,21 @@ function AdminPage() {
         }
     } catch (err) {
         console.error("Gagal load stats:", err);
+    }
+  };
+
+  const fetchAdminMonitoring = async () => {
+    try {
+      const header = getAuthHeader();
+      const [resUsers, resLogs] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/admin/users`, header),
+        axios.get(`${API_BASE_URL}/api/admin/activities`, header)
+      ]);
+      
+      if (resUsers.data.status === 'success') setUserList(resUsers.data.data);
+      if (resLogs.data.status === 'success') setActivityLog(resLogs.data.data);
+    } catch (err) {
+      console.error("Gagal load monitoring data:", err);
     }
   };
 
@@ -395,6 +413,71 @@ function AdminPage() {
             </table>
             {filteredList.length === 0 && <p className="text-center text-text-muted py-8">Tidak ada data ditemukan.</p>}
           </div>
+        </div>
+
+{/* === SECTION 4: USER & ACTIVITY MONITORING (ID TRACKING) === */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            
+            {/* TABEL USER REGISTERED */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
+                    <Users size={20} className="text-primary" /> Daftar User (ID)
+                </h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-xs text-text-muted uppercase bg-gray-50">
+                            <tr>
+                                <th className="px-4 py-2 rounded-l-lg">ID</th>
+                                <th className="px-4 py-2">Username</th>
+                                <th className="px-4 py-2 rounded-r-lg">Role</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {userList.map((u) => (
+                                <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-4 py-3 font-bold text-primary">#{u.id}</td>
+                                    <td className="px-4 py-3 font-medium">{u.username}</td>
+                                    <td className="px-4 py-3">
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'admin' ? 'bg-accent/10 text-accent' : 'bg-blue-100 text-blue-600'}`}>
+                                            {u.role.toUpperCase()}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </motion.div>
+
+            {/* TABEL ACTIVITY LOG */}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
+                    <MessageCircle size={20} className="text-secondary" /> Log Aktivitas (Audit Trail)
+                </h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-xs text-text-muted uppercase bg-gray-50">
+                            <tr>
+                                <th className="px-4 py-2 rounded-l-lg">User (ID)</th>
+                                <th className="px-4 py-2">Wisata (ID)</th>
+                                <th className="px-4 py-2 text-right rounded-r-lg">Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {activityLog.map((log) => (
+                                <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-4 py-3 font-bold text-primary">{log.user_display}</td>
+                                    <td className="px-4 py-3 font-medium text-text-main">{log.wisata_display}</td>
+                                    <td className="px-4 py-3 text-right text-[10px] text-text-muted italic">
+                                        {new Date(log.waktu).toLocaleTimeString('id-ID')}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    {activityLog.length === 0 && <p className="text-center text-xs text-text-muted py-10">Belum ada jejak digital...</p>}
+                </div>
+            </motion.div>
         </div>
 
       </div>
