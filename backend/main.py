@@ -694,6 +694,34 @@ def get_all_activities(admin_user: models.User = Depends(get_current_admin), db:
     return {"status": "success", "data": result}
 
 
+@app.get("/api/admin/user-activity-report")
+def get_user_activity_report(admin_user: models.User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    """Mengambil semua user dan riwayat klik mereka secara terkelompok"""
+    users = db.query(models.User).all()
+    report = []
+
+    for u in users:
+        # Ambil history khusus untuk user ini
+        user_history = db.query(models.History).filter(models.History.user_id == u.id).order_by(models.History.timestamp.desc()).all()
+        
+        report.append({
+            "user_info": {
+                "id": u.id,
+                "username": u.username,
+                "full_name": u.full_name
+            },
+            "total_clicks": len(user_history),
+            "history": [
+                {
+                    "id": h.id,
+                    "wisata_id": h.wisata_id,
+                    "wisata_name": h.wisata_name,
+                    "timestamp": h.timestamp
+                } for h in user_history
+            ]
+        })
+    
+    return {"status": "success", "data": report}
 
 
 

@@ -5,7 +5,8 @@ import axios from 'axios';
 import { 
   Plus, Upload, CheckCircle, AlertCircle, 
   MapPin, Tag, DollarSign, FileText, Trash2, Edit2, X, Search,
-  Users, MessageCircle, Star, LayoutDashboard, Sparkles 
+  Users, MessageCircle, Star, LayoutDashboard, Sparkles,
+  ChevronRight
 } from 'lucide-react';
 // Framer Motion untuk animasi
 // eslint-disable-next-line no-unused-vars
@@ -14,13 +15,12 @@ import { toast } from 'react-hot-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
-function AdminPage() {
-  // --- STATE ---
-  const [wisataList, setWisataList] = useState([]);
-  const [filteredList, setFilteredList] = useState([]);
-  const [search, setSearch] = useState("");
-  const [userList, setUserList] = useState([]);
-  const [activityLog, setActivityLog] = useState([]);
+  function AdminPage() {
+    // --- STATE ---
+    const [wisataList, setWisataList] = useState([]);
+    const [filteredList, setFilteredList] = useState([]);
+    const [search, setSearch] = useState("");
+    const [userReport, setUserReport] = useState([]);
   
   // State untuk Statistik
   const [stats, setStats] = useState({
@@ -51,7 +51,7 @@ function AdminPage() {
   useEffect(() => {
     fetchData();
     fetchStats();
-    fetchAdminMonitoring(); // <--- Jangan lupa panggil ini
+    fetchUserReport();
   }, []);
 
   useEffect(() => {
@@ -93,20 +93,6 @@ function AdminPage() {
     }
   };
 
-  const fetchAdminMonitoring = async () => {
-    try {
-      const header = getAuthHeader();
-      const [resUsers, resLogs] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/admin/users`, header),
-        axios.get(`${API_BASE_URL}/api/admin/activities`, header)
-      ]);
-      
-      if (resUsers.data.status === 'success') setUserList(resUsers.data.data);
-      if (resLogs.data.status === 'success') setActivityLog(resLogs.data.data);
-    } catch (err) {
-      console.error("Gagal load monitoring data:", err);
-    }
-  };
 
   // --- 2. HANDLER INPUT ---
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -154,6 +140,15 @@ function AdminPage() {
         setAiLoading(false);
     }
   };
+
+  const fetchUserReport = async () => {
+    try {
+        const res = await axios.get(`${API_BASE_URL}/api/admin/user-activity-report`, getAuthHeader());
+        if (res.data.status === 'success') setUserReport(res.data.data);
+    } catch (err) {
+        console.error("Gagal load report:", err);
+    }
+};
 
   // --- 3. HANDLER EDIT & DELETE ---
   const handleEditClick = (item) => {
@@ -415,70 +410,69 @@ function AdminPage() {
           </div>
         </div>
 
-{/* === SECTION 4: USER & ACTIVITY MONITORING (ID TRACKING) === */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            
-            {/* TABEL USER REGISTERED */}
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
-                    <Users size={20} className="text-primary" /> Daftar User (ID)
-                </h2>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-text-muted uppercase bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-2 rounded-l-lg">ID</th>
-                                <th className="px-4 py-2">Username</th>
-                                <th className="px-4 py-2 rounded-r-lg">Role</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {userList.map((u) => (
-                                <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-4 py-3 font-bold text-primary">#{u.id}</td>
-                                    <td className="px-4 py-3 font-medium">{u.username}</td>
-                                    <td className="px-4 py-3">
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'admin' ? 'bg-accent/10 text-accent' : 'bg-blue-100 text-blue-600'}`}>
-                                            {u.role.toUpperCase()}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </motion.div>
-
-            {/* TABEL ACTIVITY LOG */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
-                    <MessageCircle size={20} className="text-secondary" /> Log Aktivitas (Audit Trail)
-                </h2>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-text-muted uppercase bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-2 rounded-l-lg">User (ID)</th>
-                                <th className="px-4 py-2">Wisata (ID)</th>
-                                <th className="px-4 py-2 text-right rounded-r-lg">Waktu</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {activityLog.map((log) => (
-                                <tr key={log.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-4 py-3 font-bold text-primary">{log.user_display}</td>
-                                    <td className="px-4 py-3 font-medium text-text-main">{log.wisata_display}</td>
-                                    <td className="px-4 py-3 text-right text-[10px] text-text-muted italic">
-                                        {new Date(log.waktu).toLocaleTimeString('id-ID')}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    {activityLog.length === 0 && <p className="text-center text-xs text-text-muted py-10">Belum ada jejak digital...</p>}
-                </div>
-            </motion.div>
+{/* === SECTION 4: USER ACTIVITY DOSSIER (TERKELOMPOK) === */}
+<div className="mt-12 space-y-6">
+    <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-primary rounded-lg text-white"><Users size={24} /></div>
+        <div>
+            <h2 className="text-2xl font-bold text-text-main">User Activity Dossier</h2>
+            <p className="text-sm text-text-muted">Monitoring perilaku user berdasarkan ID secara spesifik.</p>
         </div>
+    </div>
+
+    <div className="grid grid-cols-1 gap-4">
+        {userReport.map((report) => (
+            <details key={report.user_info.id} className="group bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all hover:border-primary/30">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center text-primary font-bold">
+                            {report.user_info.id}
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-text-main">{report.user_info.full_name} (@{report.user_info.username})</h3>
+                            <p className="text-xs text-text-muted">{report.total_clicks} Wisata diklik</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-3 py-1 rounded-full group-open:hidden">Lihat Detail</span>
+                        <ChevronRight size={20} className="text-gray-400 transition-transform group-open:rotate-90" />
+                    </div>
+                </summary>
+
+                <div className="px-5 pb-5 border-t border-gray-50">
+                    <div className="overflow-x-auto mt-4">
+                        <table className="w-full text-sm text-left">
+                            <thead className="text-[10px] uppercase text-text-muted bg-gray-50">
+                                <tr>
+                                    <th className="px-4 py-2">ID History</th>
+                                    <th className="px-4 py-2">Nama Wisata (ID Wisata)</th>
+                                    <th className="px-4 py-2 text-right">Waktu Akses</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {report.history.length > 0 ? report.history.map((h) => (
+                                    <tr key={h.id} className="hover:bg-primary/5 transition-colors">
+                                        <td className="px-4 py-3 text-text-muted">#REC-{h.id}</td>
+                                        <td className="px-4 py-3 font-bold text-text-main">
+                                            {h.wisata_name} <span className="text-primary">({h.wisata_id})</span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-xs text-text-muted">
+                                            {new Date(h.timestamp).toLocaleString('id-ID')}
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan="3" className="text-center py-6 text-text-muted italic text-xs">User ini belum pernah nge-klik wisata apapun, Lur.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </details>
+        ))}
+    </div>
+</div>
 
       </div>
       <style>{`
