@@ -507,26 +507,28 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         synced_recommendations = []
         added_ids = set()
 
+        user_q = req.question.lower()
+
         # Mencocokkan nama wisata yang ada di teks jawaban AI dengan metadata
         for cand in final_candidates:
-            nama_wisata = cand.get('nama_wisata', '')
+            nama_wisata = cand.get('nama_wisata', '').lower()
             wid = str(cand.get('id', ''))
+
+            nama_words = [w for w in nama_wisata.split() if len(w) > 3]
             
-            
-            if (nama_wisata.lower() in ai_answer.lower() or 
-                any(word in ai_answer.lower() for word in nama_wisata.lower().split() if len(word) > 3)):
+            if (nama_wisata in ai_answer.lower() or 
+                nama_wisata in user_q or
+                any(word in user_q for word in nama_words)):
+                
                 if wid not in added_ids:
                     synced_recommendations.append(cand)
                     added_ids.add(wid)
         
         # Urutkan kartu berdasarkan posisi penyebutan pertama kali di teks jawaban AI
-        synced_recommendations.sort(key=lambda x: ai_answer.lower().find(x.get('nama_wisata', '').lower()))
+        synced_recommendations.sort(key=lambda x: x.get('nama_wisata', '').lower() in user_q, reverse=True)
 
-        # Fallback: Jika tidak ada yang cocok, ambil 3 teratas dari hasil vektor
-        if not synced_recommendations:
-            synced_recommendations = final_candidates[:3]
-        else:
-            synced_recommendations = synced_recommendations[:6]
+        # Batasi maksimal 6 kartu
+        synced_recommendations = synced_recommendations[:6]
 
         # 9. Simpan ke Database
         db.add(models.ChatMessage(session_id=session_id, sender="user", content=req.question))
