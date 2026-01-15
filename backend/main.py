@@ -460,7 +460,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 
         for doc, score in docs_with_scores:
             # Threshold
-            if score > 0.25:
+            if score > 0.28:
                 context_list.append(doc.page_content)
                 
                 if doc.metadata.get('type') == 'tourism' or 'id' in doc.metadata:
@@ -474,12 +474,23 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
                         final_candidates.append(doc.metadata)
                         seen_ids.add(wid)
 
-        context_text = "\n\n".join(context_list)
+            # 2. LOGIKA GUARDRAIL:
+            # Jika context_list kosong, kita kasih "pesan rahasia" buat AI di prompt nanti.
+                if not context_list:
+                    context_text = "TIDAK ADA DATA TERKAIT PARIWISATA JEMBER DI DATABASE."
+                else:
+                    context_text = "\n\n".join(context_list)
 
         # 7. PROMPT ENGINEERING 
         base_prompt = f"""
         Identitas: Kamu adalah 'Cak Jember', pemandu wisata cerdas berbasis AI yang ahli menyusun rute perjalanan (itinerary) di Jember. 
         Gaya bicara: Santai, cerdas, membantu, dan menggunakan dialek Pandalungan yang natural.
+
+        [PERATURAN KERAS - SCOPE CONTROL]
+        1. Kamu HANYA boleh menjawab pertanyaan yang berkaitan dengan pariwisata, kuliner, budaya, dan informasi seputar Kabupaten JEMBER.
+        2. Jika pengguna bertanya tentang lokasi di luar Jember (seperti Lumajang, Bondowoso, Bali, dll) atau topik umum yang tidak ada hubungannya dengan wisata Jember (seperti novel, sains, politik), kamu WAJIB menolak dengan sopan.
+        3. Gunakan dialek Pandalungan saat menolak, contoh: "Sepurane Lur, isun cuma paham wisata nang Jember ae. Nek takon liyane iku, isun gak weruh."
+        4. JANGAN pernah menggunakan pengetahuan internal kamu untuk menjawab hal di luar Jember.
 
         [INSTRUKSI KHUSUS ITINERARY]
         - Jika pengguna menyebutkan beberapa tempat (misal: Papuma, Watu Ulo, dan Dira), JANGAN hanya memilih satu.
