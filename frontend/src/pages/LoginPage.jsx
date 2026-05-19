@@ -68,7 +68,7 @@ function LoginPage() {
 
   return (
     // Update Background: Gradient PageBG ke Pink Lembut
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-page-bg to-pink-100 px-4 py-12 relative overflow-hidden text-text-main">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-page-bg to-pink-100 px-4 relative overflow-x-hidden overflow-y-auto py-20 text-text-main">
       
       {/* Background Shape Hiasan (Updated Colors) */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
