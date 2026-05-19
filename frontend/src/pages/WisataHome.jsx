@@ -42,6 +42,8 @@ function WisataHome() {
       return `/${cleanPath}`; 
   };
 
+  document.title = "Beranda - JemberTrip";
+  
   // --- 1. FETCH DATA UTAMA ---
   useEffect(() => {
     const fetchData = async () => {
