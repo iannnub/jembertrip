@@ -47,6 +47,16 @@ function WisataDetail() {
     window.scrollTo(0, 0);
   }, [id]);
 
+  useEffect(() => {
+    if (wisata) {
+      // Jika data wisata sudah berhasil di-load, ubah tab jadi "Nama Wisata - JemberTrip"
+      document.title = `${wisata.nama_wisata} - JemberTrip`;
+    } else {
+      // Judul sementara saat data masih loading
+      document.title = "Memuat Wisata... - JemberTrip";
+    }
+  }, [wisata]);
+
   const fetchRekomendasiAI = async (queryText) => {
     setLoadingRek(true);
     try {
