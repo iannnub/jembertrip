@@ -601,6 +601,8 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         final_candidates = [] 
         seen_ids = set()
 
+        csv_lookup = {str(w["id"]): w for w in data_wisata_csv}
+
         for doc, score in docs_with_scores:
             # Threshold
             if score > 0.28:
@@ -614,20 +616,33 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
                     if is_stressed and kat in ["Sejarah", "Makam"]: continue
 
                     if wid not in seen_ids:
-                        final_candidates.append(doc.metadata)
+                        meta = dict(doc.metadata)
+                        # Sinkronisasi dengan CSV terbaru (menghindari stale URL)
+                        if wid in csv_lookup:
+                            meta['gambar'] = csv_lookup[wid].get('gambar', meta.get('gambar', ''))
+                            meta['nama_wisata'] = csv_lookup[wid].get('nama_wisata', meta.get('nama_wisata', ''))
+                            meta['kategori'] = csv_lookup[wid].get('kategori', meta.get('kategori', ''))
+                            meta['alamat'] = csv_lookup[wid].get('alamat', meta.get('alamat', ''))
+                        final_candidates.append(meta)
                         seen_ids.add(wid)
 
-            # 2. LOGIKA GUARDRAIL:
-            # Jika context_list kosong, kita kasih "pesan rahasia" buat AI di prompt nanti.
-                if not context_list:
-                    context_text = "TIDAK ADA DATA TERKAIT PARIWISATA JEMBER DI DATABASE."
-                else:
-                    context_text = "\n\n".join(context_list)
+        # 2. LOGIKA GUARDRAIL (Di luar loop agar tidak NameError)
+        if not context_list:
+            context_text = "TIDAK ADA DATA TERKAIT PARIWISATA JEMBER DI DATABASE."
+        else:
+            context_text = "\n\n".join(context_list)
+
+        # Setup Language
+        language_instruction = "Gaya bicara: Santai, cerdas, membantu, dan menggunakan dialek Pandalungan Jember yang natural."
+        if req.language == "jowo":
+            language_instruction = "Gaya bicara: Gunakan bahasa Jawa Timuran / Suroboyoan / Pandalungan yang medok dan santai."
+        elif req.language == "madura":
+            language_instruction = "Gaya bicara: Gunakan campuran bahasa Madura (Pandalungan Jember) yang santai."
 
         # 7. PROMPT ENGINEERING 
         base_prompt = f"""
         Identitas: Kamu adalah 'Cak Jember', pemandu wisata cerdas berbasis AI yang ahli menyusun rute perjalanan (itinerary) di Jember. 
-        Gaya bicara: Santai, cerdas, membantu, dan menggunakan dialek Pandalungan yang natural.
+        {language_instruction}
 
         [PERATURAN KERAS - SCOPE CONTROL]
         1. Kamu HANYA boleh menjawab pertanyaan yang berkaitan dengan pariwisata, kuliner, budaya, dan informasi seputar Kabupaten JEMBER.

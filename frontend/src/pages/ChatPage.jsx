@@ -70,10 +70,22 @@ function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const getImageUrl = (gambarPath) => {
+  const VERCEL_URL = "https://jembertrip.vercel.app";
+
+  const getImageUrl = (gambarPath, width = 400) => {
       if (!gambarPath) return "https://placehold.co/400x300?text=No+Image";
-      if (gambarPath.startsWith('http')) return gambarPath; 
-      return `/${gambarPath}`; 
+      
+      let fullUrl;
+      if (gambarPath.startsWith('http')) {
+          if (gambarPath.includes('ngrok') || gambarPath.includes('127.0.0.1') || gambarPath.includes('localhost')) {
+              return gambarPath;
+          }
+          fullUrl = gambarPath;
+      } else {
+          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
+          fullUrl = `${VERCEL_URL}${cleanPath}`;
+      }
+      return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=${width}&output=webp&q=80`;
   };
 
   useEffect(() => {
@@ -403,7 +415,7 @@ function ChatPage() {
                                               {msg.recommendations.map((rec, idx) => (
                                                   <div key={idx} onClick={() => window.location.href = `/wisata/${rec.id}`} className="snap-center flex-shrink-0 w-[240px] md:w-56 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group">
                                                       <div className="h-32 bg-gray-100 relative overflow-hidden">
-                                                           <img src={getImageUrl(rec.gambar)} alt={rec.nama_wisata} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"/>
+                                                           <img src={getImageUrl(rec.gambar)} alt={rec.nama_wisata} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onError={(e) => { e.target.onerror = null; e.target.src = `/assets/images/${rec.id}.png`; }}/>
                                                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg">{rec.kategori}</div>
                                                       </div>
                                                       <div className="p-3.5">
