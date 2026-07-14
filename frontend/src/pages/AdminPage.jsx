@@ -108,6 +108,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
   const getImageUrl = (path) => {
     if (!path) return "https://placehold.co/100x100?text=No+Img";
     if (path.startsWith('http')) {
+        if (path.includes('ngrok') || path.includes('127.0.0.1') || path.includes('localhost')) {
+            return path;
+        }
         return `https://wsrv.nl/?url=${encodeURIComponent(path)}&w=200&output=webp&q=80`;
     }
     return `/${path}`;

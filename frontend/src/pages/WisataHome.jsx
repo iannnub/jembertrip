@@ -37,7 +37,11 @@ function WisataHome() {
   const getImageUrl = (gambarPath) => {
       if (!gambarPath) return "https://placehold.co/600x400?text=No+Image";
       if (gambarPath.startsWith('http')) {
-          // Optimasi CDN WSRV: resize 600px, WebP, quality 80% (dari 5MB jadi 30KB)
+          // Gambar dari Ngrok/localhost: tampilkan langsung (wsrv.nl tidak bisa akses Ngrok)
+          if (gambarPath.includes('ngrok') || gambarPath.includes('127.0.0.1') || gambarPath.includes('localhost')) {
+              return gambarPath;
+          }
+          // Gambar eksternal (Google Drive, dll): optimasi via wsrv.nl CDN
           return `https://wsrv.nl/?url=${encodeURIComponent(gambarPath)}&w=600&output=webp&q=80`;
       }
       const cleanPath = gambarPath.startsWith('/') ? gambarPath.slice(1) : gambarPath;
