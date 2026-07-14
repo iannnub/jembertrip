@@ -704,7 +704,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
 
 @app.post("/api/v1/rekomendasi")
 def get_similar_wisata(req: RecommendationRequest):
-    global vector_db
+    global vector_db, data_wisata_csv
     try:
         docs = vector_db.similarity_search(
             req.query, 
@@ -712,9 +712,22 @@ def get_similar_wisata(req: RecommendationRequest):
             filter={"type": "tourism"}
         )
         
-        # Sesuai hasil evaluasi Top-6
-        formatted_results = [{"metadata": d.metadata} for d in docs]
-        return {"status": "success", "results": formatted_results[:6]}
+        # Buat lookup dict dari CSV terbaru (by id) untuk sinkronisasi gambar
+        csv_lookup = {str(w["id"]): w for w in data_wisata_csv}
+        
+        results = []
+        for d in docs:
+            meta = dict(d.metadata)
+            # Sinkronkan gambar dari CSV terbaru (ChromaDB bisa stale)
+            wisata_id = str(meta.get("id", ""))
+            if wisata_id in csv_lookup:
+                meta["gambar"] = csv_lookup[wisata_id].get("gambar", meta.get("gambar", ""))
+                meta["nama_wisata"] = csv_lookup[wisata_id].get("nama_wisata", meta.get("nama_wisata", ""))
+                meta["kategori"] = csv_lookup[wisata_id].get("kategori", meta.get("kategori", ""))
+                meta["alamat"] = csv_lookup[wisata_id].get("alamat", meta.get("alamat", ""))
+            results.append({"metadata": meta})
+        
+        return {"status": "success", "results": results[:6]}
     except Exception as e:
         return {"status": "success", "results": []}
 
