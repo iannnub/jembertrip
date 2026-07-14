@@ -751,7 +751,7 @@ def get_admin_stats(admin_user: models.User = Depends(get_current_admin), db: Se
     except Exception: return {"status": "error"}
 
 @app.post("/api/admin/add-wisata")
-def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
+def add_wisata_admin(request: Request, nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
     global data_wisata_csv
     try:
         filename = ""
@@ -759,7 +759,8 @@ def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), k
             clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
             path = f"uploads/{clean}"
             with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
-            filename = f"https://jembertrip-api.up.railway.app/images/{clean}"
+            base_url = str(request.base_url).rstrip("/")
+            filename = f"{base_url}/images/{clean}"
         new_entry = {"id": str(len(data_wisata_csv) + 1), "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": filename, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
         data_wisata_csv.append(new_entry)
         save_csv_changes()
@@ -768,17 +769,18 @@ def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), k
     except Exception as e: raise HTTPException(500, str(e))
 
 @app.put("/api/admin/wisata/{id}")
-def edit_wisata_admin(id: str, nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
+def edit_wisata_admin(request: Request, id: str, nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
     idx = next((i for i, d in enumerate(data_wisata_csv) if str(d["id"]) == id), None)
     if idx is None: raise HTTPException(404, "Not found")
     try:
         current = data_wisata_csv[idx]
         img = current.get("gambar", "")
-        if gambar:
+        if gambar and gambar.filename:
             clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
             path = f"uploads/{clean}"
             with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
-            img = f"https://jembertrip-api.up.railway.app/images/{clean}"
+            base_url = str(request.base_url).rstrip("/")
+            img = f"{base_url}/images/{clean}"
         updated = {**current, "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": img, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
         data_wisata_csv[idx] = updated
         save_csv_changes()
