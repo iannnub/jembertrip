@@ -319,6 +319,8 @@ function App() {
                 </ProtectedAdminRoute>
             } 
           />
+          {/* Fallback Route 404 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
