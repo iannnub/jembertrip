@@ -332,7 +332,10 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if not db_user or not security.verify_password(user.password, db_user.hashed_password):
         raise HTTPException(401, "Username atau Password salah")
-    token = security.create_access_token({"sub": db_user.username, "id": db_user.id, "role": db_user.role})
+    token = security.create_access_token(
+            {"sub": db_user.username, "id": db_user.id, "role": db_user.role},
+            expires_delta=timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
     return {
         "status": "success", "access_token": token, 
         "user": {

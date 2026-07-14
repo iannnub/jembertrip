@@ -85,6 +85,16 @@ function WisataHome() {
     if (token && userData) {
       try {
         setUser(JSON.parse(userData));
+
+        // Helper: handle 401 = token expired, bersihkan session
+        const handleAuthError = (err) => {
+          if (err.response?.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setUser(null);
+          }
+        };
+
         axios.get(`${API_BASE_URL}/api/v1/recommendations/personal`, {
           headers: { Authorization: `Bearer ${token}` }
         })
@@ -92,7 +102,7 @@ function WisataHome() {
           if (res.data.status === "success") setPersonalRek(res.data.data);
         })
         .catch((err) => {
-            console.log("Info Rekomendasi (CF):", err.message);
+            handleAuthError(err);
         });
 
         axios.get(`${API_BASE_URL}/api/v1/recommendations/hybrid`, {
@@ -102,13 +112,14 @@ function WisataHome() {
           if (res.data.status === "success") setHybridRek(res.data.data);
         })
         .catch((err) => {
-            console.log("Info Rekomendasi (Hybrid):", err.message);
+            handleAuthError(err);
         });
       } catch (e) {
           console.error("User data error", e);
       }
     }
   }, []);
+
 
   // --- 3. LOGIKA FILTERING (REAL-TIME) ---
   useEffect(() => {
