@@ -10,6 +10,8 @@ import string
 import difflib 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 # --- FASTAPI IMPORTS ---
 from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form
@@ -107,6 +109,8 @@ PATH_KNOWLEDGE_BASE = "data/knowledge_base.csv"
 vector_db = None
 embedding_model = None
 data_wisata_csv = [] 
+sbert_embeddings = None
+dest_ids = []
 GROQ_API_KEYS = []
 current_key_index = 0
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -118,6 +122,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 @app.on_event("startup")
 def startup_event():
     global vector_db, embedding_model, data_wisata_csv, GROQ_API_KEYS
+    global sbert_embeddings, dest_ids
     logger.info("--- 🚀 SERVER STARTUP: Hybrid Knowledge Engine v25.0 ---")
 
     # 1. Load API Keys
@@ -164,6 +169,14 @@ def startup_event():
             
             # Simpan ke memori untuk kebutuhan list-wisata
             data_wisata_csv = df.to_dict('records')
+            
+            # [BARU] Hitung SBERT Embeddings untuk CBF & Hybrid secara global
+            logger.info("🧠 Menghitung SBERT Embeddings untuk seluruh destinasi...")
+            global dest_ids, sbert_embeddings
+            df['clean_text'] = (df['nama_wisata'].fillna('') + " " + df['kategori'].fillna('') + " " + df['deskripsi'].fillna(''))
+            dest_ids = df['id'].astype(str).tolist()
+            sbert_embeddings = np.array(embedding_model.embed_documents(df['clean_text'].tolist()))
+            logger.info("✅ SBERT Embeddings berhasil dihitung.")
 
             # db jembertrip 
             
@@ -370,39 +383,132 @@ def get_my_history(current_user: models.User = Depends(get_current_user), db: Se
 
 @app.get("/api/v1/recommendations/personal")
 def get_personal_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """SINKRON DENGAN FRONTEND: Menampilkan 6 Rekomendasi Spesial"""
-    global vector_db
+    """SINKRON DENGAN FRONTEND: Menampilkan 6 Rekomendasi Spesial (Memory-Based CF)"""
+    global dest_ids, data_wisata_csv
     try:
-        # 1. Ambil history klik terakhir user
-        history = db.query(models.History).filter(models.History.user_id == current_user.id).order_by(models.History.timestamp.desc()).limit(5).all()
-        
-        if not history:
+        # 1. Ambil seluruh history user
+        all_hist = db.query(models.History).all()
+        if not all_hist:
             return {"status": "success", "data": []}
-        
-        # 2. Gabungkan nama wisata yang pernah diklik jadi query pencarian AI
-        query_text = " ".join([h.wisata_name for h in history])
-        
-        # 3. Cari kemiripan di Vector DB dengan FILTER 'tourism'
-        
-        docs = vector_db.similarity_search(
-            query_text, 
-            k=20, 
-            filter={"type": "tourism"}
-        )
-        
-        # 4. Filter agar tidak muncul wisata yang sedang/sudah dilihat
-        visited_ids = [str(h.wisata_id) for h in history]
-        results = []
-        for d in docs:
             
-            if str(d.metadata.get('id')) not in visited_ids:
-                results.append(d.metadata)
+        hist_df = pd.DataFrame([{
+            'user_id': h.user_id,
+            'wisata_id': str(h.wisata_id)
+        } for h in all_hist])
+        
+        # 2. Build User-Item Matrix
+        all_users = hist_df['user_id'].unique()
+        R_train = pd.DataFrame(0.0, index=all_users, columns=dest_ids)
+        for (u, i), count in hist_df.groupby(['user_id', 'wisata_id']).size().items():
+            if u in R_train.index and i in R_train.columns:
+                R_train.at[u, i] = float(count)
                 
-        # 5. rekom spesial
+        if current_user.id not in R_train.index:
+            return {"status": "success", "data": []} # User belum punya klik, CF murni butuh klik
+            
+        # 3. Hitung Kemiripan User
+        user_sim_df = pd.DataFrame(cosine_similarity(R_train), index=R_train.index, columns=R_train.index)
+        np.fill_diagonal(user_sim_df.values, 0.0)
+        
+        # 4. Ambil Top-30 K-Nearest Neighbors (Sesuai hasil Evaluasi)
+        k = 30
+        top_k_users = user_sim_df.loc[current_user.id].nlargest(k).index
+        top_k_sim = user_sim_df.loc[current_user.id, top_k_users]
+        if top_k_sim.max() == 0:
+            return {"status": "success", "data": []}
+            
+        # 5. Hitung Skor CF
+        item_scores = R_train.loc[top_k_users].mul(top_k_sim, axis=0).sum(axis=0)
+        
+        # 6. Filter tempat yang sudah dikunjungi
+        u_train_items = hist_df[hist_df['user_id'] == current_user.id]['wisata_id'].unique()
+        item_scores = item_scores.drop(index=u_train_items, errors='ignore')
+        
+        # 7. Ambil 6 Tertinggi
+        top_6_recs = item_scores.nlargest(6).index.tolist()
+        
+        # Format ke bentuk metadata list
+        results = [d for d in data_wisata_csv if str(d['id']) in top_6_recs]
+        # Urutkan sesuai urutan skor
+        results.sort(key=lambda x: top_6_recs.index(str(x['id'])) if str(x['id']) in top_6_recs else 999)
+        
         return {"status": "success", "data": results[:6]}
         
     except Exception as e:
-        print(f"Error Personal Rek: {e}")
+        print(f"Error Personal Rek (CF): {e}")
+        return {"status": "success", "data": []}
+
+@app.get("/api/v1/recommendations/hybrid")
+def get_hybrid_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Menampilkan 6 Rekomendasi Hybrid Filtering (Alpha = 0.7)"""
+    global dest_ids, data_wisata_csv, sbert_embeddings, embedding_model
+    try:
+        # 1. Ambil seluruh history user
+        all_hist = db.query(models.History).all()
+        user_hist = [h for h in all_hist if h.user_id == current_user.id]
+        
+        if not user_hist:
+            return {"status": "success", "data": []}
+            
+        hist_df = pd.DataFrame([{
+            'user_id': h.user_id,
+            'wisata_id': str(h.wisata_id),
+            'wisata_name': h.wisata_name
+        } for h in all_hist])
+        
+        # ==========================================
+        # FASE 1: MEMORY-BASED CF
+        # ==========================================
+        all_users = hist_df['user_id'].unique()
+        R_train = pd.DataFrame(0.0, index=all_users, columns=dest_ids)
+        for (u, i), count in hist_df.groupby(['user_id', 'wisata_id']).size().items():
+            if u in R_train.index and i in R_train.columns:
+                R_train.at[u, i] = float(count)
+                
+        cf_scores = pd.Series(0.0, index=dest_ids)
+        if current_user.id in R_train.index:
+            user_sim_df = pd.DataFrame(cosine_similarity(R_train), index=R_train.index, columns=R_train.index)
+            np.fill_diagonal(user_sim_df.values, 0.0)
+            
+            k = 30
+            top_k_users = user_sim_df.loc[current_user.id].nlargest(k).index
+            top_k_sim = user_sim_df.loc[current_user.id, top_k_users]
+            if top_k_sim.max() > 0:
+                cf_scores = R_train.loc[top_k_users].mul(top_k_sim, axis=0).sum(axis=0)
+
+        # ==========================================
+        # FASE 2: CONTENT-BASED FILTERING (SBERT)
+        # ==========================================
+        u_train = hist_df[hist_df['user_id'] == current_user.id]
+        query_text = " ".join(u_train['wisata_name'].tolist())
+        q_vec = embedding_model.embed_query(query_text)
+        cbf_scores = pd.Series(cosine_similarity([q_vec], sbert_embeddings).flatten(), index=dest_ids)
+        
+        # ==========================================
+        # FASE 3: HYBRID FILTERING
+        # ==========================================
+        cf_norm = (cf_scores - cf_scores.min()) / (cf_scores.max() - cf_scores.min()) if cf_scores.max() > cf_scores.min() else cf_scores * 0.0
+        cbf_norm = (cbf_scores - cbf_scores.min()) / (cbf_scores.max() - cbf_scores.min()) if cbf_scores.max() > cbf_scores.min() else cbf_scores * 0.0
+        
+        alpha = 0.7
+        hybrid_scores = (alpha * cf_norm) + ((1 - alpha) * cbf_norm)
+        
+        # Filter tempat yang sudah dikunjungi
+        u_train_items = u_train['wisata_id'].unique()
+        hybrid_scores = hybrid_scores.drop(index=u_train_items, errors='ignore')
+        
+        # Ambil 6 Tertinggi
+        top_6_recs = hybrid_scores.nlargest(6).index.tolist()
+        
+        # Format ke bentuk metadata list
+        results = [d for d in data_wisata_csv if str(d['id']) in top_6_recs]
+        # Urutkan sesuai urutan skor
+        results.sort(key=lambda x: top_6_recs.index(str(x['id'])) if str(x['id']) in top_6_recs else 999)
+        
+        return {"status": "success", "data": results[:6]}
+        
+    except Exception as e:
+        print(f"Error Hybrid Rek: {e}")
         return {"status": "success", "data": []}
     
 
@@ -562,20 +668,19 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         raise HTTPException(500, f"Error di Otak Cak Jember: {str(e)}")
 
 
-# rekomendasi
 @app.post("/api/v1/rekomendasi")
 def get_similar_wisata(req: RecommendationRequest):
     global vector_db
     try:
-        
         docs = vector_db.similarity_search(
             req.query, 
             k=10, 
             filter={"type": "tourism"}
         )
         
+        # Sesuai hasil evaluasi Top-6
         formatted_results = [{"metadata": d.metadata} for d in docs]
-        return {"status": "success", "results": formatted_results}
+        return {"status": "success", "results": formatted_results[:6]}
     except Exception as e:
         return {"status": "success", "results": []}
 

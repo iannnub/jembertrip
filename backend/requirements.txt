@@ -16,13 +16,6 @@ bcrypt
 passlib
 requests
 aiohttp
-uuid
-
-# --- DIET KETAT PYTORCH (CPU ONLY) ---
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
-torchvision
-torchaudio
-
-# Database (Gunakan ini jika di Railway pakai database Postgres)
 psycopg2-binary
+scikit-learn
+numpy
