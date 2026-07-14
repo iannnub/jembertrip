@@ -15,7 +15,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 # --- FASTAPI IMPORTS ---
-from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer 
 from fastapi.staticfiles import StaticFiles 
@@ -357,12 +357,16 @@ def update_profile(data: UserUpdate, current_user: models.User = Depends(get_cur
     return {"status": "success", "message": "Profil diperbarui", "user": {"username": current_user.username, "full_name": current_user.full_name, "email": current_user.email, "role": current_user.role, "avatar": current_user.avatar}}
 
 @app.post("/api/users/avatar")
-def upload_avatar(file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def upload_avatar(request: Request, file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         clean_name = f"avatar_{current_user.id}_{int(time.time())}.jpg" 
         file_location = f"uploads/{clean_name}"
         with open(file_location, "wb") as buffer: shutil.copyfileobj(file.file, buffer)
-        avatar_url = f"https://jembertrip-api.up.railway.app/images/{clean_name}"
+        
+        # Gunakan base URL dinamis (ngrok/localhost)
+        base_url = str(request.base_url).rstrip("/")
+        avatar_url = f"{base_url}/images/{clean_name}"
+        
         current_user.avatar = avatar_url
         db.commit()
         return {"status": "success", "avatar_url": avatar_url}

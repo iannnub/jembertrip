@@ -107,7 +107,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
 
   const getImageUrl = (path) => {
     if (!path) return "https://placehold.co/100x100?text=No+Img";
-    return path.startsWith('http') ? path : `/${path}`;
+    if (path.startsWith('http')) {
+        return `https://wsrv.nl/?url=${encodeURIComponent(path)}&w=200&output=webp&q=80`;
+    }
+    return `/${path}`;
   };
 
   // --- FITUR MAGIC AI WRITER ---

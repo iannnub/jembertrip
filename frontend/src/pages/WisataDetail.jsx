@@ -102,7 +102,7 @@ function WisataDetail() {
   const getImageUrl = (gambarPath) => {
       if (!gambarPath) return "https://placehold.co/800x600?text=No+Image";
       if (gambarPath.startsWith('http')) {
-          return gambarPath; 
+          return `https://wsrv.nl/?url=${encodeURIComponent(gambarPath)}&w=800&output=webp&q=80`;
       }
       return `/${gambarPath}`; 
   };

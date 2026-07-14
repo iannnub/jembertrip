@@ -37,7 +37,8 @@ function WisataHome() {
   const getImageUrl = (gambarPath) => {
       if (!gambarPath) return "https://placehold.co/600x400?text=No+Image";
       if (gambarPath.startsWith('http')) {
-          return gambarPath; 
+          // Optimasi CDN WSRV: resize 600px, WebP, quality 80% (dari 5MB jadi 30KB)
+          return `https://wsrv.nl/?url=${encodeURIComponent(gambarPath)}&w=600&output=webp&q=80`;
       }
       const cleanPath = gambarPath.startsWith('/') ? gambarPath.slice(1) : gambarPath;
       return `/${cleanPath}`; 
