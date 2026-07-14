@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
+import axios from 'axios';
+
+// Bypass Ngrok Browser Warning
+axios.defaults.headers.common['ngrok-skip-browser-warning'] = '69420';
 
 // [BARU] Import Font Poppins
 import '@fontsource/poppins/300.css';
