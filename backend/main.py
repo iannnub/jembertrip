@@ -113,6 +113,14 @@ embedding_model = None
 data_wisata_csv = [] 
 sbert_embeddings = None
 dest_ids = []
+
+# ==========================================
+#   HELPER: URL PUBLIK UNTUK GAMBAR
+# ==========================================
+def get_public_url() -> str:
+    """Ambil URL publik dari env. Fallback ke ngrok domain default."""
+    url = os.getenv("PUBLIC_URL", "https://numbness-afterglow-parade.ngrok-free.dev")
+    return url.rstrip("/")
 GROQ_API_KEYS = []
 current_key_index = 0
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -357,16 +365,12 @@ def update_profile(data: UserUpdate, current_user: models.User = Depends(get_cur
     return {"status": "success", "message": "Profil diperbarui", "user": {"username": current_user.username, "full_name": current_user.full_name, "email": current_user.email, "role": current_user.role, "avatar": current_user.avatar}}
 
 @app.post("/api/users/avatar")
-def upload_avatar(request: Request, file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def upload_avatar(file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         clean_name = f"avatar_{current_user.id}_{int(time.time())}.jpg" 
         file_location = f"uploads/{clean_name}"
         with open(file_location, "wb") as buffer: shutil.copyfileobj(file.file, buffer)
-        
-        # Gunakan base URL dinamis (ngrok/localhost)
-        base_url = str(request.base_url).rstrip("/")
-        avatar_url = f"{base_url}/images/{clean_name}"
-        
+        avatar_url = f"{get_public_url()}/images/{clean_name}"
         current_user.avatar = avatar_url
         db.commit()
         return {"status": "success", "avatar_url": avatar_url}
@@ -751,16 +755,15 @@ def get_admin_stats(admin_user: models.User = Depends(get_current_admin), db: Se
     except Exception: return {"status": "error"}
 
 @app.post("/api/admin/add-wisata")
-def add_wisata_admin(request: Request, nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
+def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
     global data_wisata_csv
     try:
         filename = ""
-        if gambar:
+        if gambar and gambar.filename:
             clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
             path = f"uploads/{clean}"
             with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
-            base_url = str(request.base_url).rstrip("/")
-            filename = f"{base_url}/images/{clean}"
+            filename = f"{get_public_url()}/images/{clean}"
         new_entry = {"id": str(len(data_wisata_csv) + 1), "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": filename, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
         data_wisata_csv.append(new_entry)
         save_csv_changes()
@@ -769,7 +772,7 @@ def add_wisata_admin(request: Request, nama_wisata: str = Form(...), deskripsi: 
     except Exception as e: raise HTTPException(500, str(e))
 
 @app.put("/api/admin/wisata/{id}")
-def edit_wisata_admin(request: Request, id: str, nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
+def edit_wisata_admin(id: str, nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
     idx = next((i for i, d in enumerate(data_wisata_csv) if str(d["id"]) == id), None)
     if idx is None: raise HTTPException(404, "Not found")
     try:
@@ -779,8 +782,7 @@ def edit_wisata_admin(request: Request, id: str, nama_wisata: str = Form(...), d
             clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
             path = f"uploads/{clean}"
             with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
-            base_url = str(request.base_url).rstrip("/")
-            img = f"{base_url}/images/{clean}"
+            img = f"{get_public_url()}/images/{clean}"
         updated = {**current, "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": img, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
         data_wisata_csv[idx] = updated
         save_csv_changes()
