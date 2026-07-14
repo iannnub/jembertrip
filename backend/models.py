@@ -14,6 +14,8 @@ class User(Base):
     hashed_password = Column(String)
     role = Column(String, default="user") 
     avatar = Column(String, nullable=True)
+    has_onboarded = Column(Integer, default=0) # 0 = false, 1 = true
+    preferences = Column(String, nullable=True)
 
     history_items = relationship("History", back_populates="owner")
     chat_sessions = relationship("ChatSession", back_populates="user")

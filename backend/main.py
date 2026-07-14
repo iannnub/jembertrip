@@ -1,4 +1,5 @@
 import os
+import json
 import shutil 
 import time
 import uvicorn
@@ -254,6 +255,8 @@ class UserLogin(BaseModel):
     username: str; password: str
 class UserUpdate(BaseModel):
     full_name: str; email: str
+class UserOnboard(BaseModel):
+    categories: List[str]
 class PasswordChange(BaseModel):
     old_password: str; new_password: str
 class GenerateDescRequest(BaseModel):
@@ -325,13 +328,23 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         "status": "success", "access_token": token, 
         "user": {
             "username": db_user.username, "full_name": db_user.full_name,
-            "email": db_user.email, "role": db_user.role, "avatar": db_user.avatar
+            "email": db_user.email, "role": db_user.role, "avatar": db_user.avatar,
+            "has_onboarded": bool(db_user.has_onboarded), "preferences": db_user.preferences
         }
     }
 
 # ==========================================
 #       USER PROFILE & HISTORY
 # ==========================================
+@app.post("/api/v1/user/onboard")
+def onboard_user(data: UserOnboard, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.has_onboarded:
+        return {"status": "success", "message": "Already onboarded"}
+    current_user.preferences = json.dumps(data.categories)
+    current_user.has_onboarded = 1
+    db.commit()
+    return {"status": "success", "message": "Preferences saved"}
+
 @app.put("/api/users/me")
 def update_profile(data: UserUpdate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if data.email != current_user.email:
@@ -448,6 +461,18 @@ def get_hybrid_recommendations(current_user: models.User = Depends(get_current_u
         user_hist = [h for h in all_hist if h.user_id == current_user.id]
         
         if not user_hist:
+            if current_user.has_onboarded and current_user.preferences:
+                try:
+                    prefs = json.loads(current_user.preferences)
+                    query_text = " ".join(prefs)
+                    q_vec = embedding_model.embed_query(query_text)
+                    cbf_scores = pd.Series(cosine_similarity([q_vec], sbert_embeddings).flatten(), index=dest_ids)
+                    top_6_recs = cbf_scores.nlargest(6).index.tolist()
+                    results = [d for d in data_wisata_csv if str(d['id']) in top_6_recs]
+                    results.sort(key=lambda x: top_6_recs.index(str(x['id'])) if str(x['id']) in top_6_recs else 999)
+                    return {"status": "success", "data": results[:6]}
+                except Exception as e:
+                    print(f"Cold Start Error: {e}")
             return {"status": "success", "data": []}
             
         hist_df = pd.DataFrame([{

@@ -48,14 +48,16 @@ function LoginPage() {
         // 2. Tampilkan notifikasi
         toast.success(`Selamat datang, ${user.full_name}!`);
         
-        // 3. LOGIKA REDIRECT CERDAS (Traffic Light) 🚦
+        // 3. LOGIKA REDIRECT CERDAS
         setTimeout(() => {
             if (user.role === 'admin') {
                 navigate('/admin'); 
+            } else if (!user.has_onboarded) {
+                navigate('/onboard');
             } else {
                 navigate('/'); 
             }
-        }, 1000);
+        }, 1500);
       }
     } catch (err) {
       const pesanError = err.response?.data?.detail || "Username atau password salah.";

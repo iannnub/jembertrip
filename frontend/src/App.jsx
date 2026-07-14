@@ -16,6 +16,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage'; 
+import OnboardingPage from './pages/OnboardingPage';
 
 // --- KOMPONEN PROTEKSI RUTE ADMIN ---
 const ProtectedAdminRoute = ({ children }) => {
@@ -42,7 +43,7 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const noFooterPaths = ['/rekomendasi', '/login', '/register'];
+  const noFooterPaths = ['/rekomendasi', '/login', '/register', '/onboard'];
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
 
   // 1. Cek Login
@@ -53,7 +54,15 @@ function App() {
 
       if (token && userData) {
         try {
-          setUser(JSON.parse(userData));
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+          
+          // Proteksi Onboarding (Mencegah user skip)
+          if (!parsedUser.has_onboarded && location.pathname !== '/onboard' && location.pathname !== '/login' && location.pathname !== '/register') {
+            navigate('/onboard');
+          } else if (parsedUser.has_onboarded && location.pathname === '/onboard') {
+            navigate('/');
+          }
         } catch (e) {
           console.error("Data user korup", e);
           localStorage.clear();
@@ -63,7 +72,7 @@ function App() {
       }
     };
     cekUserLogin();
-  }, [location]); 
+  }, [location, navigate]); 
 
   // 2. Cegah scroll saat menu mobile terbuka
   useEffect(() => {
@@ -298,6 +307,7 @@ function App() {
           <Route path="/wisata/:id" element={<WisataDetail />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/onboard" element={<OnboardingPage />} />
           <Route path="/rekomendasi" element={<ChatPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           

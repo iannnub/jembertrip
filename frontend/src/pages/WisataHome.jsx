@@ -24,6 +24,7 @@ function WisataHome() {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   
   const [personalRek, setPersonalRek] = useState([]);
+  const [hybridRek, setHybridRek] = useState([]);
   const [user, setUser] = useState(null);
 
   // Ref untuk target scroll
@@ -78,7 +79,17 @@ function WisataHome() {
           if (res.data.status === "success") setPersonalRek(res.data.data);
         })
         .catch((err) => {
-            console.log("Info Rekomendasi:", err.message);
+            console.log("Info Rekomendasi (CF):", err.message);
+        });
+
+        axios.get(`${API_BASE_URL}/api/v1/recommendations/hybrid`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => {
+          if (res.data.status === "success") setHybridRek(res.data.data);
+        })
+        .catch((err) => {
+            console.log("Info Rekomendasi (Hybrid):", err.message);
         });
       } catch (e) {
           console.error("User data error", e);
@@ -272,15 +283,14 @@ function WisataHome() {
                 <Sparkles size={20} />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-text-main">Rekomendasi Spesial</h3>
-                <p className="text-sm text-text-muted">Dipilihkan AI khusus untuk {user.full_name.split(' ')[0]}</p>
+                <h3 className="text-2xl font-bold text-text-main">Rekomendasi Personalize</h3>
+                <p className="text-sm text-text-muted">Rekomendasi kolaboratif (CF) khusus untuk {user.full_name.split(' ')[0]}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {personalRek.map((wisata, index) => (
-                <Link to={`/wisata/${wisata.id}`} key={`rek-${index}`} className="group block h-full">
-                  {/* Card AI: Hapus Indigo, ganti jadi Page BG / Pink Soft */}
+                <Link to={`/wisata/${wisata.id}`} key={`cf-${index}`} className="group block h-full">
                   <div className="bg-gradient-to-br from-white to-page-bg rounded-2xl p-4 border border-primary/10 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/10 h-full flex items-start gap-4">
                     <img 
                       src={getImageUrl(wisata.gambar)} 
@@ -291,7 +301,47 @@ function WisataHome() {
                       <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-primary transition-colors">{wisata.nama_wisata}</h4>
                       <p className="text-xs text-text-muted line-clamp-2 mb-3">{wisata.alamat}</p>
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-gradient-to-r from-primary to-accent px-2 py-1 rounded-md shadow-sm">
-                        <Star size={10} fill="currentColor" /> mungkin yang anda suka
+                        <Star size={10} fill="currentColor" /> Memory-Based CF
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* 1.B. PERSONALISASI (HYBRID) */}
+        {hybridRek.length > 0 && user && (
+          <motion.section 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center gap-3 mb-8">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white shadow-lg shadow-pink-500/30">
+                <Compass size={20} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-text-main">Mungkin Yang Anda Sukai</h3>
+                <p className="text-sm text-text-muted">Hasil racikan cerdas Hybrid (CF + CBF) untuk {user.full_name.split(' ')[0]}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {hybridRek.map((wisata, index) => (
+                <Link to={`/wisata/${wisata.id}`} key={`hf-${index}`} className="group block h-full">
+                  <div className="bg-gradient-to-br from-white to-pink-50 rounded-2xl p-4 border border-pink-200 hover:border-pink-400 transition-all hover:shadow-xl hover:shadow-pink-200 h-full flex items-start gap-4">
+                    <img 
+                      src={getImageUrl(wisata.gambar)} 
+                      alt={wisata.nama_wisata}
+                      className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div>
+                      <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-pink-600 transition-colors">{wisata.nama_wisata}</h4>
+                      <p className="text-xs text-text-muted line-clamp-2 mb-3">{wisata.alamat}</p>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-gradient-to-r from-accent to-pink-500 px-2 py-1 rounded-md shadow-sm">
+                        <Star size={10} fill="currentColor" /> Hybrid Filtering
                       </span>
                     </div>
                   </div>
