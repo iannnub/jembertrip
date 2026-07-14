@@ -105,15 +105,22 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
     }
   };
 
-  const getImageUrl = (path) => {
+  const VERCEL_URL = "https://jembertrip.vercel.app";
+
+  const getImageUrl = (path, width = 200) => {
     if (!path) return "https://placehold.co/100x100?text=No+Img";
+    
+    let fullUrl;
     if (path.startsWith('http')) {
         if (path.includes('ngrok') || path.includes('127.0.0.1') || path.includes('localhost')) {
             return path;
         }
-        return `https://wsrv.nl/?url=${encodeURIComponent(path)}&w=200&output=webp&q=80`;
+        fullUrl = path;
+    } else {
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        fullUrl = `${VERCEL_URL}${cleanPath}`;
     }
-    return path.startsWith('/') ? path : `/${path}`;
+    return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=${width}&output=webp&q=80`;
   };
 
   // --- FITUR MAGIC AI WRITER ---

@@ -99,16 +99,22 @@ function WisataDetail() {
       }
   };
 
-  const getImageUrl = (gambarPath) => {
+  const VERCEL_URL = "https://jembertrip.vercel.app";
+
+  const getImageUrl = (gambarPath, width = 800) => {
       if (!gambarPath) return "https://placehold.co/800x600?text=No+Image";
+      
+      let fullUrl;
       if (gambarPath.startsWith('http')) {
           if (gambarPath.includes('ngrok') || gambarPath.includes('127.0.0.1') || gambarPath.includes('localhost')) {
               return gambarPath;
           }
-          return `https://wsrv.nl/?url=${encodeURIComponent(gambarPath)}&w=800&output=webp&q=80`;
+          fullUrl = gambarPath;
+      } else {
+          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
+          fullUrl = `${VERCEL_URL}${cleanPath}`;
       }
-      // Pastikan tidak ada double slash (/assets... -> /assets..., assets... -> /assets...)
-      return gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
+      return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=${width}&output=webp&q=80`;
   };
 
   const getMapsUrl = (nama, alamat) => {

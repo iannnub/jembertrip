@@ -34,19 +34,27 @@ function WisataHome() {
   const categories = ["Semua", "Pantai", "Rekreasi", "Agrowisata", "Edukasi", "Religi", "Rural Tourism", "Air Terjun", "Situs", "Panorama"];
 
   // --- HELPER GAMBAR SAKTI (Hybrid Logic) ---
-  const getImageUrl = (gambarPath) => {
+  const VERCEL_URL = "https://jembertrip.vercel.app";
+
+  const getImageUrl = (gambarPath, width = 600) => {
       if (!gambarPath) return "https://placehold.co/600x400?text=No+Image";
+      
+      let fullUrl;
       if (gambarPath.startsWith('http')) {
-          // Gambar dari Ngrok/localhost: tampilkan langsung (wsrv.nl tidak bisa akses Ngrok)
+          // Gambar Ngrok/localhost: tampilkan langsung (wsrv.nl tidak bisa akses)
           if (gambarPath.includes('ngrok') || gambarPath.includes('127.0.0.1') || gambarPath.includes('localhost')) {
               return gambarPath;
           }
-          // Gambar eksternal (Google Drive, dll): optimasi via wsrv.nl CDN
-          return `https://wsrv.nl/?url=${encodeURIComponent(gambarPath)}&w=600&output=webp&q=80`;
+          fullUrl = gambarPath;
+      } else {
+          // Gambar lokal: bangun full URL Vercel untuk diproses wsrv.nl
+          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
+          fullUrl = `${VERCEL_URL}${cleanPath}`;
       }
-      const cleanPath = gambarPath.startsWith('/') ? gambarPath.slice(1) : gambarPath;
-      return `/${cleanPath}`; 
+      // Optimalkan via wsrv.nl: resize + WebP + quality 80
+      return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=${width}&output=webp&q=80`;
   };
+
 
   document.title = "Beranda - JemberTrip";
   
