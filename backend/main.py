@@ -440,7 +440,7 @@ def get_personal_recommendations(current_user: models.User = Depends(get_current
 
 @app.get("/api/v1/recommendations/hybrid")
 def get_hybrid_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Menampilkan 6 Rekomendasi Hybrid Filtering (Alpha = 0.7)"""
+    """Menampilkan 6 Rekomendasi Hybrid Filtering (Alpha = 0.6)"""
     global dest_ids, data_wisata_csv, sbert_embeddings, embedding_model
     try:
         # 1. Ambil seluruh history user
@@ -490,7 +490,7 @@ def get_hybrid_recommendations(current_user: models.User = Depends(get_current_u
         cf_norm = (cf_scores - cf_scores.min()) / (cf_scores.max() - cf_scores.min()) if cf_scores.max() > cf_scores.min() else cf_scores * 0.0
         cbf_norm = (cbf_scores - cbf_scores.min()) / (cbf_scores.max() - cbf_scores.min()) if cbf_scores.max() > cbf_scores.min() else cbf_scores * 0.0
         
-        alpha = 0.7
+        alpha = 0.6
         hybrid_scores = (alpha * cf_norm) + ((1 - alpha) * cbf_norm)
         
         # Filter tempat yang sudah dikunjungi
