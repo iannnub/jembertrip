@@ -585,8 +585,8 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         normalized_query = pandalungan_normalizer(req.question)
         user_query_lower = normalized_query.lower()
 
-        # 3. Hybrid Search: k=20 agar semua tempat yang disebut user terambil datanya
-        docs_with_scores = vector_db.similarity_search_with_relevance_scores(normalized_query, k=20)
+        # 3. Hybrid Search: k=10 agar context tidak terlalu penuh
+        docs_with_scores = vector_db.similarity_search_with_relevance_scores(normalized_query, k=10)
         
         # 4. History Injection
         recent_chats = db.query(models.ChatMessage).filter(models.ChatMessage.session_id == session_id).order_by(models.ChatMessage.timestamp.desc()).limit(6).all()
@@ -604,27 +604,26 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         csv_lookup = {str(w["id"]): w for w in data_wisata_csv}
 
         for doc, score in docs_with_scores:
-            # Threshold
-            if score > 0.28:
-                context_list.append(doc.page_content)
-                
-                if doc.metadata.get('type') == 'tourism' or 'id' in doc.metadata:
-                    wid = str(doc.metadata.get('id'))
-                    kat = doc.metadata.get('kategori', '')
+            # Threshold dihapus agar query pendek tetap dijawab
+            context_list.append(doc.page_content)
+            
+            if doc.metadata.get('type') == 'tourism' or 'id' in doc.metadata:
+                wid = str(doc.metadata.get('id'))
+                kat = doc.metadata.get('kategori', '')
 
-                    if is_complaining_weather and kat in ["Pantai", "Alam"]: continue
-                    if is_stressed and kat in ["Sejarah", "Makam"]: continue
+                if is_complaining_weather and kat in ["Pantai", "Alam"]: continue
+                if is_stressed and kat in ["Sejarah", "Makam"]: continue
 
-                    if wid not in seen_ids:
-                        meta = dict(doc.metadata)
-                        # Sinkronisasi dengan CSV terbaru (menghindari stale URL)
-                        if wid in csv_lookup:
-                            meta['gambar'] = csv_lookup[wid].get('gambar', meta.get('gambar', ''))
-                            meta['nama_wisata'] = csv_lookup[wid].get('nama_wisata', meta.get('nama_wisata', ''))
-                            meta['kategori'] = csv_lookup[wid].get('kategori', meta.get('kategori', ''))
-                            meta['alamat'] = csv_lookup[wid].get('alamat', meta.get('alamat', ''))
-                        final_candidates.append(meta)
-                        seen_ids.add(wid)
+                if wid not in seen_ids:
+                    meta = dict(doc.metadata)
+                    # Sinkronisasi dengan CSV terbaru (menghindari stale URL)
+                    if wid in csv_lookup:
+                        meta['gambar'] = csv_lookup[wid].get('gambar', meta.get('gambar', ''))
+                        meta['nama_wisata'] = csv_lookup[wid].get('nama_wisata', meta.get('nama_wisata', ''))
+                        meta['kategori'] = csv_lookup[wid].get('kategori', meta.get('kategori', ''))
+                        meta['alamat'] = csv_lookup[wid].get('alamat', meta.get('alamat', ''))
+                    final_candidates.append(meta)
+                    seen_ids.add(wid)
 
         # 2. LOGIKA GUARDRAIL (Di luar loop agar tidak NameError)
         if not context_list:
@@ -649,6 +648,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         2. JAWABANMU WAJIB 100% BERSUMBER HANYA DARI [KONTEKS DATA] di bawah ini.
         3. Jika pengguna menanyakan tempat, hotel, atau makanan yang TIDAK ADA di [KONTEKS DATA], kamu WAJIB menjawab tidak tahu dengan gaya Pandalungan, contoh: "Sepurane Lur, nang dataku saiki durung onok info soal iku. Isun cuma iso rekomendasiin tempat sing onok nang dataku ae."
         4. Jika pengguna bertanya di luar topik wisata Jember, tolak dengan sopan.
+        5. LOKASI HARUS AKURAT: Jika pengguna mencari sesuatu di LOKASI SPESIFIK (contoh: "Ambulu", "Kencong", "Mangli"), PASTIKAN alamat di [KONTEKS DATA] benar-benar berada di lokasi tersebut. Jika tidak ada yang cocok lokasinya, katakan JUJUR bahwa tidak ada data di lokasi tersebut! JANGAN merekomendasikan tempat dari lokasi lain.
 
         [INSTRUKSI KHUSUS ITINERARY]
         - Jika pengguna menyebutkan beberapa tempat (misal: Papuma, Watu Ulo, dan Dira), JANGAN hanya memilih satu.
