@@ -107,7 +107,8 @@ function WisataDetail() {
           }
           return `https://wsrv.nl/?url=${encodeURIComponent(gambarPath)}&w=800&output=webp&q=80`;
       }
-      return `/${gambarPath}`; 
+      // Pastikan tidak ada double slash (/assets... -> /assets..., assets... -> /assets...)
+      return gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
   };
 
   const getMapsUrl = (nama, alamat) => {
