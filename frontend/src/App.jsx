@@ -1,5 +1,6 @@
 // src/App.jsx
 
+import NgrokImage from './components/NgrokImage';
 import React, { useState, useEffect } from 'react';
 // Import Routing
 import { Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
@@ -183,7 +184,7 @@ function App() {
                   {/* Avatar: Pink Gradient */}
                   <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md overflow-hidden ${user.role === 'admin' ? 'bg-gradient-to-tr from-accent to-orange-400 shadow-orange-200' : 'bg-gradient-to-tr from-primary to-primary-soft shadow-pink-200'}`}>
                     {user.avatar ? (
-                        <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                        <NgrokImage src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                         user.full_name.charAt(0).toUpperCase()
                     )}
@@ -267,7 +268,7 @@ function App() {
                         <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-primary/10 active:scale-95 transition-transform">
                             <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-primary to-primary-soft flex items-center justify-center text-white font-bold text-xl shadow-md overflow-hidden">
                                 {user.avatar ? (
-                                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                                    <NgrokImage src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
                                     user.full_name.charAt(0).toUpperCase()
                                 )}

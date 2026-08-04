@@ -45,8 +45,54 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
   const [status, setStatus] = useState({ type: '', msg: '' });
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); 
-  const [editId, setEditId] = useState(null); 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  // --- DRAG AND DROP REORDER ---
+  const dragItem = React.useRef(null);
+  const dragOverItem = React.useRef(null);
+
+  const handleDragStart = (e, index) => {
+    if (search) return; // Disable saat search
+    dragItem.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnter = (e, index) => {
+    if (search) return;
+    dragOverItem.current = index;
+  };
+
+  const handleDragEnd = () => {
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
+  const handleDrop = async (e) => {
+    if (search || dragItem.current === null || dragOverItem.current === null) return;
+    
+    const copyList = [...wisataList];
+    const dragContent = copyList[dragItem.current];
+    copyList.splice(dragItem.current, 1);
+    copyList.splice(dragOverItem.current, 0, dragContent);
+    
+    setWisataList(copyList);
+    setFilteredList(copyList);
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    try {
+        const token = localStorage.getItem('token');
+        const newOrderIds = copyList.map(item => item.id.toString());
+        await axios.put(`${API_BASE_URL}/api/admin/wisata-reorder`, 
+            { new_order_ids: newOrderIds },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Urutan berhasil diperbarui!');
+    } catch (err) {
+        toast.error('Gagal menyimpan urutan baru');
+    }
+  };
 
   // --- 1. LOAD DATA AWAL ---
   useEffect(() => {
@@ -353,7 +399,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
                       <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 relative group h-32 flex items-center justify-center overflow-hidden transition-colors hover:border-primary/50">
                           <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onChange={handleFileChange} />
                           {preview ? (
-                              <img src={preview} className="h-full w-full object-contain" alt="Preview"/>
+                              <NgrokImage src={preview} className="h-full w-full object-contain" alt="Preview"/>
                           ) : (
                               <div className="text-gray-400 text-xs">
                                 <Upload size={24} className="mx-auto mb-1 opacity-50"/> Klik / Drop gambar
@@ -396,8 +442,15 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredList.map((item) => (
-                  <tr key={item.id} className="hover:bg-primary/5 transition-colors group">
+                {filteredList.map((item, index) => (
+                  <tr key={item.id} 
+                      draggable={!search} 
+                      onDragStart={(e) => handleDragStart(e, index)} 
+                      onDragEnter={(e) => handleDragEnter(e, index)} 
+                      onDragEnd={handleDragEnd} 
+                      onDragOver={(e) => e.preventDefault()} 
+                      onDrop={handleDrop} 
+                      className={`hover:bg-primary/5 transition-colors group ${!search ? 'cursor-move' : ''}`}>
                     <td className="px-4 py-3">
                       <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                         <NgrokImage src={getImageUrl(item.gambar)} alt="" className="w-full h-full object-cover" />

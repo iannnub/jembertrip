@@ -954,6 +954,26 @@ def delete_wisata_admin(id: str, admin_user: models.User = Depends(get_current_a
     return {"status": "success", "message": "Dihapus"}
 
 
+class ReorderRequest(BaseModel):
+    new_order_ids: List[str]
+
+@app.put("/api/admin/wisata-reorder")
+def reorder_wisata_admin(request: ReorderRequest, admin_user: models.User = Depends(get_current_admin)):
+    global data_wisata_csv
+    id_to_data = {str(item["id"]): item for item in data_wisata_csv}
+    new_data = []
+    for wid in request.new_order_ids:
+        if wid in id_to_data:
+            new_data.append(id_to_data[wid])
+    
+    if len(new_data) == len(data_wisata_csv):
+        data_wisata_csv.clear()
+        data_wisata_csv.extend(new_data)
+        save_csv_changes()
+        return {"status": "success", "message": "Urutan diperbarui"}
+    else:
+        raise HTTPException(400, "Jumlah ID tidak cocok dengan jumlah data wisata")
+
 # --- ENDPOINT MONITORING UNTUK ADMIN ---
 
 # ==========================================
