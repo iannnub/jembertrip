@@ -746,7 +746,8 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         - Jadwal (kereta, bus, jam buka/tutup)
         - Nomor telepon atau kontak apapun
         - Nama tempat/menu/hotel yang tidak ada di [KONTEKS DATA]
-        Semua fakta di atas WAJIB bersumber dari [KONTEKS DATA] di bawah.
+        Semua fakta di atas WAJIB bersumber dari [KONTEKS DATA] di bawah. 
+        Jika data dalam [KONTEKS DATA] ditandai dengan "[Unverified]" atau "Estimasi", kamu WAJIB menyampaikan status tersebut secara eksplisit kepada pengguna (contoh: "Harga tiket sekitar Rp15.000 (Estimasi/Belum Terverifikasi)").
 
         ATURAN 2 — WAJIB JUJUR TIDAK TAHU:
         Jika [KONTEKS DATA] kosong atau berisi pesan "TIDAK ADA DATA RELEVAN", WAJIB jawab jujur dengan format:
