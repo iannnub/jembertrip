@@ -1,6 +1,7 @@
 // src/pages/WisataDetail.jsx
 
 import React, { useState, useEffect } from 'react';
+import NgrokImage from '../components/NgrokImage';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 // Import Icon Modern
@@ -166,11 +167,10 @@ function WisataDetail() {
             <div className="lg:col-span-2 space-y-8">
                 {/* Gambar Hero */}
                 <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/10 bg-gray-200 aspect-video group">
-                    <img 
+                    <NgrokImage 
                         src={getImageUrl(wisata.gambar)} 
                         alt={wisata.nama_wisata} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        onError={(e) => e.target.src = "https://placehold.co/800x600?text=Image+404"}
                     />
                     <div className="absolute top-6 left-6">
                         {/* Tag Kategori: Gradient Pink */}
@@ -211,11 +211,10 @@ function WisataDetail() {
                                     className="group bg-white rounded-2xl p-3 border border-gray-100 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all flex flex-col"
                                 >
                                     <div className="h-32 rounded-xl overflow-hidden bg-gray-100 mb-3 relative">
-                                        <img 
+                                        <NgrokImage 
                                             src={getImageUrl(rec.gambar)} 
                                             alt={rec.nama_wisata} 
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                                            onError={(e) => { e.target.onerror = null; e.target.src = `/assets/images/${rec.id}.png`; }}
                                         />
                                         <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md">
                                             {rec.kategori}

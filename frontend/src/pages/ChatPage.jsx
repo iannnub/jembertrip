@@ -1,6 +1,7 @@
 // src/pages/ChatPage.jsx
 
 import React, { useState, useRef, useEffect } from 'react';
+import NgrokImage from '../components/NgrokImage';
 import axios from 'axios';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 // Import Icon
@@ -416,7 +417,7 @@ function ChatPage() {
                                               {msg.recommendations.map((rec, idx) => (
                                                   <div key={idx} onClick={() => window.location.href = `/wisata/${rec.id}`} className="snap-center flex-shrink-0 w-[240px] md:w-56 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group">
                                                       <div className="h-32 bg-gray-100 relative overflow-hidden">
-                                                           <img src={getImageUrl(rec.gambar)} alt={rec.nama_wisata} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onError={(e) => { e.target.onerror = null; e.target.src = `/assets/images/${rec.id}.png`; }}/>
+                                                           <NgrokImage src={getImageUrl(rec.gambar)} alt={rec.nama_wisata} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg">{rec.kategori}</div>
                                                       </div>
                                                       <div className="p-3.5">
