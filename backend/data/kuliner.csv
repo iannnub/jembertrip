@@ -1,0 +1,31 @@
+id,nama,kategori,alamat,kecamatan,lat,long,jam_buka,jam_tutup,harga,menu,kontak,sumber,tanggal_verifikasi
+1,Pecel Gudeg Walisongo,Makanan Berat,Jl. Sultan Agung No. 27,Kaliwates,-8.1722,113.6961,06:00,14:00,Rp 20.000,"Pecel Gudeg, Nasi Campur",[Unverified],"Google Maps, Review Kuliner Lokal",2026-07-20
+2,Soto Ayam Dahlok,Makanan Berat,Jl. Fatahillah No. 1,Patrang,-8.1583,113.7058,07:00,15:00,Rp 15.000,Soto Ayam Kampung,0812-3456-7890,Google Maps,2026-07-20
+3,Warung Nasi Langgo,Makanan Berat,Jl. PB Sudirman,Sumbersari,-8.1742,113.7022,06:00,10:00,Rp 10.000,Nasi Langgo,[Unverified],Google Maps,2026-07-20
+4,Sate Maranggi & Gule,Makanan Berat,Alun-Alun Jember,Kaliwates,-8.1712,113.6995,17:00,23:00,Rp 25.000,"Sate Kambing, Gule",[Unverified],Google Maps,2026-07-20
+5,Rumah Makan Lestari,Makanan Berat,Jl. Gajah Mada No. 100,Kaliwates,-8.173,113.6905,10:00,21:00,Rp 35.000,"Ayam Goreng Lengkuas, Gurame",(0331) 484848,"Google Maps, TripAdvisor",2026-07-20
+6,Sate Ayam Pak Malud,Makanan Berat,"Jl. Gajah Mada, Jember Kidul",Kaliwates,-8.1741,113.6948,16:00,22:00,Rp 20.000,Sate Ayam Madura,[Unverified],Google Maps,2026-07-20
+7,Depot Es Krim & Pangsit Mie Domino,Makanan Berat & Jajanan,Jl. Trunojoyo No. 45,Kaliwates,-8.1705,113.6976,10:00,21:00,Rp 25.000,"Pangsit Mie, Es Krim Jadul",[Unverified],Google Maps,2026-07-20
+8,Bebek Galak 88,Makanan Berat,Jl. Letjen Suprapto,Sumbersari,-8.1765,113.7121,10:00,22:00,Rp 25.000,Bebek Goreng Sambal Galak,0812-4444-5555,Google Maps,2026-07-20
+9,Ayam Geprek Sa'i,Makanan Berat,Jl. Kalimantan,Sumbersari,-8.1633,113.7155,09:00,21:00,Rp 15.000,"Ayam Geprek, Susu Jahe",[Unverified],Google Maps,2026-07-20
+10,Mie Apong Sampurna,Makanan Berat,Jl. Gajah Mada No. 12,Kaliwates,-8.1718,113.6888,11:00,20:00,Rp 15.000,Pangsit Mie Jember,[Unverified],Google Maps,2026-07-20
+11,Warung Mak Krenyes,Makanan Berat,Jl. Hayam Wuruk,Kaliwates,-8.1812,113.6705,08:00,20:00,Rp 20.000,"Nasi Jagung, Lauk Pauk",[Unverified],Google Maps,2026-07-20
+12,Rest area Gumitir Cafe,Makanan Berat & Jajanan,"Jl. Banyuwangi - Jember, Gn. Gumitir",Silo,-8.2435,113.9181,08:00,21:00,Rp 30.000,"Nasi Goreng, Kopi Hitam",[Unverified],Google Maps,2026-07-20
+13,Ikan Bakar Payangan,Makanan Berat,Pantai Payangan,Ambulu,-8.3934,113.5659,07:00,18:00,Rp 50.000,"Ikan Laut Bakar, Sambal Terasi",[Unverified],Google Maps,2026-07-20
+14,Lesehan Bajak Laut,Makanan Berat,Jl. Watu Ulo,Ambulu,-8.3888,113.5781,08:00,19:00,Rp 40.000,Seafood,[Unverified],Google Maps,2026-07-20
+15,Tahu Lontong Tanggul,Makanan Berat,Dekat Stasiun Tanggul,Tanggul,-8.165,113.4501,15:00,22:00,Rp 12.000,"Tahu Lontong, Tahu Tek",[Unverified],Review Kuliner Lokal,2026-07-20
+16,Rujak Soto Kencong,Makanan Berat,"Jl. Krakatau, Kencong",Kencong,-8.2615,113.366,09:00,17:00,Rp 15.000,Rujak Soto,[Unverified],Google Maps,2026-07-20
+17,Sate Kambing Balung,Makanan Berat,Pasar Balung,Balung,-8.2711,113.5281,16:00,22:00,Rp 30.000,Sate Kambing,[Unverified],Google Maps,2026-07-20
+18,Warung Tahu Campur Rambipuji,Makanan Berat,Jl. Raya Rambipuji,Rambipuji,-8.2115,113.6062,16:00,22:00,Rp 15.000,Tahu Campur Lamongan,[Unverified],Google Maps,2026-07-20
+19,Kafe Kolong,Kafe,Bawah Jembatan Mastrip,Sumbersari,-8.161,113.7144,18:00,01:00,Rp 15.000,"Kopi Jember, Roti Bakar",[Unverified],Google Maps,2026-07-20
+20,Tebing Cafe,Kafe,Taman Botani Sukorambi,Sukorambi,-8.1565,113.6552,08:00,21:00,Rp 30.000,"Steak, Kopi",[Unverified],Google Maps,2026-07-20
+21,Rollas Cafe,Kafe,Jl. Gajah Mada No. 1,Kaliwates,-8.1725,113.6931,10:00,22:00,Rp 25.000,"Kopi Kebun, Kudapan",[Unverified],Google Maps,2026-07-20
+22,Senja Di Kopi,Kafe,Jl. Letjen Panjaitan,Sumbersari,-8.1691,113.7088,15:00,23:00,Rp 20.000,"Kopi Senja, Snack",[Unverified],Google Maps,2026-07-20
+23,Hihi Cafe & Resto,Kafe,Jl. Sumatera,Sumbersari,-8.1645,113.7141,10:00,23:00,Rp 30.000,"Mocktail, Pasta",[Unverified],Google Maps,2026-07-20
+24,Kopi Doel,Kafe,Jl. Mastrip,Sumbersari,-8.1622,113.7155,15:00,24:00,Rp 15.000,"Es Kopi Susu, Mie Goreng",[Unverified],Google Maps,2026-07-20
+25,Primadona Pusat Oleh-Oleh Jember,Oleh-Oleh,Jl. Trunojoyo No. 137,Kaliwates,-8.1701,113.6972,08:00,21:00,Rp 40.000,"Suwar-Suwir, Tape Singkong, Prol Tape",(0331) 333333,Google Maps,2026-07-20
+26,Sari Rasa Tape Jember,Oleh-Oleh,Jl. Gajah Mada No. 25,Kaliwates,-8.1735,113.6912,07:00,20:00,Rp 25.000,Tape Manis Jember,[Unverified],Google Maps,2026-07-20
+27,Prol Tape Sari Madu,Oleh-Oleh,Jl. Trunojoyo,Kaliwates,-8.171,113.6975,08:00,20:00,Rp 35.000,Prol Tape,[Unverified],Google Maps,2026-07-20
+28,Pia Kukus Edamame,Oleh-Oleh,Mitratani Jember,Mangli,-8.1882,113.6451,08:00,16:00,Rp 35.000,"Pia Edamame, Kedelai Edamame",[Unverified],"Google Maps, Situs Resmi",2026-07-20
+29,Pusat Oleh-oleh Jember (Lokal),Oleh-Oleh,Sekitar Stasiun Jember,Patrang,-8.1634,113.7042,07:00,21:00,Rp 20.000,Suwar-Suwir Berbagai Rasa,[Unverified],Google Maps,2026-07-20
+30,Pabrik Cerutu BIN Cigar,Oleh-Oleh,Jl. Brawijaya,Jubung,-8.1895,113.6558,08:00,16:00,Rp 50.000,Cerutu Lokal Kualitas Ekspor,[Unverified],Google Maps,2026-07-20

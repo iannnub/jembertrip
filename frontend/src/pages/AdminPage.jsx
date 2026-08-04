@@ -8,6 +8,7 @@ import {
   Users, MessageCircle, Star, LayoutDashboard, Sparkles,
   ChevronRight
 } from 'lucide-react';
+import NgrokImage from '../components/NgrokImage';
 // Framer Motion untuk animasi
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,6 +53,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
     fetchData();
     fetchStats();
     fetchUserReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -397,8 +399,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
                 {filteredList.map((item) => (
                   <tr key={item.id} className="hover:bg-primary/5 transition-colors group">
                     <td className="px-4 py-3">
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-200">
-                        <img src={getImageUrl(item.gambar)} alt="" className="w-full h-full object-cover" />
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                        <NgrokImage src={getImageUrl(item.gambar)} alt="" className="w-full h-full object-cover" />
                       </div>
                     </td>
                     <td className="px-4 py-3 font-medium text-text-main">{item.nama_wisata}</td>

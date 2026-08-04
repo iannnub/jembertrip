@@ -2,11 +2,15 @@
 
 from datetime import datetime, timedelta
 from typing import Optional
+import os
+from dotenv import load_dotenv
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
+load_dotenv()
+
 # --- KONFIGURASI KEAMANAN ---
-SECRET_KEY = "jembertrip_rahasia_banget_kuncinya_jangan_disebar_luas"
+SECRET_KEY = os.getenv("SECRET_KEY", "jembertrip_rahasia_banget_kuncinya_jangan_disebar_luas")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 24 * 60 
 

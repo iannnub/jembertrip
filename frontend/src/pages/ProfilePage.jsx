@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
     User, Mail, Lock, Camera, Save, LogOut, Shield 
 } from 'lucide-react';
+import NgrokImage from '../components/NgrokImage';
 // Import Animasi
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
@@ -137,7 +138,7 @@ function ProfilePage() {
                         <div className="relative mt-8 mb-4 group inline-block">
                             <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-page-bg mx-auto">
                                 {user.avatar ? (
-                                    <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                                    <NgrokImage src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-4xl font-bold">
                                         {user.full_name?.charAt(0).toUpperCase()}
@@ -212,6 +213,39 @@ function ProfilePage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+
+                    {/* Danger Zone: Hapus Akun */}
+                    <div className="bg-red-50/50 rounded-3xl shadow-sm border border-red-100 p-8">
+                        <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+                            <Shield size={20} /> Danger Zone
+                        </h3>
+                        <p className="text-red-500/80 text-sm mb-6">
+                            Menghapus akun bersifat permanen. Semua data riwayat, preferensi, dan obrolan Anda akan dihapus dan tidak dapat dikembalikan.
+                        </p>
+                        <button 
+                            onClick={async () => {
+                                if(window.confirm("APAKAH ANDA YAKIN? Tindakan ini tidak dapat dibatalkan!")) {
+                                    setLoading(true);
+                                    try {
+                                        const token = localStorage.getItem('token');
+                                        await axios.delete(`${API_BASE_URL}/api/users/me`, {
+                                            headers: { 'Authorization': `Bearer ${token}` }
+                                        });
+                                        toast.success("Akun Anda telah dihapus secara permanen.");
+                                        localStorage.clear();
+                                        navigate('/login');
+                                    } catch (err) {
+                                        toast.error(err.response?.data?.detail || "Gagal menghapus akun.");
+                                        setLoading(false);
+                                    }
+                                }
+                            }}
+                            disabled={loading} 
+                            className="bg-red-500 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-red-600 transition-colors w-full flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
+                        >
+                            Hapus Akun Permanen
+                        </button>
                     </div>
                 </motion.div>
 

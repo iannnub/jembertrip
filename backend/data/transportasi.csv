@@ -1,0 +1,19 @@
+id,kategori,nama_layanan,rute_relasi,jam_berangkat,jam_tiba,kelas_tipe,estimasi_harga,sumber,tanggal_verifikasi
+1,Kereta Api,KA Pandalungan,Jember (JR) - Jakarta Gambir (GMR),14:55,04:45,Eksekutif,Rp 500.000 - Rp 700.000,Situs KAI / KAI Access,2026-07-21
+2,Kereta Api,KA Ranggajati,Jember (JR) - Cirebon (CN),05:15,20:35,"Eksekutif, Bisnis",Rp 300.000 - Rp 450.000,Situs KAI / KAI Access,2026-07-21
+3,Kereta Api,KA Logawa,Jember (JR) - Purwokerto (PWT),06:15,18:40,"Bisnis, Ekonomi",Rp 180.000 - Rp 270.000,Situs KAI / KAI Access,2026-07-21
+4,Kereta Api,KA Wijayakusuma,Banyuwangi (Ketapang) - Cilacap (via Jember),13:36 (via Jember),02:15,"Eksekutif, Ekonomi Premium",Rp 250.000 - Rp 400.000,Situs KAI / KAI Access,2026-07-21
+5,Kereta Api,KA Blambangan Ekspres,Banyuwangi (Ketapang) - Semarang Tawang (via Jember),21:30 (via Jember),05:44,"Eksekutif, Ekonomi",Rp 300.000 - Rp 450.000,Situs KAI / KAI Access,2026-07-21
+6,Kereta Api,KA Mutiara Timur,Banyuwangi (Ketapang) - Surabaya Gubeng (via Jember),23:43 (via Jember),03:45,"Eksekutif, Ekonomi",Rp 200.000 - Rp 300.000,Situs KAI / KAI Access,2026-07-21
+7,Kereta Api,KA Sri Tanjung,Banyuwangi (Ketapang) - Lempuyangan Yogya (via Jember),09:30 (via Jember),19:30,Ekonomi,Rp 94.000,Situs KAI / KAI Access,2026-07-21
+8,Kereta Api,KA Tawang Alun,Banyuwangi (Ketapang) - Malang Kota Lama (via Jember),07:38 (via Jember),12:15,Ekonomi,Rp 62.000,Situs KAI / KAI Access,2026-07-21
+9,Kereta Api,KA Probowangi,Banyuwangi (Ketapang) - Surabaya Gubeng (via Jember),17:02 (via Jember),21:15,Ekonomi,Rp 56.000,Situs KAI / KAI Access,2026-07-21
+10,Kereta Api,KA Pandanwangi,Jember (JR) - Banyuwangi (Ketapang),"05:30, 14:15","08:00, 16:45",Ekonomi Lokal,Rp 8.000,Situs KAI / KAI Access,2026-07-21
+11,Bus Antar Kota,Bus PATAS Jatim,Jember - Surabaya (Bungurasih),24 Jam (Tiap 1-2 Jam),-,"AC, Reclining Seat",Rp 90.000 - Rp 110.000,Info Terminal Tawang Alun,2026-07-21
+12,Bus Antar Kota,Bus Ekonomi,Jember - Surabaya (Bungurasih),24 Jam,-,Ekonomi Non-AC / AC Tarif Biasa,Rp 40.000 - Rp 60.000,Info Terminal Tawang Alun,2026-07-21
+13,Bus Antar Kota,Bus Jember - Malang,Jember - Malang (Arjosari),Pagi & Malam,-,Ekonomi & PATAS,Rp 70.000 - Rp 95.000,Info Terminal Tawang Alun,2026-07-21
+14,Bus Antar Kota,Bus Jember - Denpasar,Jember - Denpasar (Mengwi),15:00 - 19:00,-,PATAS / Eksekutif,Rp 150.000 - Rp 250.000,Info Agen Bus,2026-07-21
+15,Bus Antar Kota,Bus Jember - Banyuwangi,Jember - Ketapang Banyuwangi,24 Jam,-,Ekonomi,Rp 40.000,Info Terminal Tawang Alun,2026-07-21
+16,Transportasi Lokal,Gojek / Grab / Maxim,Dalam Kota Jember & Sekitarnya,24 Jam,-,Ojek Motor & Mobil,Menyesuaikan Jarak di Aplikasi,Aplikasi Ride-Hailing,2026-07-21
+17,Transportasi Lokal,Angkutan Kota (LIN),"Tawang Alun - Arjasa, Kampus, Pakusari",05:00 - 18:00,-,Angkot Kuning/Biru,Rp 5.000 (Jauh/Dekat),Dinas Perhubungan Jember,2026-07-21
+18,Transportasi Lokal,Rental Mobil / Motor,Sewa Harian (Jember & Sekitarnya),Sesuai Pesanan,-,"Avanza, Xenia, Motor Bebek/Matic",Mobil: Rp 250k-350k/hari | Motor: Rp 75k-100k/hari,Agen Rental Lokal,2026-07-21

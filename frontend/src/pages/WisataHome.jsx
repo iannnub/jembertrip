@@ -1,5 +1,6 @@
 // src/pages/WisataHome.jsx
 
+import NgrokImage from '../components/NgrokImage';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -316,10 +317,7 @@ function WisataHome() {
               {personalRek.map((wisata, index) => (
                 <Link to={`/wisata/${wisata.id}`} key={`cf-${index}`} className="group block h-full">
                   <div className="bg-gradient-to-br from-white to-page-bg rounded-2xl p-4 border border-primary/10 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/10 h-full flex items-start gap-4">
-                    <img 
-                      src={getImageUrl(wisata.gambar)} 
-                      alt={wisata.nama_wisata}
-                      className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500"
+                    <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500"
                     />
                     <div>
                       <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-primary transition-colors">{wisata.nama_wisata}</h4>
@@ -356,10 +354,7 @@ function WisataHome() {
               {hybridRek.map((wisata, index) => (
                 <Link to={`/wisata/${wisata.id}`} key={`hf-${index}`} className="group block h-full">
                   <div className="bg-gradient-to-br from-white to-pink-50 rounded-2xl p-4 border border-pink-200 hover:border-pink-400 transition-all hover:shadow-xl hover:shadow-pink-200 h-full flex items-start gap-4">
-                    <img 
-                      src={getImageUrl(wisata.gambar)} 
-                      alt={wisata.nama_wisata}
-                      className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500"
+                    <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500"
                     />
                     <div>
                       <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-pink-600 transition-colors">{wisata.nama_wisata}</h4>
@@ -417,10 +412,7 @@ function WisataHome() {
                     <Link to={`/wisata/${wisata.id}`} className="block h-full bg-card-bg rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-primary/10 border border-gray-100 overflow-hidden transition-all duration-300 group">
                       {/* Image Container */}
                       <div className="relative h-56 overflow-hidden">
-                        <img 
-                          src={getImageUrl(wisata.gambar)}
-                          alt={wisata.nama_wisata} 
-                          loading="lazy"
+                        <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           onError={(e) => {
                             e.target.onerror = null; 
