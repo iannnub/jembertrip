@@ -6,7 +6,7 @@ import {
   Plus, Upload, CheckCircle, AlertCircle, 
   MapPin, Tag, DollarSign, FileText, Trash2, Edit2, X, Search,
   Users, MessageCircle, Star, LayoutDashboard, Sparkles,
-  ChevronRight
+  ChevronRight, GripVertical
 } from 'lucide-react';
 import NgrokImage from '../components/NgrokImage';
 // Framer Motion untuk animasi
@@ -452,8 +452,11 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
                       onDrop={handleDrop} 
                       className={`hover:bg-primary/5 transition-colors group ${!search ? 'cursor-move' : ''}`}>
                     <td className="px-4 py-3">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                        <NgrokImage src={getImageUrl(item.gambar)} alt="" className="w-full h-full object-cover" />
+                      <div className="flex items-center gap-3">
+                        {!search && <GripVertical className="text-gray-300 opacity-50 group-hover:opacity-100 transition-opacity" size={20} />}
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                          <NgrokImage src={getImageUrl(item.gambar)} alt="" className="w-full h-full object-cover" />
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 font-medium text-text-main">{item.nama_wisata}</td>
