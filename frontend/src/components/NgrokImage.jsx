@@ -15,7 +15,7 @@ const NgrokImage = ({ src, alt, className, ...props }) => {
                     observer.disconnect();
                 }
             },
-            { rootMargin: '100px' } // Load slightly before it comes into view
+            { rootMargin: '800px' } // Load way before it comes into view
         );
 
         if (imgRef.current) {
