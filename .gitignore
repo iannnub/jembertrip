@@ -13,3 +13,11 @@ frontend/dist/
 
 # System
 .DS_Store
+
+# Dokumen & Markdown (Kecuali README.md utama)
+*.pdf
+**/*.pdf
+*.md
+**/*.md
+!/README.md
+!/readme.md
