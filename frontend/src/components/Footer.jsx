@@ -89,7 +89,7 @@ export default function Footer() {
           {/* Kolom 4: Informasi & Legal */}
           <div>
             <h4 className="text-sm font-bold text-text-main uppercase tracking-wider mb-3">
-              Informasi & SEO
+              Informasi & Legalitas
             </h4>
             <ul className="space-y-2 text-xs md:text-sm">
               <li>
@@ -104,7 +104,17 @@ export default function Footer() {
               </li>
               <li>
                 <a 
-                  href="http://127.0.0.1:8000/sitemap.xml" 
+                  href="/terms-of-service.html" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors flex items-center gap-1.5"
+                >
+                  <FileText size={14} className="text-gray-400" /> Syarat & Ketentuan
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="/sitemap.xml" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="hover:text-primary transition-colors flex items-center gap-1.5"
@@ -114,7 +124,7 @@ export default function Footer() {
               </li>
               <li>
                 <a 
-                  href="http://127.0.0.1:8000/robots.txt" 
+                  href="/robots.txt" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="hover:text-primary transition-colors flex items-center gap-1.5"

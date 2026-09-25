@@ -7,7 +7,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { trackEvent } from '../utils/analytics';
 // Import Icon
-import { Search, MapPin, Star, Compass, Sparkles } from 'lucide-react';
+import { Search, MapPin, Star, Compass, Sparkles, MessageSquare, ArrowRight } from 'lucide-react';
 // Import Animasi
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
@@ -371,7 +371,7 @@ function WisataHome() {
                 <Sparkles size={20} />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-text-main">Rekomendasi Personalize</h3>
+                <h3 className="text-2xl font-bold text-text-main">Rekomendasi Spesial Untuk Anda</h3>
                 <p className="text-sm text-text-muted">Rekomendasi kolaboratif (CF) khusus untuk {user.full_name.split(' ')[0]}</p>
               </div>
             </div>
@@ -413,7 +413,7 @@ function WisataHome() {
                 <Compass size={20} />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-text-main">Mungkin Yang Anda Sukai</h3>
+                <h3 className="text-2xl font-bold text-text-main">Mungkin Anda Sukai</h3>
                 <p className="text-sm text-text-muted">Hasil racikan cerdas Hybrid (CF + CBF) untuk {user.full_name?.split(' ')[0]}</p>
               </div>
             </div>
@@ -531,6 +531,36 @@ function WisataHome() {
             </motion.div>
           )}
         </section>
+
+        {/* === BANNER CTA: TANYA CAK JEMBER === */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary via-pink-600 to-accent p-8 md:p-12 text-white shadow-2xl shadow-primary/20"
+        >
+          <div className="absolute -top-12 -right-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-black/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div className="relative z-10 max-w-2xl">
+            <span className="inline-flex items-center gap-1.5 py-1 px-3.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-4">
+              <MessageSquare size={14} /> Asisten Cerdas Cak Jember
+            </span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 leading-tight">
+              Bingung Mau Liburan ke Mana di Jember?
+            </h2>
+            <p className="text-white/90 text-sm md:text-base leading-relaxed mb-6 font-light">
+              Tanyakan langsung ke <strong>Cak Jember</strong>! Asisten AI berdialek Pandalungan yang siap memberikan ide liburan, rekomendasi pantai tersembunyi, hingga kuliner legendaris sesuai seleramu.
+            </p>
+            <Link
+              to="/rekomendasi"
+              onClick={() => trackEvent('click_cta_cak_jember', { location: 'home_bottom_banner' })}
+              className="inline-flex items-center gap-2 bg-white text-primary font-bold px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:bg-pink-50 hover:scale-105 active:scale-95 transition-all min-h-[48px]"
+            >
+              Mulai Ngobrol dengan Cak Jember <ArrowRight size={18} />
+            </Link>
+          </div>
+        </motion.div>
 
       </div>
     </div>
