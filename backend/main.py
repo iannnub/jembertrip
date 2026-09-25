@@ -1264,7 +1264,30 @@ def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), k
         return {"status": "success", "message": "Berhasil", "data": new_entry}
     except Exception as e: raise HTTPException(500, str(e))
 
+@app.post("/api/admin/upload-gambar")
+def upload_gambar_admin(
+    file: UploadFile = File(...),
+    admin_user: models.User = Depends(get_current_admin)
+):
+    """Endpoint mandiri untuk upload gambar admin dengan konversi otomatis ke format WebP terkompresi."""
+    try:
+        raw_base = os.path.splitext(file.filename)[0] if file.filename else "upload"
+        clean_base = f"wisata_{int(datetime.now().timestamp())}_{re.sub(r'[^a-zA-Z0-9_-]', '_', raw_base)}"
+        saved_filename = process_and_save_image(file, "uploads", clean_base, max_width=1280, quality=80)
+        image_url = f"{get_public_url()}/images/{saved_filename}"
+        return {
+            "status": "success",
+            "message": "Gambar berhasil dioptimasi ke WebP dan disimpan",
+            "filename": saved_filename,
+            "url": image_url
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Gagal upload gambar: {str(e)}")
+
 class ReorderRequest(BaseModel):
+
     new_order_ids: List[str]
 
 @app.put("/api/admin/wisata-reorder")
