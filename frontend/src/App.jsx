@@ -20,6 +20,7 @@ import RegisterPage from './pages/RegisterPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage'; 
 import OnboardingPage from './pages/OnboardingPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // --- KOMPONEN PROTEKSI RUTE ADMIN ---
 const ProtectedAdminRoute = ({ children }) => {
@@ -216,8 +217,8 @@ function App() {
                 </ProtectedAdminRoute>
             } 
           />
-          {/* Fallback Route 404 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Fallback Route 404 - Halaman Custom */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 

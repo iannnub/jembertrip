@@ -226,7 +226,7 @@ function WisataHome() {
           <div className="h-12 bg-gray-200 rounded-full w-1/3"></div>
           <div className="h-12 bg-gray-200 rounded-full w-full"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-80 bg-gray-200 rounded-2xl"></div>
           ))}
@@ -264,7 +264,7 @@ function WisataHome() {
       
       {/* === HERO SECTION === */}
       {/* Update: Hapus bg-slate-900, ganti jadi bg-gray-900 agar netral dengan pink */}
-      <div className="relative bg-gray-900 pt-32 pb-32 overflow-hidden">
+      <div className="relative bg-gray-900 pt-24 pb-24 md:pt-32 md:pb-32 overflow-hidden">
         {/* Background Image Overlay */}
         <div className="absolute inset-0 z-0">
              <img 
@@ -288,7 +288,7 @@ function WisataHome() {
                 <Compass size={14} /> Explore Jatim
               </span>
               
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
                 Temukan Pesona <br/>
                 {/* Gradient Text: Accent (Gold) ke Primary (Pink) */}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">

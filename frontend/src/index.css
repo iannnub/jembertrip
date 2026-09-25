@@ -14,6 +14,15 @@
   .safe-area-bottom {
     padding-bottom: max(env(safe-area-inset-bottom, 1rem), 1rem);
   }
+
+  /* Hide scrollbar tapi tetap bisa scroll (category filter, horizontal carousel) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Touch & Mobile UX Optimization */
@@ -52,4 +61,31 @@ select {
   .overflow-y-auto {
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Custom scrollbar untuk sidebar chat (non-mobile) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
+/* Lazy load image fade-in */
+img {
+  transition: opacity 0.3s ease;
+}
+img[loading="lazy"] {
+  opacity: 0;
+}
+img[loading="lazy"].loaded,
+img:not([loading]) {
+  opacity: 1;
 }
