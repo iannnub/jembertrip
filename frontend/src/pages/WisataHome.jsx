@@ -83,25 +83,16 @@ function WisataHome() {
   };
 
   // --- HELPER GAMBAR SAKTI (Hybrid Logic) ---
-  const VERCEL_URL = "https://jembertrip.vercel.app";
-
-  const getImageUrl = (gambarPath, width = 600) => {
+  const getImageUrl = (gambarPath) => {
       if (!gambarPath) return "https://placehold.co/600x400?text=No+Image";
       
-      let fullUrl;
+      // Jika URL eksternal / ngrok / http
       if (gambarPath.startsWith('http')) {
-          // Gambar Ngrok/localhost: tampilkan langsung (wsrv.nl tidak bisa akses)
-          if (gambarPath.includes('ngrok') || gambarPath.includes('127.0.0.1') || gambarPath.includes('localhost')) {
-              return gambarPath;
-          }
-          fullUrl = gambarPath;
-      } else {
-          // Gambar lokal: bangun full URL Vercel untuk diproses wsrv.nl
-          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
-          fullUrl = `${VERCEL_URL}${cleanPath}`;
+          return gambarPath;
       }
-      // Optimalkan via wsrv.nl: resize + WebP + quality 80
-      return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=${width}&output=webp&q=80`;
+      
+      // Gambar lokal yang ada di public/assets/...
+      return gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
   };
 
 

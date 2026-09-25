@@ -17,10 +17,10 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t border-primary/10 pt-12 pb-8 mt-auto text-text-muted">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
           
           {/* Kolom 1: About */}
-          <div className="md:col-span-1">
+          <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="bg-gradient-to-br from-primary to-accent p-2 rounded-xl text-white shadow-sm">
                 <MapPin size={18} fill="currentColor" />
@@ -86,65 +86,26 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Kolom 4: Informasi & Legal */}
-          <div>
-            <h4 className="text-sm font-bold text-text-main uppercase tracking-wider mb-3">
-              Informasi & Legalitas
-            </h4>
-            <ul className="space-y-2 text-xs md:text-sm">
-              <li>
-                <a 
-                  href="/privacy-policy.html" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors flex items-center gap-1.5"
-                >
-                  <Shield size={14} className="text-gray-400" /> Kebijakan Privasi
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="/terms-of-service.html" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors flex items-center gap-1.5"
-                >
-                  <FileText size={14} className="text-gray-400" /> Syarat & Ketentuan
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="/sitemap.xml" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="hover:text-primary transition-colors flex items-center gap-1.5"
-                >
-                  <FileText size={14} className="text-gray-400" /> Peta Situs (Sitemap XML) <ExternalLink size={12} />
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="/robots.txt" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="hover:text-primary transition-colors flex items-center gap-1.5"
-                >
-                  <FileText size={14} className="text-gray-400" /> Robots.txt <ExternalLink size={12} />
-                </a>
-              </li>
-            </ul>
-          </div>
-
         </div>
 
-        {/* Divider & Copyright */}
-        <div className="border-t border-primary/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
-          <p className="text-xs text-text-muted">
-            Semua Karna ❤️ untuk <span className="text-primary font-bold">Masyarakat & Wisatawan Jember</span>
-          </p>
-          <p className="text-xs text-text-muted/70">
-            iannnub &copy; {new Date().getFullYear()} JemberTrip - Universitas Muhammadiyah Jember
-          </p>
+        {/* Divider & Watermark Lisensi iannnub */}
+        <div className="border-t border-primary/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+          <div>
+            <p className="text-xs text-text-muted">
+              Semua Karna ❤️ untuk <span className="text-primary font-bold">Masyarakat & Wisatawan Jember</span>
+            </p>
+            <p className="text-[11px] text-text-muted/70 mt-1">
+              Didesain, dikembangkan & dilisensikan oleh <span className="font-semibold text-text-main">iannnub</span> • Universitas Muhammadiyah Jember
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
+              <Sparkles size={12} /> Karya Asli iannnub
+            </span>
+            <span className="text-xs text-text-muted">
+              &copy; {new Date().getFullYear()} JemberTrip
+            </span>
+          </div>
         </div>
       </div>
     </footer>

@@ -73,22 +73,16 @@ function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const VERCEL_URL = "https://jembertrip.vercel.app";
-
-  const getImageUrl = (gambarPath, width = 400) => {
+  const getImageUrl = (gambarPath) => {
       if (!gambarPath) return "https://placehold.co/400x300?text=No+Image";
       
-      let fullUrl;
+      // Jika URL eksternal / ngrok / http
       if (gambarPath.startsWith('http')) {
-          if (gambarPath.includes('ngrok') || gambarPath.includes('127.0.0.1') || gambarPath.includes('localhost')) {
-              return gambarPath;
-          }
-          fullUrl = gambarPath;
-      } else {
-          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
-          fullUrl = `${VERCEL_URL}${cleanPath}`;
+          return gambarPath;
       }
-      return `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=${width}&output=webp&q=80`;
+      
+      // Gambar lokal yang ada di public/assets/...
+      return gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
   };
 
   useEffect(() => {
