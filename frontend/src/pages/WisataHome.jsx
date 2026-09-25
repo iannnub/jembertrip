@@ -57,7 +57,9 @@ function WisataHome() {
   };
 
 
-  document.title = "Beranda - JemberTrip";
+  useEffect(() => {
+    document.title = "Beranda - JemberTrip";
+  }, []);
   
   // --- 1. FETCH DATA UTAMA ---
   useEffect(() => {
@@ -313,11 +315,11 @@ function WisataHome() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {personalRek.map((wisata, index) => (
                 <Link to={`/wisata/${wisata.id}`} key={`cf-${index}`} className="group block h-full">
                   <div className="bg-gradient-to-br from-white to-page-bg rounded-2xl p-4 border border-primary/10 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/10 h-full flex items-start gap-4">
-                    <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500"
+                    <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 shrink-0"
                     />
                     <div>
                       <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-primary transition-colors">{wisata.nama_wisata}</h4>
@@ -346,15 +348,15 @@ function WisataHome() {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-text-main">Mungkin Yang Anda Sukai</h3>
-                <p className="text-sm text-text-muted">Hasil racikan cerdas Hybrid (CF + CBF) untuk {user.full_name.split(' ')[0]}</p>
+                <p className="text-sm text-text-muted">Hasil racikan cerdas Hybrid (CF + CBF) untuk {user.full_name?.split(' ')[0]}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {hybridRek.map((wisata, index) => (
                 <Link to={`/wisata/${wisata.id}`} key={`hf-${index}`} className="group block h-full">
                   <div className="bg-gradient-to-br from-white to-pink-50 rounded-2xl p-4 border border-pink-200 hover:border-pink-400 transition-all hover:shadow-xl hover:shadow-pink-200 h-full flex items-start gap-4">
-                    <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500"
+                    <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 shrink-0"
                     />
                     <div>
                       <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-pink-600 transition-colors">{wisata.nama_wisata}</h4>
@@ -397,7 +399,7 @@ function WisataHome() {
           ) : (
             <motion.div 
               layout
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             >
               <AnimatePresence>
                 {displayedWisata.map((wisata, index) => (

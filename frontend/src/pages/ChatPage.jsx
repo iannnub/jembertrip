@@ -411,19 +411,19 @@ function ChatPage() {
                                   )}
 
                                   {msg.sender === 'ai' && msg.recommendations && msg.recommendations.length > 0 && (
-                                      <div className="mt-4 w-full -ml-2 md:ml-0">
-                                          <p className="text-xs font-bold text-text-muted mb-2 px-2 flex items-center gap-1"><Sparkles size={12} className="text-accent" /> Rekomendasi Pilihan:</p>
-                                          <div className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x snap-mandatory no-scrollbar w-[85vw] md:w-full">
+                                      <div className="mt-4 w-full">
+                                          <p className="text-xs font-bold text-text-muted mb-2 px-1 flex items-center gap-1"><Sparkles size={12} className="text-accent" /> Rekomendasi Pilihan:</p>
+                                          <div className="flex gap-3 overflow-x-auto pb-3 px-1 snap-x snap-mandatory max-w-full">
                                               {msg.recommendations.map((rec, idx) => (
-                                                  <div key={idx} onClick={() => window.location.href = `/wisata/${rec.id}`} className="snap-center flex-shrink-0 w-[240px] md:w-56 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group">
-                                                      <div className="h-32 bg-gray-100 relative overflow-hidden">
-                                                           <NgrokImage src={getImageUrl(rec.gambar)} alt={rec.nama_wisata} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                                           <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg">{rec.kategori}</div>
+                                                  <div key={idx} onClick={() => window.location.href = `/wisata/${rec.id}`} className="snap-center flex-shrink-0 w-[220px] sm:w-56 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group">
+                                                      <div className="h-28 sm:h-32 bg-gray-100 relative overflow-hidden">
+                                                           <NgrokImage src={getImageUrl(rec.gambar)} alt={rec.nama_wisata} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                           <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg">{rec.kategori}</div>
                                                       </div>
-                                                      <div className="p-3.5">
+                                                      <div className="p-3">
                                                           <h4 className="font-bold text-text-main text-sm line-clamp-1 mb-1 group-hover:text-primary transition-colors">{rec.nama_wisata}</h4>
-                                                          <p className="text-xs text-text-muted line-clamp-1 mb-3 flex items-center gap-1">📍 {rec.alamat}</p>
-                                                          <button className="w-full bg-primary/5 text-primary text-xs font-bold py-2 rounded-xl group-hover:bg-primary group-hover:text-white transition-all flex items-center justify-center gap-1">Lihat Detail <ChevronRight size={12} /></button>
+                                                          <p className="text-xs text-text-muted line-clamp-1 mb-2 flex items-center gap-1">📍 {rec.alamat}</p>
+                                                          <button className="w-full bg-primary/5 text-primary text-xs font-bold py-2 rounded-xl group-hover:bg-primary group-hover:text-white transition-all flex items-center justify-center gap-1 min-h-[36px]">Lihat Detail <ChevronRight size={12} /></button>
                                                       </div>
                                                   </div>
                                               ))}
@@ -456,21 +456,22 @@ function ChatPage() {
           </div>
         </div>
 
-        {/* INPUT AREA (FIXED BOTTOM) */}
-        <div className="bg-white border-t border-gray-200 p-3 md:p-4 sticky bottom-0 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] pb-safe">
+        {/* INPUT AREA (FIXED BOTTOM WITH SAFE AREA) */}
+        <div className="bg-white border-t border-gray-200 p-3 md:p-4 sticky bottom-0 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] safe-area-bottom">
           <div className="max-w-3xl mx-auto w-full">
-              <form onSubmit={handleSend} className="relative flex items-center gap-3">
+              <form onSubmit={handleSend} className="relative flex items-center gap-2 sm:gap-3">
                   
                   {browserSupportsSpeechRecognition && (
                       <button
                         type="button"
                         onClick={handleMicClick}
-                        className={`p-3 rounded-full transition-all ${
+                        className={`p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-all shrink-0 ${
                             listening 
                             ? 'bg-red-50 text-red-500 animate-pulse border border-red-200' 
                             : 'bg-gray-100 text-text-muted hover:bg-gray-200'
                         }`}
                         title="Tekan untuk bicara"
+                        aria-label="Input suara"
                       >
                           {listening ? <MicOff size={20} /> : <Mic size={20} />}
                       </button>
@@ -479,7 +480,8 @@ function ChatPage() {
                   <input 
                       type="text" 
                       placeholder={listening ? "Mendengarkan..." : "Tanya Cak Jember..."} 
-                      className={`w-full py-3.5 rounded-full bg-gray-100 border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm text-text-main placeholder-gray-400 font-medium ${browserSupportsSpeechRecognition ? 'px-4' : 'pl-5 pr-14'}`}
+                      className={`w-full py-3.5 rounded-full bg-gray-100 border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all text-base md:text-sm text-text-main placeholder-gray-400 font-medium min-h-[44px] ${browserSupportsSpeechRecognition ? 'px-4' : 'pl-5 pr-14'}`}
+                      style={{ fontSize: '16px' }}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       disabled={loading}
@@ -488,7 +490,8 @@ function ChatPage() {
                   <button 
                       type="submit" 
                       disabled={loading || !input.trim()}
-                      className="p-3 bg-primary text-white rounded-full hover:bg-primary-soft active:scale-90 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+                      className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-primary text-white rounded-full hover:bg-primary-soft active:scale-90 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md shadow-primary/20 shrink-0 relative"
+                      aria-label="Kirim pesan"
                   >
                       <Send size={18} className={loading ? "opacity-0" : ""} />
                       {loading && <div className="absolute inset-0 flex items-center justify-center"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div></div>}
