@@ -35,7 +35,8 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.staticfiles import StaticFiles 
 from starlette.middleware.base import BaseHTTPMiddleware
 import xml.etree.ElementTree as ET
-from pydantic import BaseModel, Field
+import requests
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import func 
 from jose import JWTError, jwt 
@@ -462,18 +463,49 @@ def save_csv_changes():
         df.to_csv(target_path, index=False)
 
 # ==========================================
-#           MODEL PYDANTIC
+#           MODEL PYDANTIC (STRICT VALIDATION)
 # ==========================================
 class UserCreate(BaseModel):
-    username: str; email: str; password: str; full_name: str
+    username: str = Field(..., min_length=3, max_length=30, pattern=r"^[a-zA-Z0-9_]+$")
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=100)
+    full_name: str = Field(..., min_length=2, max_length=100)
+    turnstile_token: Optional[str] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_complexity(cls, v: str) -> str:
+        if not re.search(r"[a-zA-Z]", v):
+            raise ValueError("Password harus mengandung kombinasi huruf.")
+        if not re.search(r"[0-9]", v):
+            raise ValueError("Password harus mengandung kombinasi angka.")
+        return v
+
 class UserLogin(BaseModel):
-    username: str; password: str
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6, max_length=100)
+    turnstile_token: Optional[str] = None
+
 class UserUpdate(BaseModel):
-    full_name: str; email: str
+    full_name: str = Field(..., min_length=2, max_length=100)
+    email: EmailStr
+
 class UserOnboard(BaseModel):
     categories: List[str]
+
 class PasswordChange(BaseModel):
-    old_password: str; new_password: str
+    old_password: str = Field(..., min_length=6, max_length=100)
+    new_password: str = Field(..., min_length=8, max_length=100)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password_complexity(cls, v: str) -> str:
+        if not re.search(r"[a-zA-Z]", v):
+            raise ValueError("Password baru harus mengandung kombinasi huruf.")
+        if not re.search(r"[0-9]", v):
+            raise ValueError("Password baru harus mengandung kombinasi angka.")
+        return v
+
 class GenerateDescRequest(BaseModel):
     nama_wisata: str; kategori: str
 class ChatRequest(BaseModel):
@@ -493,6 +525,43 @@ class ChatSessionResponse(BaseModel):
 class HistoryCreate(BaseModel):
     wisata_id: str
     wisata_name: str
+
+# ==========================================
+#       ANTI-SPAM / CAPTCHA (TURNSTILE)
+# ==========================================
+def verify_turnstile_token(token: Optional[str], client_ip: Optional[str] = None) -> bool:
+    """
+    Verifikasi token Cloudflare Turnstile anti-spam/CAPTCHA.
+    - Jika TURNSTILE_SECRET_KEY tidak disetel atau 'disabled', verifikasi dilewati (mode dev/lokal).
+    - Jika disetel, token wajib valid dan diverifikasi ke endpoint Cloudflare.
+    """
+    secret_key = os.getenv("TURNSTILE_SECRET_KEY", "").strip()
+    if not secret_key or secret_key.lower() == "disabled":
+        return True
+
+    if not token:
+        return False
+
+    try:
+        data = {
+            "secret": secret_key,
+            "response": token
+        }
+        if client_ip:
+            data["remoteip"] = client_ip
+
+        res = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=data,
+            timeout=5
+        )
+        if res.status_code == 200:
+            result = res.json()
+            return result.get("success", False)
+        return False
+    except Exception as e:
+        logger.warning(f"Turnstile verification request error: {e}")
+        return False
 
 # ==========================================
 #           AUTH FUNCTIONS (RBAC)
@@ -523,6 +592,9 @@ def setup_first_admin(username: str, secret_key: str, db: Session = Depends(get_
 @app.post("/api/auth/register", status_code=201)
 @limiter.limit("10/minute")
 def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
+    client_ip = get_remote_address(request)
+    if not verify_turnstile_token(user.turnstile_token, client_ip):
+        raise HTTPException(400, "Verifikasi keamanan (CAPTCHA) gagal. Silakan coba lagi.")
     if db.query(models.User).filter(models.User.username == user.username).first():
         raise HTTPException(400, "Username sudah dipakai!")
     if db.query(models.User).filter(models.User.email == user.email).first():
@@ -537,6 +609,9 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
 @app.post("/api/auth/login")
 @limiter.limit("5/minute")
 def login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
+    client_ip = get_remote_address(request)
+    if not verify_turnstile_token(user.turnstile_token, client_ip):
+        raise HTTPException(400, "Verifikasi keamanan (CAPTCHA) gagal. Silakan coba lagi.")
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if not db_user or not security.verify_password(user.password, db_user.hashed_password):
         raise HTTPException(401, "Username atau Password salah")

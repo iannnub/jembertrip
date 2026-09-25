@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
+import TurnstileWidget from '../components/TurnstileWidget';
 // Import Icons
 import { User, Lock, LogIn, ArrowLeft, Eye, EyeOff, XCircle } from 'lucide-react';
 // Import Animasi
@@ -40,6 +41,7 @@ function LoginPage() {
   const [loading,     setLoading]     = useState(false);
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,7 +78,11 @@ function LoginPage() {
     setServerError(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, formData);
+      const payload = {
+        ...formData,
+        turnstile_token: turnstileToken || undefined
+      };
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, payload);
 
       if (response.data.status === 'success') {
         const { access_token, user } = response.data;
@@ -220,6 +226,12 @@ function LoginPage() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Cloudflare Turnstile Anti-Spam / CAPTCHA */}
+          <TurnstileWidget
+            onVerify={(token) => setTurnstileToken(token)}
+            onExpire={() => setTurnstileToken('')}
+          />
 
           {/* Tombol Login */}
           <button

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
+import TurnstileWidget from '../components/TurnstileWidget';
 // Import Icons
 import { User, Mail, Lock, UserPlus, ArrowLeft, Type, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 // Import Animasi
@@ -77,6 +78,7 @@ function RegisterPage() {
   const [loading,     setLoading]     = useState(false);
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -112,7 +114,11 @@ function RegisterPage() {
     setServerError(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/register`, formData);
+      const payload = {
+        ...formData,
+        turnstile_token: turnstileToken || undefined
+      };
+      const response = await axios.post(`${API_BASE_URL}/api/auth/register`, payload);
       if (response.data.status === 'success') {
         toast.success('Yeay! Akun berhasil dibuat. Yuk login! 🎉');
         setTimeout(() => { navigate('/login'); }, 1500);
@@ -347,6 +353,12 @@ function RegisterPage() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Cloudflare Turnstile Anti-Spam / CAPTCHA */}
+          <TurnstileWidget
+            onVerify={(token) => setTurnstileToken(token)}
+            onExpire={() => setTurnstileToken('')}
+          />
 
           {/* Tombol Submit */}
           <button
