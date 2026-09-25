@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 // Import Icons
 import { User, Lock, LogIn, ArrowLeft } from 'lucide-react';
 // Import Animasi
@@ -71,6 +72,12 @@ function LoginPage() {
   return (
     // Update Background: Gradient PageBG ke Pink Lembut
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-page-bg to-pink-100 px-4 relative overflow-x-hidden overflow-y-auto py-20 text-text-main">
+      <SEO
+        title="Masuk Akun Wisatawan"
+        description="Masuk ke akun JemberTrip untuk menyimpan riwayat wisata, personalisasi rekomendasi destinasi, dan konsultasi AI Cak Jember."
+        url="https://jembertrip.id/login"
+        noindex={true}
+      />
       
       {/* Background Shape Hiasan (Updated Colors) */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>

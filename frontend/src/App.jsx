@@ -2,6 +2,7 @@
 
 import NgrokImage from './components/NgrokImage';
 import MobileNav from './components/MobileNav';
+import Footer from './components/Footer';
 import React, { useState, useEffect } from 'react';
 // Import Routing
 import { Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
@@ -220,26 +221,8 @@ function App() {
         </Routes>
       </main>
 
-      {/* --- FOOTER (Updated Theme) --- */}
-      {shouldShowFooter && (
-        <footer className="bg-primary/5 border-t border-primary/10 pt-10 pb-6 mt-auto">
-          <div className="container mx-auto px-6 text-center">
-              <div className="flex flex-col items-center">
-                  
-                  <div className="bg-white p-3 rounded-full mb-4 shadow-sm border border-primary/20">
-                      <MapPin size={22} className="text-primary" />
-                  </div>
-
-                  <p className="text-text-muted text-sm font-medium mb-1">
-                      Semua Karna ❤️ untuk <span className="text-primary font-bold tracking-wide">Masyrakat Jember</span>
-                  </p>
-                  <p className="text-xs text-text-muted/60">
-                     iannnub &copy; {new Date().getFullYear()} JemberTrip - Universitas Muhammadiyah Jember
-                  </p>
-              </div>
-          </div>
-        </footer>
-      )}
+      {/* --- FOOTER DENGAN SITEMAP & INTERNAL LINKS --- */}
+      {shouldShowFooter && <Footer />}
 
     </div>
   );

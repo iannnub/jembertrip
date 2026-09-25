@@ -29,9 +29,11 @@ if hasattr(sys.stderr, "reconfigure"):
 
 # --- FASTAPI IMPORTS ---
 from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form, Request
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer 
 from fastapi.staticfiles import StaticFiles 
+import xml.etree.ElementTree as ET
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import func 
@@ -1043,6 +1045,120 @@ def detail_wisata(id: str):
     res = next((i for i in data_wisata_csv if str(i["id"]) == id), None)
     if res: return {"status": "success", "data": res}
     raise HTTPException(404, "Not found")
+
+# ==========================================
+#         SEO: SITEMAP & ROBOTS.TXT
+# ==========================================
+@app.get("/sitemap.xml", response_class=Response)
+def generate_sitemap():
+    """
+    Generate dynamic sitemap.xml based on all destinations in memory / CSV.
+    """
+    global data_wisata_csv
+    site_url = os.getenv("SITE_URL", os.getenv("FRONTEND_URL", "https://jembertrip.id")).rstrip("/")
+
+    urlset = ET.Element("urlset")
+    urlset.set("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")
+    urlset.set("xmlns:image", "http://www.google.com/schemas/sitemap-image/1.1")
+
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    # 1. Homepage
+    url_home = ET.SubElement(urlset, "url")
+    ET.SubElement(url_home, "loc").text = f"{site_url}/"
+    ET.SubElement(url_home, "lastmod").text = today_str
+    ET.SubElement(url_home, "changefreq").text = "daily"
+    ET.SubElement(url_home, "priority").text = "1.0"
+
+    # 2. Static pages
+    static_pages = [
+        ("/rekomendasi", "0.9", "weekly"),
+        ("/chat", "0.8", "weekly"),
+        ("/login", "0.5", "monthly"),
+        ("/register", "0.5", "monthly"),
+    ]
+    for path, priority, changefreq in static_pages:
+        url_static = ET.SubElement(urlset, "url")
+        ET.SubElement(url_static, "loc").text = f"{site_url}{path}"
+        ET.SubElement(url_static, "lastmod").text = today_str
+        ET.SubElement(url_static, "changefreq").text = changefreq
+        ET.SubElement(url_static, "priority").text = priority
+
+    # 3. Dynamic wisata destinations
+    items = data_wisata_csv
+    if not items:
+        target_path = PATH_CSV_DATA if os.path.exists(PATH_CSV_DATA) else f"../{PATH_CSV_DATA}"
+        if os.path.exists(target_path):
+            try:
+                df = pd.read_csv(target_path).fillna("")
+                items = df.to_dict('records')
+            except Exception as e:
+                logger.error(f"Error loading CSV for sitemap: {e}")
+                items = []
+
+    for item in items:
+        item_id = str(item.get("id", "")).strip()
+        if not item_id:
+            continue
+        url_wisata = ET.SubElement(urlset, "url")
+        ET.SubElement(url_wisata, "loc").text = f"{site_url}/wisata/{item_id}"
+        ET.SubElement(url_wisata, "lastmod").text = today_str
+        ET.SubElement(url_wisata, "changefreq").text = "weekly"
+        ET.SubElement(url_wisata, "priority").text = "0.8"
+
+        gambar = str(item.get("gambar", "")).strip()
+        if gambar and gambar.lower() not in ("nan", "tidak ada data", "none"):
+            img_tag = ET.SubElement(url_wisata, "image:image")
+            if gambar.startswith("http://") or gambar.startswith("https://"):
+                img_loc = gambar
+            else:
+                clean_path = gambar if gambar.startswith("/") else f"/{gambar}"
+                img_loc = f"{site_url}{clean_path}"
+            ET.SubElement(img_tag, "image:loc").text = img_loc
+            nama = str(item.get("nama_wisata") or item.get("nama") or "Destinasi Wisata Jember")
+            ET.SubElement(img_tag, "image:title").text = nama
+
+    xml_string = ET.tostring(urlset, encoding='utf-8', method='xml')
+    xml_output = b'<?xml version="1.0" encoding="UTF-8"?>\n' + xml_string
+    return Response(
+        content=xml_output,
+        media_type="application/xml",
+        headers={"Cache-Control": "public, max-age=3600"}
+    )
+
+@app.get("/robots.txt", response_class=Response)
+def get_robots_txt():
+    """
+    Serve robots.txt directly from backend for crawlers.
+    """
+    site_url = os.getenv("SITE_URL", os.getenv("FRONTEND_URL", "https://jembertrip.id")).rstrip("/")
+    content = f"""# JemberTrip Robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /profile/
+Disallow: /onboard/
+
+# Crawl delay untuk sopan ke server
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: {site_url}/sitemap.xml
+
+# Block bad bots (optional)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+"""
+    return Response(
+        content=content,
+        media_type="text/plain",
+        headers={"Cache-Control": "public, max-age=86400"}
+    )
+
 
 @app.get("/api/chat/sessions")
 def get_sessions(user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):

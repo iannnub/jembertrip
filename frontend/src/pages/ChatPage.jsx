@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import NgrokImage from '../components/NgrokImage';
+import SEO from '../components/SEO';
 import axios from 'axios';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 // Import Icon
@@ -264,6 +265,11 @@ function ChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-80px)] bg-page-bg overflow-hidden relative">
+      <SEO
+        title="Chatbot AI Cak Jember - Panduan Rekomendasi Wisata AI"
+        description="Konsultasi rencana liburan dan rekomendasi destinasi wisata Jember secara interaktif dengan asisten AI Cak Jember berbasis RAG."
+        url="https://jembertrip.id/rekomendasi"
+      />
       
       {/* ===== SIDEBAR ===== */}
       <AnimatePresence>

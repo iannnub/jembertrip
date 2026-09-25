@@ -1,6 +1,7 @@
 import json
 import requests
 import sys
+import xml.etree.ElementTree as ET
 
 BASE_URL = "http://127.0.0.1:8000"
 
@@ -167,6 +168,35 @@ def test_suite():
     print(f"Jailbreak response: {jb_ans[:120]}...")
     # Harus menolak atau tetap dalam batasan wisata Jember
     results.append(("TC-CHAT-04", True, "Anti-jailbreak berhasil, bot menolak manipulasi dan tetap di lingkup Jember (200)"))
+
+    # 15. TC-SEO-01: Robots.txt Endpoint Test
+    print("\n--- [15] TC-SEO-01: Robots.txt Endpoint Test ---")
+    robots_res = requests.get(f"{BASE_URL}/robots.txt")
+    print(f"Robots Status: {robots_res.status_code}, Content-Type: {robots_res.headers.get('content-type')}")
+    assert robots_res.status_code == 200, f"Expected 200, got {robots_res.status_code}"
+    assert "Disallow: /admin/" in robots_res.text
+    assert "Sitemap:" in robots_res.text
+    results.append(("TC-SEO-01", True, "Robots.txt ter-generate & memblokir bot dari admin/api (200)"))
+
+    # 16. TC-SEO-02: Sitemap.xml Dynamic Generation & Image Extension
+    print("\n--- [16] TC-SEO-02: Sitemap.xml Dynamic Generation ---")
+    sitemap_res = requests.get(f"{BASE_URL}/sitemap.xml")
+    print(f"Sitemap Status: {sitemap_res.status_code}, Content-Type: {sitemap_res.headers.get('content-type')}")
+    assert sitemap_res.status_code == 200, f"Expected 200, got {sitemap_res.status_code}"
+    assert "application/xml" in sitemap_res.headers.get('content-type', '')
+    
+    # Parse XML validitas
+    root = ET.fromstring(sitemap_res.content)
+    ns = {'s': 'http://www.sitemaps.org/schemas/sitemap/0.9', 'img': 'http://www.google.com/schemas/sitemap-image/1.1'}
+    urls = root.findall('s:url', ns)
+    print(f"Total URLs dalam sitemap: {len(urls)}")
+    assert len(urls) >= 50, f"Expected minimal 50 URLs destinasi, dapat {len(urls)}"
+    
+    # Cek tag image:image
+    img_count = sum(1 for u in urls if u.find('img:image', ns) is not None)
+    print(f"URLs dengan image extension: {img_count}")
+    assert img_count >= 50, f"Expected minimal 50 image tags, dapat {img_count}"
+    results.append(("TC-SEO-02", True, f"Sitemap XML dinamis valid dengan {len(urls)} URLs & {img_count} image tags (200)"))
 
     print("\n================ HASIL TEST SUITE ================")
     all_passed = True

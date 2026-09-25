@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 // Import Icons
 import { User, Mail, Lock, UserPlus, ArrowLeft, Type } from 'lucide-react';
 // Import Animasi
@@ -70,6 +71,12 @@ function RegisterPage() {
   return (
     // Background: Gradient PageBG ke Pink Lembut
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-page-bg to-pink-100 px-4 relative overflow-x-hidden overflow-y-auto py-20">
+      <SEO
+        title="Daftar Akun Baru"
+        description="Daftar akun JemberTrip untuk mulai menjelajahi pesona pariwisata Kabupaten Jember dengan panduan AI cerdas."
+        url="https://jembertrip.id/register"
+        noindex={true}
+      />
       
       {/* Background Hiasan (Updated Colors) */}
       <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>

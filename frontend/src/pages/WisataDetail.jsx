@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import NgrokImage from '../components/NgrokImage';
+import SEO from '../components/SEO';
+import Breadcrumb from '../components/Breadcrumb';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 // Import Icon Modern
@@ -144,20 +146,64 @@ function WisataDetail() {
     </div>
   );
 
+  // Schema Markup untuk Google Rich Results (TouristAttraction)
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "TouristAttraction",
+    "name": wisata.nama_wisata,
+    "description": wisata.deskripsi,
+    "image": wisata.gambar?.startsWith('http') ? wisata.gambar : `https://jembertrip.id/${wisata.gambar?.replace(/^\//, '')}`,
+    "url": `https://jembertrip.id/wisata/${wisata.id}`,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": wisata.alamat,
+      "addressLocality": "Jember",
+      "addressRegion": "Jawa Timur",
+      "addressCountry": "ID"
+    },
+    ...(wisata.latitude && wisata.longitude ? {
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": Number(wisata.latitude) || wisata.latitude,
+        "longitude": Number(wisata.longitude) || wisata.longitude
+      }
+    } : {}),
+    "touristType": wisata.kategori,
+    "isAccessibleForFree": wisata.harga_tiket === "0" || wisata.harga_tiket === 0,
+    "publicAccess": true
+  };
+
   return (
-    <motion.div 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        className="min-h-screen bg-page-bg pb-16 pt-6 md:pt-10"
-    >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        
-        {/* BREADCRUMB / BACK BUTTON */}
-        <div className="mb-6">
-            <Link to="/" className="inline-flex items-center text-text-muted hover:text-primary font-medium transition-colors gap-2 bg-white px-4 py-2.5 rounded-full shadow-xs border border-gray-100 group min-h-[44px]">
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Kembali
-            </Link>
-        </div>
+    <>
+      <SEO
+        title={`${wisata.nama_wisata} - Destinasi Wisata ${wisata.kategori}`}
+        description={(wisata.deskripsi || '').substring(0, 155)}
+        keywords={`${wisata.nama_wisata}, wisata ${wisata.kategori?.toLowerCase()}, jember, ${wisata.alamat}`}
+        image={getImageUrl(wisata.gambar, 1200)}
+        url={`https://jembertrip.id/wisata/${wisata.id}`}
+        type="article"
+        schema={schema}
+      />
+
+      <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          className="min-h-screen bg-page-bg pb-16 pt-6 md:pt-10"
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+          
+          {/* BREADCRUMB & BACK BUTTON */}
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <Breadcrumb
+                items={[
+                  { label: wisata.kategori, href: `/?kategori=${encodeURIComponent(wisata.kategori)}` },
+                  { label: wisata.nama_wisata }
+                ]}
+              />
+              <Link to="/" className="inline-flex items-center text-text-muted hover:text-primary font-medium transition-colors gap-2 bg-white px-4 py-2 rounded-full shadow-xs border border-gray-100 group min-h-[40px] shrink-0 self-start sm:self-auto">
+                  <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Kembali ke Home
+              </Link>
+          </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
             
@@ -315,6 +361,7 @@ function WisataDetail() {
         </div>
       </div>
     </motion.div>
+    </>
   );
 }
 

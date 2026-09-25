@@ -3,7 +3,8 @@
 import NgrokImage from '../components/NgrokImage';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import SEO from '../components/SEO';
 // Import Icon
 import { Search, MapPin, Star, Compass, Sparkles } from 'lucide-react';
 // Import Animasi
@@ -21,8 +22,12 @@ function WisataHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [searchParams] = useSearchParams();
+  const initialCategory = searchParams.get('kategori') || "Semua";
+  const initialSearch = searchParams.get('search') || "";
+
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   
   const [personalRek, setPersonalRek] = useState([]);
   const [hybridRek, setHybridRek] = useState([]);
@@ -33,6 +38,48 @@ function WisataHome() {
 
   // Kategori sesuai CSV Data
   const categories = ["Semua", "Pantai", "Rekreasi", "Agrowisata", "Edukasi", "Religi", "Rural Tourism", "Air Terjun", "Situs", "Panorama"];
+
+  // Sinkronisasi kategori/search jika URL params berubah
+  useEffect(() => {
+    const cat = searchParams.get('kategori');
+    if (cat && cat !== selectedCategory) {
+      setSelectedCategory(cat);
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [searchParams, selectedCategory]);
+
+  // Schema Markup untuk WebSite & Organization (Google Rich Results)
+  const schemaWebSite = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "JemberTrip",
+    "url": "https://jembertrip.id",
+    "description": "Platform eksplorasi destinasi wisata, kuliner, dan budaya Jember berbasis AI.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://jembertrip.id/?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
+  const schemaOrganization = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "JemberTrip",
+    "url": "https://jembertrip.id",
+    "logo": "https://jembertrip.vercel.app/banner-jembertrip.jpg",
+    "sameAs": [
+      "https://facebook.com/jembertrip",
+      "https://instagram.com/jembertrip"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "email": "info@jembertrip.id"
+    }
+  };
 
   // --- HELPER GAMBAR SAKTI (Hybrid Logic) ---
   const VERCEL_URL = "https://jembertrip.vercel.app";
@@ -207,6 +254,13 @@ function WisataHome() {
   return (
     // Update: Gunakan page-bg dan text-main
     <div className="min-h-screen pb-20 bg-page-bg text-text-main">
+      <SEO 
+        title="JemberTrip - Panduan Wisata Cerdas Kabupaten Jember"
+        description="Eksplorasi destinasi wisata pantai, alam, air terjun, rekreasi, dan kuliner Jember dengan asisten cerdas AI Cak Jember dan rekomendasi personalisasi."
+        url="https://jembertrip.id"
+        image="https://jembertrip.vercel.app/banner-jembertrip.jpg"
+        schema={[schemaWebSite, schemaOrganization]}
+      />
       
       {/* === HERO SECTION === */}
       {/* Update: Hapus bg-slate-900, ganti jadi bg-gray-900 agar netral dengan pink */}

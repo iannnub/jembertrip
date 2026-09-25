@@ -1,0 +1,20 @@
+# JemberTrip Robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /profile/
+Disallow: /onboard/
+
+# Crawl delay untuk sopan ke server
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://jembertrip.id/sitemap.xml
+
+# Block bad bots (optional)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
