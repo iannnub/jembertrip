@@ -33,12 +33,16 @@ from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer 
 from fastapi.staticfiles import StaticFiles 
+from starlette.middleware.base import BaseHTTPMiddleware
 import xml.etree.ElementTree as ET
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import func 
 from jose import JWTError, jwt 
 from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # --- AI & LANGCHAIN ---
 from langchain_chroma import Chroma
@@ -62,6 +66,26 @@ app = FastAPI(
     description="API: V24.0 - Grand Refactor (Smart Logic, Gen Z, Safety Guard)",
     version="24.0.0 Final"
 )
+
+# ==========================================
+#   RATE LIMITER SETUP (slowapi)
+# ==========================================
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# ==========================================
+#   SECURITY HEADERS MIDDLEWARE (OWASP)
+# ==========================================
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
 
 # ==========================================
 #           AUTO-ADMIN GENERATOR
@@ -111,6 +135,7 @@ app.add_middleware(
     CORSMiddleware, allow_origins=origins, allow_credentials=True, 
     allow_methods=["*"], allow_headers=["*"]
 )
+app.add_middleware(SecurityHeadersMiddleware)
 
 # --- GLOBAL VARS ---
 NAMA_MODEL_EMBEDDING = "sentence-transformers/all-MiniLM-L6-v2"
@@ -496,7 +521,8 @@ def setup_first_admin(username: str, secret_key: str, db: Session = Depends(get_
     return {"status": "success", "message": f"{username} sekarang adalah ADMIN."}
 
 @app.post("/api/auth/register", status_code=201)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.username == user.username).first():
         raise HTTPException(400, "Username sudah dipakai!")
     if db.query(models.User).filter(models.User.email == user.email).first():
@@ -509,7 +535,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     return {"status": "success"}
 
 @app.post("/api/auth/login")
-def login(user: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if not db_user or not security.verify_password(user.password, db_user.hashed_password):
         raise HTTPException(401, "Username atau Password salah")
@@ -818,7 +845,8 @@ def pandalungan_normalizer(text: str) -> str:
 # =========================================================
 
 @app.post("/api/v1/chat")
-def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("15/minute")
+def chat_rag(request: Request, req: ChatRequest, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     global vector_db, data_wisata_csv
     try:
         session_id = req.session_id
