@@ -1,3 +1,4 @@
+import sys
 import os
 import json
 import shutil 
@@ -13,6 +14,18 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+
+# Fix Windows cp1252 UnicodeEncodeError for console stdout/stderr
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 # --- FASTAPI IMPORTS ---
 from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form, Request
@@ -58,29 +71,26 @@ def create_default_admin():
         existing_admin = db.query(models.User).filter(models.User.username == "admin").first()
         
         if not existing_admin:
-            print("⚠️ ADMIN BELUM ADA! Membuat akun Admin default...")
+            logger.info("ADMIN BELUM ADA! Membuat akun Admin default...")
             
             # Buat akun admin baru
             new_admin = models.User(
                 username="admin",
                 email="admin@jembertrip.com",
                 full_name="Super Admin",
-                # Menggunakan password 'adminn' sesuai requestmu
                 hashed_password=security.get_password_hash("adminn"), 
                 role="admin",
-                avatar="" # Kosongkan default avatar
+                avatar=""
             )
             
             db.add(new_admin)
             db.commit()
-            print("✅ SUKSES! Akun Admin dibuat.")
-            print("👉 Username: admin")
-            print("👉 Password: [Terdapat dalam source code / env]")
+            logger.info("SUKSES: Akun Admin default dibuat (Username: admin).")
         else:
-            print("ℹ️ Akun Admin sudah ada. Aman.")
+            logger.info("Akun Admin sudah ada. Aman.")
             
     except Exception as e:
-        print(f"❌ Gagal membuat admin otomatis: {e}")
+        logger.error(f"Gagal membuat admin otomatis: {e}")
     finally:
         db.close()
 
@@ -181,7 +191,6 @@ def startup_event():
             
             # Hitung SBERT Embeddings HANYA untuk destinasi wisata (untuk CF/CBF)
             logger.info("🧠 Menghitung SBERT Embeddings untuk destinasi wisata...")
-            global dest_ids, sbert_embeddings
             df['clean_text'] = (df['nama_wisata'].fillna('') + " " + df['kategori'].fillna('') + " " + df['deskripsi'].fillna(''))
             dest_ids = df['id'].astype(str).tolist()
             sbert_embeddings = np.array(embedding_model.embed_documents(df['clean_text'].tolist()))
@@ -313,13 +322,109 @@ def startup_event():
 # ==========================================
 #           HELPER FUNCTIONS
 # ==========================================
-def get_groq_llm():
-    global GROQ_API_KEYS, current_key_index
+DEFAULT_GROQ_MODELS = [
+    m for m in [
+        os.getenv("GROQ_MODEL"),
+        "qwen/qwen3.8-27b",
+        "llama-3.3-70b-versatile",
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b"
+    ] if m
+]
+current_working_model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+
+def get_groq_llm(model_name: str = None):
+    global GROQ_API_KEYS, current_key_index, current_working_model
     if not GROQ_API_KEYS: raise HTTPException(500, "No API Key")
     key = GROQ_API_KEYS[current_key_index]
     current_key_index = (current_key_index + 1) % len(GROQ_API_KEYS)
+    model = model_name or current_working_model or "qwen/qwen3.8-27b"
+    return ChatGroq(temperature=0.7, model_name=model, api_key=key) 
+
+def invoke_groq_llm(prompt_template, input_vars: dict, temperature: float = 0.7):
+    """Memanggil Groq LLM dengan auto-failover ke key berikutnya dan model fallback jika terkena rate limit (429) atau error."""
+    global GROQ_API_KEYS, current_key_index, current_working_model, DEFAULT_GROQ_MODELS
+    if not GROQ_API_KEYS:
+        raise HTTPException(500, "Tidak ada Groq API Key yang terkonfigurasi")
     
-    return ChatGroq(temperature=0.7, model_name="llama-3.3-70b-versatile", api_key=key) 
+    total_keys = len(GROQ_API_KEYS)
+    last_error = None
+
+    models_to_try = [current_working_model] + [m for m in DEFAULT_GROQ_MODELS if m != current_working_model]
+
+    for model in models_to_try:
+        model_failed = False
+        for _ in range(total_keys):
+            key = GROQ_API_KEYS[current_key_index]
+            try:
+                llm = ChatGroq(temperature=temperature, model_name=model, api_key=key)
+                chain = prompt_template | llm
+                response = chain.invoke(input_vars)
+                current_working_model = model
+                current_key_index = (current_key_index + 1) % total_keys
+                return response
+            except Exception as e:
+                err_str = str(e).lower()
+                logger.warning(f"Groq [{model}] Key index {current_key_index} gagal: {e}. Mencoba berikutnya...")
+                last_error = e
+                current_key_index = (current_key_index + 1) % total_keys
+                if "model_not_found" in err_str or "does not exist" in err_str:
+                    model_failed = True
+                    break
+                if any(k in err_str for k in ["rate_limit", "429", "quota", "invalid_api_key", "unauthorized", "exhausted"]):
+                    continue
+                continue
+        if not model_failed and last_error is None:
+            break
+
+    logger.error(f"Semua Groq models & keys gagal. Error terakhir: {last_error}")
+    raise HTTPException(500, f"Error di Otak Cak Jember: {str(last_error)}")
+
+def get_popular_destinations(db: Session, limit: int = 6, exclude_ids: list = None) -> list:
+    """Mengambil destinasi paling populer berdasarkan frekuensi klik di tabel History,
+    dengan fallback ke rating tertinggi di CSV destinasi."""
+    global data_wisata_csv
+    if not data_wisata_csv:
+        return []
+    
+    exclude_set = set(str(eid) for eid in (exclude_ids or []))
+    popular_ids = []
+    
+    try:
+        query = db.query(
+            models.History.wisata_id, 
+            func.count(models.History.id).label('total_clicks')
+        ).group_by(models.History.wisata_id).order_by(func.count(models.History.id).desc()).all()
+        
+        for pid, _ in query:
+            pid_str = str(pid)
+            if pid_str and pid_str not in exclude_set and pid_str not in popular_ids:
+                popular_ids.append(pid_str)
+    except Exception as e:
+        logger.warning(f"Gagal query history untuk popular fallback: {e}")
+
+    results = []
+    csv_lookup = {str(d['id']): d for d in data_wisata_csv}
+    for pid in popular_ids:
+        if pid in csv_lookup and pid not in exclude_set:
+            results.append(csv_lookup[pid])
+            if len(results) >= limit:
+                return results
+
+    # Fallback ke destinasi dengan rating tertinggi
+    sorted_csv = sorted(
+        data_wisata_csv,
+        key=lambda x: float(x.get('rating', 0) or 0) if str(x.get('rating', '')).replace('.', '', 1).isdigit() else 0.0,
+        reverse=True
+    )
+    for d in sorted_csv:
+        did = str(d.get('id', ''))
+        if did not in exclude_set and did not in [str(r.get('id', '')) for r in results]:
+            results.append(d)
+            if len(results) >= limit:
+                break
+
+    return results[:limit] 
 
 def save_csv_changes():
     global data_wisata_csv
@@ -502,162 +607,210 @@ def get_my_history(current_user: models.User = Depends(get_current_user), db: Se
 
 @app.get("/api/v1/recommendations/personal")
 def get_personal_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """SINKRON DENGAN FRONTEND: Menampilkan 6 Rekomendasi Spesial (Memory-Based CF)"""
-    global dest_ids, data_wisata_csv
+    """SINKRON DENGAN FRONTEND: Menampilkan 6 Rekomendasi Spesial (Memory-Based CF) dengan Cold-Start Fallback"""
+    global dest_ids, data_wisata_csv, sbert_embeddings, embedding_model
     try:
-        # 1. Ambil seluruh history user
         all_hist = db.query(models.History).all()
-        if not all_hist:
-            return {"status": "success", "data": []}
+        user_hist = [h for h in all_hist if h.user_id == current_user.id]
+        visited_ids = [str(h.wisata_id) for h in user_hist]
+
+        # Cold-Start: Jika user belum punya klik history
+        if not user_hist:
+            if current_user.has_onboarded and current_user.preferences:
+                try:
+                    prefs = json.loads(current_user.preferences)
+                    if prefs and embedding_model is not None and sbert_embeddings is not None:
+                        query_text = " ".join(prefs)
+                        q_vec = embedding_model.embed_query(query_text)
+                        cbf_scores = pd.Series(cosine_similarity([q_vec], sbert_embeddings).flatten(), index=dest_ids)
+                        top_recs = cbf_scores.drop(index=visited_ids, errors='ignore').nlargest(6).index.tolist()
+                        results = [d for d in data_wisata_csv if str(d['id']) in top_recs]
+                        results.sort(key=lambda x: top_recs.index(str(x['id'])) if str(x['id']) in top_recs else 999)
+                        if results:
+                            return {"status": "success", "data": results[:6]}
+                except Exception as e:
+                    logger.warning(f"Cold-Start Preferences Fallback error: {e}")
             
+            fallback_items = get_popular_destinations(db, limit=6, exclude_ids=visited_ids)
+            return {"status": "success", "data": fallback_items}
+
         hist_df = pd.DataFrame([{
             'user_id': h.user_id,
             'wisata_id': str(h.wisata_id)
         } for h in all_hist])
-        
-        # 2. Build User-Item Matrix
+
         all_users = hist_df['user_id'].unique()
         R_train = pd.DataFrame(0.0, index=all_users, columns=dest_ids)
         for (u, i), count in hist_df.groupby(['user_id', 'wisata_id']).size().items():
             if u in R_train.index and i in R_train.columns:
                 R_train.at[u, i] = float(count)
-                
+
         if current_user.id not in R_train.index:
-            return {"status": "success", "data": []} # User belum punya klik, CF murni butuh klik
-            
-        # 3. Hitung Kemiripan User
-        user_sim_df = pd.DataFrame(cosine_similarity(R_train), index=R_train.index, columns=R_train.index)
-        np.fill_diagonal(user_sim_df.values, 0.0)
-        
-        # 4. Ambil Top-30 K-Nearest Neighbors (Sesuai hasil Evaluasi)
+            fallback_items = get_popular_destinations(db, limit=6, exclude_ids=visited_ids)
+            return {"status": "success", "data": fallback_items}
+
+        # User Similarity dengan perlindungan zero norm
+        matrix_vals = R_train.values
+        norms = np.linalg.norm(matrix_vals, axis=1, keepdims=True)
+        norms[norms == 0] = 1e-9
+        normalized_matrix = matrix_vals / norms
+        sim_matrix = cosine_similarity(normalized_matrix)
+        np.fill_diagonal(sim_matrix, 0.0)
+        user_sim_df = pd.DataFrame(sim_matrix, index=R_train.index, columns=R_train.index)
+
         k = 30
         top_k_users = user_sim_df.loc[current_user.id].nlargest(k).index
         top_k_sim = user_sim_df.loc[current_user.id, top_k_users]
-        if top_k_sim.max() == 0:
-            return {"status": "success", "data": []}
-            
-        # 5. Hitung Skor CF
+
+        if top_k_sim.max() <= 0:
+            fallback_items = get_popular_destinations(db, limit=6, exclude_ids=visited_ids)
+            return {"status": "success", "data": fallback_items}
+
         item_scores = R_train.loc[top_k_users].mul(top_k_sim, axis=0).sum(axis=0)
-        
-        # 6. Filter tempat yang sudah dikunjungi
-        u_train_items = hist_df[hist_df['user_id'] == current_user.id]['wisata_id'].unique()
-        item_scores = item_scores.drop(index=u_train_items, errors='ignore')
-        
-        # 7. Ambil 6 Tertinggi
+        item_scores = item_scores.drop(index=visited_ids, errors='ignore')
+
         top_6_recs = item_scores.nlargest(6).index.tolist()
-        
-        # Format ke bentuk metadata list
         results = [d for d in data_wisata_csv if str(d['id']) in top_6_recs]
-        # Urutkan sesuai urutan skor
         results.sort(key=lambda x: top_6_recs.index(str(x['id'])) if str(x['id']) in top_6_recs else 999)
-        
+
+        if len(results) < 6:
+            extra = get_popular_destinations(db, limit=6 - len(results), exclude_ids=visited_ids + [str(r['id']) for r in results])
+            results.extend(extra)
+
         return {"status": "success", "data": results[:6]}
-        
     except Exception as e:
-        print(f"Error Personal Rek (CF): {e}")
-        return {"status": "success", "data": []}
+        logger.error(f"Error Personal Rek (CF): {e}")
+        fallback_items = get_popular_destinations(db, limit=6)
+        return {"status": "success", "data": fallback_items}
 
 @app.get("/api/v1/recommendations/hybrid")
 def get_hybrid_recommendations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Menampilkan 6 Rekomendasi Hybrid Filtering (Alpha = 0.6)"""
+    """Menampilkan 6 Rekomendasi Hybrid Filtering (Alpha = 0.6) dengan Cold-Start handling"""
     global dest_ids, data_wisata_csv, sbert_embeddings, embedding_model
     try:
-        # 1. Ambil seluruh history user
         all_hist = db.query(models.History).all()
         user_hist = [h for h in all_hist if h.user_id == current_user.id]
-        
+        visited_ids = [str(h.wisata_id) for h in user_hist]
+
+        # Cold-Start: User belum ada riwayat klik
         if not user_hist:
             if current_user.has_onboarded and current_user.preferences:
                 try:
                     prefs = json.loads(current_user.preferences)
-                    query_text = " ".join(prefs)
-                    q_vec = embedding_model.embed_query(query_text)
-                    cbf_scores = pd.Series(cosine_similarity([q_vec], sbert_embeddings).flatten(), index=dest_ids)
-                    top_6_recs = cbf_scores.nlargest(6).index.tolist()
-                    results = [d for d in data_wisata_csv if str(d['id']) in top_6_recs]
-                    results.sort(key=lambda x: top_6_recs.index(str(x['id'])) if str(x['id']) in top_6_recs else 999)
-                    return {"status": "success", "data": results[:6]}
+                    if prefs and embedding_model is not None and sbert_embeddings is not None:
+                        query_text = " ".join(prefs)
+                        q_vec = embedding_model.embed_query(query_text)
+                        cbf_scores = pd.Series(cosine_similarity([q_vec], sbert_embeddings).flatten(), index=dest_ids)
+                        top_6_recs = cbf_scores.drop(index=visited_ids, errors='ignore').nlargest(6).index.tolist()
+                        results = [d for d in data_wisata_csv if str(d['id']) in top_6_recs]
+                        results.sort(key=lambda x: top_6_recs.index(str(x['id'])) if str(x['id']) in top_6_recs else 999)
+                        if results:
+                            return {"status": "success", "data": results[:6]}
                 except Exception as e:
-                    print(f"Cold Start Error: {e}")
-            return {"status": "success", "data": []}
+                    logger.warning(f"Cold Start Hybrid CBF Error: {e}")
             
+            fallback_items = get_popular_destinations(db, limit=6, exclude_ids=visited_ids)
+            return {"status": "success", "data": fallback_items}
+
         hist_df = pd.DataFrame([{
             'user_id': h.user_id,
             'wisata_id': str(h.wisata_id),
             'wisata_name': h.wisata_name
         } for h in all_hist])
-        
-        # ==========================================
+
         # FASE 1: MEMORY-BASED CF
-        # ==========================================
         all_users = hist_df['user_id'].unique()
         R_train = pd.DataFrame(0.0, index=all_users, columns=dest_ids)
         for (u, i), count in hist_df.groupby(['user_id', 'wisata_id']).size().items():
             if u in R_train.index and i in R_train.columns:
                 R_train.at[u, i] = float(count)
-                
+
         cf_scores = pd.Series(0.0, index=dest_ids)
         if current_user.id in R_train.index:
-            user_sim_df = pd.DataFrame(cosine_similarity(R_train), index=R_train.index, columns=R_train.index)
-            np.fill_diagonal(user_sim_df.values, 0.0)
-            
+            matrix_vals = R_train.values
+            norms = np.linalg.norm(matrix_vals, axis=1, keepdims=True)
+            norms[norms == 0] = 1e-9
+            normalized_matrix = matrix_vals / norms
+            sim_matrix = cosine_similarity(normalized_matrix)
+            np.fill_diagonal(sim_matrix, 0.0)
+            user_sim_df = pd.DataFrame(sim_matrix, index=R_train.index, columns=R_train.index)
+
             k = 30
             top_k_users = user_sim_df.loc[current_user.id].nlargest(k).index
             top_k_sim = user_sim_df.loc[current_user.id, top_k_users]
             if top_k_sim.max() > 0:
                 cf_scores = R_train.loc[top_k_users].mul(top_k_sim, axis=0).sum(axis=0)
 
-        # ==========================================
         # FASE 2: CONTENT-BASED FILTERING (SBERT)
-        # ==========================================
         u_train = hist_df[hist_df['user_id'] == current_user.id]
         query_text = " ".join(u_train['wisata_name'].tolist())
-        q_vec = embedding_model.embed_query(query_text)
-        cbf_scores = pd.Series(cosine_similarity([q_vec], sbert_embeddings).flatten(), index=dest_ids)
-        
-        # ==========================================
+        cbf_scores = pd.Series(0.0, index=dest_ids)
+        if embedding_model is not None and sbert_embeddings is not None:
+            q_vec = embedding_model.embed_query(query_text)
+            cbf_scores = pd.Series(cosine_similarity([q_vec], sbert_embeddings).flatten(), index=dest_ids)
+
         # FASE 3: HYBRID FILTERING
-        # ==========================================
-        cf_norm = (cf_scores - cf_scores.min()) / (cf_scores.max() - cf_scores.min()) if cf_scores.max() > cf_scores.min() else cf_scores * 0.0
-        cbf_norm = (cbf_scores - cbf_scores.min()) / (cbf_scores.max() - cbf_scores.min()) if cbf_scores.max() > cbf_scores.min() else cbf_scores * 0.0
-        
+        cf_range = cf_scores.max() - cf_scores.min()
+        cf_norm = (cf_scores - cf_scores.min()) / cf_range if cf_range > 0 else cf_scores * 0.0
+
+        cbf_range = cbf_scores.max() - cbf_scores.min()
+        cbf_norm = (cbf_scores - cbf_scores.min()) / cbf_range if cbf_range > 0 else cbf_scores * 0.0
+
         alpha = 0.6
         hybrid_scores = (alpha * cf_norm) + ((1 - alpha) * cbf_norm)
-        
+
         # Filter tempat yang sudah dikunjungi
-        u_train_items = u_train['wisata_id'].unique()
-        hybrid_scores = hybrid_scores.drop(index=u_train_items, errors='ignore')
-        
-        # Ambil 6 Tertinggi
+        hybrid_scores = hybrid_scores.drop(index=visited_ids, errors='ignore')
+
         top_6_recs = hybrid_scores.nlargest(6).index.tolist()
-        
-        # Format ke bentuk metadata list
         results = [d for d in data_wisata_csv if str(d['id']) in top_6_recs]
-        # Urutkan sesuai urutan skor
         results.sort(key=lambda x: top_6_recs.index(str(x['id'])) if str(x['id']) in top_6_recs else 999)
-        
+
+        if len(results) < 6:
+            extra = get_popular_destinations(db, limit=6 - len(results), exclude_ids=visited_ids + [str(r['id']) for r in results])
+            results.extend(extra)
+
         return {"status": "success", "data": results[:6]}
-        
     except Exception as e:
-        print(f"Error Hybrid Rek: {e}")
-        return {"status": "success", "data": []}
+        logger.error(f"Error Hybrid Rek: {e}")
+        fallback_items = get_popular_destinations(db, limit=6)
+        return {"status": "success", "data": fallback_items}
     
 
     
-KAMUS_PANDALUNGAN = {
-    "nandi": "dimana", "nang": "ke", "nggon": "tempat", "dolan": "wisata",
-    "mangan": "kuliner", "mbadog": "makan", "mbois": "keren", "tretan": "saudara",
-    "lur": "teman", "rek": "teman", "kancah": "teman", "nyambi": "sambil",
-    "wes": "sudah", "durung": "belum", "penak": "nyaman", "adem": "dingin",
-    "asri": "alami", "budhal": "berangkat", "mlaku": "jalan", "ndelok": "melihat",
-    "isun": "saya", "engko": "nanti", "badeh": "akan", "saben": "setiap"
+PANDALUNGAN_DICT = {
+    r"\bnandi\b": "dimana",
+    r"\bnang\b": "ke",
+    r"\bnggon\b": "tempat",
+    r"\bdolan\b": "wisata",
+    r"\bmangan\b": "kuliner",
+    r"\bmbadog\b": "makan",
+    r"\bmbois\b": "keren",
+    r"\btretan\b": "teman",
+    r"\blur\b": "teman",
+    r"\brek\b": "teman",
+    r"\bkancah\b": "teman",
+    r"\bnyambi\b": "sambil",
+    r"\bwes\b": "sudah",
+    r"\bdurung\b": "belum",
+    r"\bpenak\b": "nyaman",
+    r"\badem\b": "dingin",
+    r"\basri\b": "alami",
+    r"\bbudhal\b": "berangkat",
+    r"\bmlaku\b": "jalan",
+    r"\bndelok\b": "melihat",
+    r"\bisun\b": "saya",
+    r"\bengko\b": "nanti",
+    r"\bbadeh\b": "akan",
+    r"\bsaben\b": "setiap"
 }
 
 def pandalungan_normalizer(text: str) -> str:
-    """Menerjemahkan dialek lokal ke bahasa Indonesia formal untuk pencarian vektor"""
-    words = text.lower().split()
-    normalized = [KAMUS_PANDALUNGAN.get(w, w) for w in words]
-    return " ".join(normalized)
+    """Menerjemahkan dialek lokal ke bahasa Indonesia formal untuk pencarian vektor menggunakan regex word boundaries"""
+    normalized = text
+    for pattern, replacement in PANDALUNGAN_DICT.items():
+        normalized = re.sub(pattern, replacement, normalized, flags=re.IGNORECASE)
+    return normalized
 
 # Chat dan rekom
 # =========================================================
@@ -666,7 +819,6 @@ def pandalungan_normalizer(text: str) -> str:
 def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     global vector_db, data_wisata_csv
     try:
-        llm = get_groq_llm()
         session_id = req.session_id
         
         # 1. Handle Session
@@ -794,8 +946,7 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         """
 
         prompt = ChatPromptTemplate.from_messages([("system", base_prompt), ("human", "{question}")])
-        chain = prompt | llm
-        response = chain.invoke({"question": req.question})
+        response = invoke_groq_llm(prompt, {"question": req.question})
         ai_answer = response.content
 
         # 8. ADVANCED SMART SYNC (Sinkronisasi & Urutan Kartu)
@@ -803,24 +954,31 @@ def chat_rag(req: ChatRequest, current_user: models.User = Depends(get_current_u
         added_ids = set()
 
         user_q = req.question.lower()
+        ai_lower = ai_answer.lower()
 
-        # Mencocokkan nama wisata yang ada di teks jawaban AI dengan metadata
+        # Mencocokkan nama wisata yang ada di teks jawaban AI atau query user dengan metadata
         for cand in final_candidates:
             nama_wisata = cand.get('nama_wisata', '').lower()
             wid = str(cand.get('id', ''))
 
-            nama_words = [w for w in nama_wisata.split() if len(w) > 3]
-            
-            if (nama_wisata in ai_answer.lower() or 
+            # Ambil kata-kata unik dari nama wisata (abaikan kata umum pariwisata)
+            nama_words = [w for w in re.sub(r'[^\w\s]', '', nama_wisata).split() 
+                          if len(w) > 3 and w not in ["pantai", "taman", "wisata", "jember", "kabupaten", "pemandian", "alam"]]
+
+            is_matched = (
+                nama_wisata in ai_lower or 
                 nama_wisata in user_q or
-                any(word in user_q for word in nama_words)):
-                
-                if wid not in added_ids:
-                    synced_recommendations.append(cand)
-                    added_ids.add(wid)
-        
-        # Urutkan kartu berdasarkan posisi penyebutan pertama kali di teks jawaban AI
-        synced_recommendations.sort(key=lambda x: x.get('nama_wisata', '').lower() in user_q, reverse=True)
+                any(w in ai_lower for w in nama_words) or
+                any(w in user_q for w in nama_words)
+            )
+
+            if is_matched and wid not in added_ids:
+                synced_recommendations.append(cand)
+                added_ids.add(wid)
+
+        # Fallback jika tidak ada yang cocok tapi ada final_candidates dari vector search
+        if not synced_recommendations and final_candidates:
+            synced_recommendations = final_candidates[:3]
 
         # Batasi maksimal 6 kartu
         synced_recommendations = synced_recommendations[:6]
@@ -898,11 +1056,14 @@ def get_messages(sid: int, user: models.User = Depends(get_current_user), db: Se
 @app.post("/api/admin/generate-desc")
 def generate_description_ai(req: GenerateDescRequest, admin_user: models.User = Depends(get_current_admin)):
     try:
-        llm = get_groq_llm()
-        prompt = f"Buatkan deskripsi wisata menarik untuk: {req.nama_wisata} ({req.kategori}). Gaya bahasa santai dan emosional."
-        response = llm.invoke(prompt)
+        prompt_tmpl = ChatPromptTemplate.from_messages([
+            ("human", f"Buatkan deskripsi wisata menarik untuk: {req.nama_wisata} ({req.kategori}). Gaya bahasa santai dan emosional.")
+        ])
+        response = invoke_groq_llm(prompt_tmpl, {})
         return {"status": "success", "description": response.content}
-    except Exception: raise HTTPException(500, "Gagal generate.")
+    except Exception as e:
+        logger.error(f"Gagal generate desc: {e}")
+        raise HTTPException(500, f"Gagal generate deskripsi: {str(e)}")
 
 @app.get("/api/admin/stats")
 def get_admin_stats(admin_user: models.User = Depends(get_current_admin), db: Session = Depends(get_db)):
@@ -913,7 +1074,7 @@ def get_admin_stats(admin_user: models.User = Depends(get_current_admin), db: Se
 
 @app.post("/api/admin/add-wisata")
 def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), kategori: str = Form(...), alamat: str = Form(...), harga_tiket: str = Form(...), gambar: UploadFile = File(None), admin_user: models.User = Depends(get_current_admin)):
-    global data_wisata_csv
+    global data_wisata_csv, dest_ids, sbert_embeddings, embedding_model, vector_db
     try:
         filename = ""
         if gambar and gambar.filename:
@@ -921,10 +1082,41 @@ def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), k
             path = f"uploads/{clean}"
             with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
             filename = f"{get_public_url()}/images/{clean}"
-        new_entry = {"id": str(len(data_wisata_csv) + 1), "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": filename, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
+        new_id = str(len(data_wisata_csv) + 1)
+        new_entry = {
+            "id": new_id, 
+            "nama_wisata": nama_wisata, 
+            "deskripsi": deskripsi, 
+            "kategori": kategori, 
+            "alamat": alamat, 
+            "harga_tiket": harga_tiket, 
+            "gambar": filename, 
+            "type": "tourism",
+            "combined_text": f"{nama_wisata} {kategori} {deskripsi}"
+        }
         data_wisata_csv.append(new_entry)
         save_csv_changes()
-        if vector_db: vector_db.add_texts(texts=[new_entry["combined_text"]], metadatas=[new_entry])
+
+        # Sinkronisasi SBERT embeddings & dest_ids
+        if embedding_model is not None and sbert_embeddings is not None:
+            try:
+                new_emb = np.array(embedding_model.embed_documents([new_entry["combined_text"]]))
+                dest_ids.append(new_id)
+                sbert_embeddings = np.vstack([sbert_embeddings, new_emb])
+            except Exception as emb_err:
+                logger.warning(f"Gagal update SBERT embedding untuk wisata baru: {emb_err}")
+
+        # Sinkronisasi ChromaDB dengan metadata type=tourism
+        if vector_db: 
+            content_desc = (
+                f"Nama Wisata: {nama_wisata}. "
+                f"Kategori: {kategori}. "
+                f"Alamat: {alamat}. "
+                f"Deskripsi: {deskripsi}. "
+                f"Harga Tiket: {harga_tiket}."
+            )
+            vector_db.add_texts(texts=[content_desc], metadatas=[new_entry])
+
         return {"status": "success", "message": "Berhasil", "data": new_entry}
     except Exception as e: raise HTTPException(500, str(e))
 
@@ -1053,24 +1245,6 @@ def get_user_activity_report(admin_user: models.User = Depends(get_current_admin
         })
     
     return {"status": "success", "data": report}
-
-
-
-# ==========================================
-#    FORCE ADMIN
-# ==========================================
-@app.get("/api/cheat/jadi-admin/{username}")
-def force_user_to_admin(username: str, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.username == username).first()
-    if not user:
-        return {"status": "error", "message": f"Waduh, user '{username}' gak ditemukan bro!"}
-    user.role = "admin"
-    db.commit()
-    
-    return {
-        "status": "success", 
-        "message": f"🎉 SELAMAT! Akun '{username}' sekarang resmi jadi ADMIN (Role: {user.role}). Silakan login ulang!"
-    }
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
