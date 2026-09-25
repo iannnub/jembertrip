@@ -48,6 +48,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import models 
 from database import engine, get_db, SessionLocal
 import security
+from image_utils import process_and_save_image
 
 # Load Environment
 load_dotenv()
@@ -569,10 +570,9 @@ def delete_my_account(current_user: models.User = Depends(get_current_user), db:
 @app.post("/api/users/avatar")
 def upload_avatar(file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
-        clean_name = f"avatar_{current_user.id}_{int(time.time())}.jpg" 
-        file_location = f"uploads/{clean_name}"
-        with open(file_location, "wb") as buffer: shutil.copyfileobj(file.file, buffer)
-        avatar_url = f"{get_public_url()}/images/{clean_name}"
+        clean_base = f"avatar_{current_user.id}_{int(time.time())}"
+        saved_filename = process_and_save_image(file, "uploads", clean_base, max_width=400, quality=80)
+        avatar_url = f"{get_public_url()}/images/{saved_filename}"
         current_user.avatar = avatar_url
         db.commit()
         return {"status": "success", "avatar_url": avatar_url}
@@ -1078,10 +1078,10 @@ def add_wisata_admin(nama_wisata: str = Form(...), deskripsi: str = Form(...), k
     try:
         filename = ""
         if gambar and gambar.filename:
-            clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
-            path = f"uploads/{clean}"
-            with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
-            filename = f"{get_public_url()}/images/{clean}"
+            raw_base = os.path.splitext(gambar.filename)[0]
+            clean_base = f"wisata_{int(datetime.now().timestamp())}_{re.sub(r'[^a-zA-Z0-9_-]', '_', raw_base)}"
+            saved_filename = process_and_save_image(gambar, "uploads", clean_base, max_width=1200, quality=80)
+            filename = f"{get_public_url()}/images/{saved_filename}"
         new_id = str(len(data_wisata_csv) + 1)
         new_entry = {
             "id": new_id, 
@@ -1148,10 +1148,10 @@ def edit_wisata_admin(id: str, nama_wisata: str = Form(...), deskripsi: str = Fo
         current = data_wisata_csv[idx]
         img = current.get("gambar", "")
         if gambar and gambar.filename:
-            clean = f"{datetime.now().timestamp()}_{gambar.filename.replace(' ', '_')}"
-            path = f"uploads/{clean}"
-            with open(path, "wb") as buffer: shutil.copyfileobj(gambar.file, buffer)
-            img = f"{get_public_url()}/images/{clean}"
+            raw_base = os.path.splitext(gambar.filename)[0]
+            clean_base = f"wisata_{int(datetime.now().timestamp())}_{re.sub(r'[^a-zA-Z0-9_-]', '_', raw_base)}"
+            saved_filename = process_and_save_image(gambar, "uploads", clean_base, max_width=1200, quality=80)
+            img = f"{get_public_url()}/images/{saved_filename}"
         updated = {**current, "nama_wisata": nama_wisata, "deskripsi": deskripsi, "kategori": kategori, "alamat": alamat, "harga_tiket": harga_tiket, "gambar": img, "combined_text": f"{nama_wisata} {kategori} {deskripsi}"}
         data_wisata_csv[idx] = updated
         save_csv_changes()

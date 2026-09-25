@@ -19,3 +19,4 @@ aiohttp
 psycopg2-binary
 scikit-learn
 numpy
+Pillow>=10.0.0
