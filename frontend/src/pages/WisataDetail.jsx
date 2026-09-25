@@ -6,6 +6,7 @@ import SEO from '../components/SEO';
 import Breadcrumb from '../components/Breadcrumb';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import { trackEvent } from '../utils/analytics';
 // Import Icon Modern
 import { MapPin, ArrowLeft, Tag, Info, DollarSign, Star, Sparkles, Compass, Clock } from 'lucide-react';
 // Import Animasi
@@ -80,6 +81,11 @@ function WisataDetail() {
         if (dataWisata) {
             fetchRekomendasiAI(dataWisata.nama_wisata + " " + dataWisata.kategori);
             recordHistory(dataWisata);
+            trackEvent('view_wisata_detail', {
+              wisata_id: dataWisata.id,
+              wisata_name: dataWisata.nama_wisata,
+              kategori: dataWisata.kategori
+            });
         }
       } catch (err) {
         console.error(err);
@@ -269,7 +275,13 @@ function WisataDetail() {
                             {rekomendasiList.map((rec, idx) => (
                                 <Link 
                                     to={`/wisata/${rec.id}`} 
-                                    key={idx} 
+                                    key={idx}
+                                    onClick={() => trackEvent('click_recommendation', {
+                                        recommendation_type: 'similar_wisata',
+                                        source_wisata_id: wisata?.id,
+                                        target_wisata_id: rec.id,
+                                        target_wisata_name: rec.nama_wisata
+                                    })} 
                                     className="group bg-white rounded-2xl p-3 border border-gray-100 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all flex flex-col"
                                 >
                                     <div className="h-32 rounded-xl overflow-hidden bg-gray-100 mb-3 relative">
@@ -351,6 +363,10 @@ function WisataDetail() {
                         href={getMapsUrl(wisata.nama_wisata, wisata.alamat)}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackEvent('open_google_maps', {
+                            wisata_id: wisata.id,
+                            wisata_name: wisata.nama_wisata
+                        })}
                         className="w-full mt-6 bg-gradient-to-r from-primary to-primary-soft text-white py-4 rounded-xl font-bold text-base md:text-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer min-h-[48px]"
                     >
                         <Compass size={20} /> Buka Google Maps

@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link, useSearchParams } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { trackEvent } from '../utils/analytics';
 // Import Icon
 import { Search, MapPin, Star, Compass, Sparkles } from 'lucide-react';
 // Import Animasi
@@ -193,17 +194,23 @@ function WisataHome() {
   }, [searchTerm, selectedCategory, masterWisataList]);
 
 
-  // --- 4. HANDLER KHUSUS SCROLL ---
+  // --- 4. HANDLER KHUSUS SCROLL & ANALYTICS ---
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && resultsRef.current) {
-      setTimeout(() => {
-        resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+    if (e.key === 'Enter') {
+      if (searchTerm.trim()) {
+        trackEvent('search_wisata', { search_term: searchTerm.trim(), result_count: displayedWisata.length });
+      }
+      if (resultsRef.current) {
+        setTimeout(() => {
+          resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
     }
   };
 
   const handleCategoryClick = (cat) => {
     setSelectedCategory(cat);
+    trackEvent('select_category', { category_name: cat });
     if (resultsRef.current) {
       setTimeout(() => {
         resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -371,7 +378,12 @@ function WisataHome() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {personalRek.map((wisata, index) => (
-                <Link to={`/wisata/${wisata.id}`} key={`cf-${index}`} className="group block h-full">
+                <Link 
+                  to={`/wisata/${wisata.id}`} 
+                  key={`cf-${index}`} 
+                  onClick={() => trackEvent('click_recommendation', { source: 'cf', wisata_id: wisata.id, wisata_name: wisata.nama_wisata })}
+                  className="group block h-full"
+                >
                   <div className="bg-gradient-to-br from-white to-page-bg rounded-2xl p-4 border border-primary/10 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/10 h-full flex items-start gap-4">
                     <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 shrink-0"
                     />
@@ -408,7 +420,12 @@ function WisataHome() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {hybridRek.map((wisata, index) => (
-                <Link to={`/wisata/${wisata.id}`} key={`hf-${index}`} className="group block h-full">
+                <Link 
+                  to={`/wisata/${wisata.id}`} 
+                  key={`hf-${index}`} 
+                  onClick={() => trackEvent('click_recommendation', { source: 'hybrid', wisata_id: wisata.id, wisata_name: wisata.nama_wisata })}
+                  className="group block h-full"
+                >
                   <div className="bg-gradient-to-br from-white to-pink-50 rounded-2xl p-4 border border-pink-200 hover:border-pink-400 transition-all hover:shadow-xl hover:shadow-pink-200 h-full flex items-start gap-4">
                     <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 shrink-0"
                     />

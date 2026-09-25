@@ -59,6 +59,21 @@ from image_utils import process_and_save_image
 
 # Load Environment
 load_dotenv()
+
+# --- SENTRY ERROR MONITORING SETUP ---
+SENTRY_DSN = os.getenv("SENTRY_DSN", "").strip()
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            traces_sample_rate=0.2,
+            environment=os.getenv("ENVIRONMENT", "production" if os.getenv("DATABASE_URL", "").startswith("postgresql") else "development")
+        )
+        logging.getLogger("uvicorn").info("🛡️ Sentry Error Monitoring aktif.")
+    except Exception as sentry_err:
+        logging.getLogger("uvicorn").warning(f"Gagal inisialisasi Sentry: {sentry_err}")
+
 models.Base.metadata.create_all(bind=engine)
 logger = logging.getLogger("uvicorn")
 

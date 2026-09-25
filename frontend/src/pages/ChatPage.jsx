@@ -5,6 +5,7 @@ import NgrokImage from '../components/NgrokImage';
 import SEO from '../components/SEO';
 import axios from 'axios';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { trackEvent } from '../utils/analytics';
 // Import Icon
 import { Send, Bot, User, Info, Sparkles, Menu, X, Plus, Trash2, ChevronRight, Mic, MicOff, Languages } from 'lucide-react';
 // Import Animasi
@@ -208,6 +209,14 @@ function ChatPage() {
         timestamp: currentTime
     };
     setMessages((prev) => [...prev, userMessage]);
+    
+    // GA4 Event Tracking
+    trackEvent('ask_cak_jember', {
+        question_length: userMessage.text.length,
+        language: language,
+        input_method: listening ? 'voice' : 'text'
+    });
+
     setInput(""); 
     setLoading(true);
 
@@ -421,7 +430,18 @@ function ChatPage() {
                                           <p className="text-xs font-bold text-text-muted mb-2 px-1 flex items-center gap-1"><Sparkles size={12} className="text-accent" /> Rekomendasi Pilihan:</p>
                                           <div className="flex gap-3 overflow-x-auto pb-3 px-1 snap-x snap-mandatory max-w-full">
                                               {msg.recommendations.map((rec, idx) => (
-                                                  <div key={idx} onClick={() => window.location.href = `/wisata/${rec.id}`} className="snap-center flex-shrink-0 w-[220px] sm:w-56 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group">
+                                                  <div 
+                                                      key={idx} 
+                                                      onClick={() => {
+                                                          trackEvent('click_recommendation', {
+                                                              recommendation_type: 'chatbot_rag',
+                                                              target_wisata_id: rec.id,
+                                                              target_wisata_name: rec.nama_wisata
+                                                          });
+                                                          window.location.href = `/wisata/${rec.id}`;
+                                                      }} 
+                                                      className="snap-center flex-shrink-0 w-[220px] sm:w-56 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group"
+                                                  >
                                                       <div className="h-28 sm:h-32 bg-gray-100 relative overflow-hidden">
                                                            <NgrokImage src={getImageUrl(rec.gambar)} alt={rec.nama_wisata} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg">{rec.kategori}</div>

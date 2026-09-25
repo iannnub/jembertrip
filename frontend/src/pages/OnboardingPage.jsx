@@ -5,6 +5,7 @@ import { Sparkles, MapPin, CheckCircle2 } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { trackEvent } from '../utils/analytics';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -56,6 +57,11 @@ function OnboardingPage() {
       const userData = JSON.parse(localStorage.getItem('user'));
       userData.has_onboarded = true;
       localStorage.setItem('user', JSON.stringify(userData));
+
+      trackEvent('complete_onboarding', {
+        selected_categories: selected.join(','),
+        count: selected.length
+      });
 
       toast.success("Kategori berhasil disimpan! Selamat menjelajah.");
       navigate("/");

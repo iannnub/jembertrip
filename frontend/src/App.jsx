@@ -21,6 +21,7 @@ import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage'; 
 import OnboardingPage from './pages/OnboardingPage';
 import NotFoundPage from './pages/NotFoundPage';
+import { trackPageView, initGA } from './utils/analytics';
 
 // --- KOMPONEN PROTEKSI RUTE ADMIN ---
 const ProtectedAdminRoute = ({ children }) => {
@@ -48,6 +49,16 @@ function App() {
 
   const noFooterPaths = ['/rekomendasi', '/login', '/register', '/onboard'];
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
+
+  // Initialize GA4 once on mount
+  useEffect(() => {
+    initGA();
+  }, []);
+
+  // GA4 Page View Tracking on Route Change
+  useEffect(() => {
+    trackPageView(location.pathname + location.search, document.title);
+  }, [location]);
 
   // 1. Cek Login
   useEffect(() => {

@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import TurnstileWidget from '../components/TurnstileWidget';
+import { trackEvent } from '../utils/analytics';
 // Import Icons
 import { User, Lock, LogIn, ArrowLeft, Eye, EyeOff, XCircle } from 'lucide-react';
 // Import Animasi
@@ -89,6 +90,7 @@ function LoginPage() {
 
         localStorage.setItem('token', access_token);
         localStorage.setItem('user', JSON.stringify(user));
+        trackEvent('login_success', { role: user.role });
         toast.success(`Selamat datang, ${user.full_name}!`);
 
         setTimeout(() => {

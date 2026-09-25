@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import TurnstileWidget from '../components/TurnstileWidget';
+import { trackEvent } from '../utils/analytics';
 // Import Icons
 import { User, Mail, Lock, UserPlus, ArrowLeft, Type, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 // Import Animasi
@@ -120,6 +121,10 @@ function RegisterPage() {
       };
       const response = await axios.post(`${API_BASE_URL}/api/auth/register`, payload);
       if (response.data.status === 'success') {
+        trackEvent('user_registered', {
+          method: 'email',
+          username_length: formData.username.length
+        });
         toast.success('Yeay! Akun berhasil dibuat. Yuk login! 🎉');
         setTimeout(() => { navigate('/login'); }, 1500);
       }
