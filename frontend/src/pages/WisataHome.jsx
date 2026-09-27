@@ -90,6 +90,12 @@ function WisataHome() {
       if (gambarPath.startsWith('http')) {
           return gambarPath;
       }
+
+      // Jika upload path (/uploads/... atau /images/...)
+      if (gambarPath.startsWith('/uploads') || gambarPath.startsWith('uploads/') || gambarPath.startsWith('/images') || gambarPath.startsWith('images/')) {
+          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
+          return `${API_BASE_URL}${cleanPath}`;
+      }
       
       // Gambar lokal yang ada di public/assets/...
       return gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;

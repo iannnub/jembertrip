@@ -41,6 +41,15 @@ const ProtectedAdminRoute = ({ children }) => {
   return children;
 };
 
+// Helper Avatar URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+const getAvatarUrl = (avatar) => {
+  if (!avatar) return null;
+  if (avatar.startsWith('http')) return avatar;
+  const clean = avatar.startsWith('/') ? avatar : `/${avatar}`;
+  return `${API_BASE_URL}${clean}`;
+};
+
 function App() {
   const [user, setUser] = useState(null);
   
@@ -118,8 +127,8 @@ function App() {
         }}
       />
 
-      {/* --- NAVBAR MODERN STICKY --- */}
-      <header className="sticky top-0 left-0 w-full z-40 bg-page-bg/90 backdrop-blur-md border-b border-primary/10 shadow-xs transition-all duration-300">
+      {/* --- NAVBAR MODERN STICKY (z-30) --- */}
+      <header className="sticky top-0 left-0 w-full z-30 bg-page-bg/90 backdrop-blur-md border-b border-primary/10 shadow-xs transition-all duration-300">
         <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
           
           {/* LOGO */}
@@ -178,7 +187,7 @@ function App() {
                   {/* Avatar: Pink Gradient */}
                   <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-xs overflow-hidden ${user.role === 'admin' ? 'bg-gradient-to-tr from-accent to-orange-400 shadow-orange-200' : 'bg-gradient-to-tr from-primary to-primary-soft shadow-pink-200'}`}>
                     {user.avatar ? (
-                        <NgrokImage src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                        <NgrokImage src={getAvatarUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                         user.full_name?.charAt(0)?.toUpperCase() || 'U'
                     )}

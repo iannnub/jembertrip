@@ -3,43 +3,57 @@ title 🚀 JemberTrip - Server Launcher
 color 0A
 cls
 
+echo ========================================================
+echo         🌟 JEMBERTRIP - AUTO LAUNCHER 🌟
+echo ========================================================
 echo.
-echo  ==========================================
-echo    🌟 JEMBERTRIP - AUTO LAUNCHER 🌟
-echo  ==========================================
+echo  [1/2] Mempersiapkan Backend (FastAPI + AI Cak Jember)...
+echo  [2/2] Mempersiapkan Tunnel Publik (Ngrok Cloud)...
 echo.
-echo  Memulai Backend (Python + AI)...
-echo  Memulai Tunnel Publik (Ngrok)...
-echo.
-echo  Website akan bisa diakses di:
-echo  https://jembertrip.vercel.app
-echo.
-echo  ==========================================
+echo  Website Publik: https://jembertrip.vercel.app
+echo  Backend URL   : https://numbness-afterglow-parade.ngrok-free.dev
+echo ========================================================
 echo.
 
-:: Buka Terminal 1: Backend Python (Uvicorn)
-start "🐍 JemberTrip Backend (Uvicorn)" cmd /k ^
-    "title JemberTrip Backend ^& color 0B ^& echo. ^& echo  [BACKEND] Mengaktifkan virtual environment... ^& echo. ^& "^
-    "d:\iann Kuliah\Semester 7\1. Artificial Intelegence (AI)\jembertrip\venv\Scripts\activate.bat" ^& ^
-    cd /d "d:\iann Kuliah\Semester 7\1. Artificial Intelegence (AI)\jembertrip\backend" ^& ^
-    echo. ^& echo  [BACKEND] Menjalankan server AI... ^& echo. ^& ^
-    python -m uvicorn main:app --host 127.0.0.1 --port 8000"
+:: Mendapatkan direktori folder project saat ini
+set "ROOT_DIR=%~dp0"
 
-:: Tunggu 10 detik agar backend siap lebih dulu
-echo  Menunggu backend siap (15 detik)...
-timeout /t 15 /nobreak > nul
+:: 1. Buka Terminal 1: Backend Python (FastAPI / Uvicorn)
+echo  [INFO] Menjalankan Backend di port 8000...
+start "🐍 JemberTrip Backend (FastAPI)" cmd /k ^
+    "title 🐍 JemberTrip Backend ^& color 0B ^& cd /d "%ROOT_DIR%backend" ^& ^
+    echo. ^& echo ========================================== ^& ^
+    echo   [BACKEND] Mengaktifkan Virtual Environment... ^& ^
+    echo ========================================== ^& echo. ^& ^
+    call "%ROOT_DIR%backend\venv\Scripts\activate.bat" ^& ^
+    echo. ^& echo   [BACKEND] Menjalankan FastAPI Server... ^& echo. ^& ^
+    uvicorn main:app --reload --host 0.0.0.0 --port 8000"
 
-:: Buka Terminal 2: Ngrok Tunnel
+:: Tunggu 6 detik agar backend selesai inisialisasi database & AI model
+echo  [INFO] Menunggu Backend siap (6 detik)...
+timeout /t 6 /nobreak > nul
+
+:: 2. Buka Terminal 2: Ngrok Tunnel (Jembatan ke Vercel)
+echo  [INFO] Membuka Tunnel Ngrok...
 start "🌐 JemberTrip Ngrok Tunnel" cmd /k ^
-    "title JemberTrip Ngrok Tunnel ^& color 0E ^& echo. ^& echo  [NGROK] Membuka tunnel publik... ^& echo. ^& ^
-    "C:\Users\IANN\AppData\Local\Microsoft\WinGet\Packages\Ngrok.Ngrok_Microsoft.Winget.Source_8wekyb3d8bbwe\ngrok.exe" http --domain=numbness-afterglow-parade.ngrok-free.dev 8000"
+    "title 🌐 JemberTrip Ngrok Tunnel ^& color 0E ^& cd /d "%ROOT_DIR%" ^& ^
+    echo. ^& echo ========================================== ^& ^
+    echo   [NGROK] Menghubungkan Laptop ke Vercel... ^& ^
+    echo ========================================== ^& echo. ^& ^
+    npx --yes ngrok http --url=numbness-afterglow-parade.ngrok-free.dev 8000"
 
 echo.
-echo  ✅ Semua server berhasil dijalankan!
+echo ========================================================
+echo  ✅ SEMUA SERVICE BERHASIL DIJALANKAN!
+echo ========================================================
 echo.
-echo  🌐 Website: https://jembertrip.vercel.app
-echo  🔗 Backend: https://numbness-afterglow-parade.ngrok-free.dev
+echo  📱 Buka di Browser Laptop / HP Anda:
+echo     👉 https://jembertrip.vercel.app
 echo.
-echo  ⚠️  JANGAN TUTUP jendela terminal yang terbuka!
+echo  ⚠️  CATATAN PENTING:
+echo     JANGAN TUTUP 2 jendela terminal hitam yang baru muncul!
+echo     (Terminal Backend dan Terminal Ngrok harus tetap terbuka
+echo      selama Anda ingin website bisa diakses).
 echo.
+echo ========================================================
 pause

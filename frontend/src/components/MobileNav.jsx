@@ -4,6 +4,15 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Home, Sparkles, LayoutDashboard, User, LogOut, LogIn, MapPin } from 'lucide-react';
 import NgrokImage from './NgrokImage';
 
+// Helper Avatar URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+const getAvatarUrl = (avatar) => {
+  if (!avatar) return null;
+  if (avatar.startsWith('http')) return avatar;
+  const clean = avatar.startsWith('/') ? avatar : `/${avatar}`;
+  return `${API_BASE_URL}${clean}`;
+};
+
 export default function MobileNav({ user, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
@@ -153,7 +162,7 @@ export default function MobileNav({ user, onLogout }) {
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary-soft flex items-center justify-center text-white font-bold text-sm shadow-xs overflow-hidden shrink-0">
                   {user.avatar ? (
-                    <NgrokImage src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    <NgrokImage src={getAvatarUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     user.full_name?.charAt(0)?.toUpperCase() || 'U'
                   )}

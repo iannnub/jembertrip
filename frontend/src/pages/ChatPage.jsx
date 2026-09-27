@@ -81,8 +81,30 @@ function ChatPage() {
           return gambarPath;
       }
       
+      // Jika upload path (/uploads/... atau /images/...)
+      if (gambarPath.startsWith('/uploads') || gambarPath.startsWith('uploads/') || gambarPath.startsWith('/images') || gambarPath.startsWith('images/')) {
+          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
+          return `${API_BASE_URL}${cleanPath}`;
+      }
+
       // Gambar lokal yang ada di public/assets/...
       return gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
+  };
+
+  const loadChatSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/chat/sessions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.status === "success") {
+        setChatSessions(response.data.data);
+      }
+    } catch (err) {
+      console.error("Error loading chat sessions:", err);
+    } finally {
+      setLoadingSessions(false);
+    }
   };
 
   useEffect(() => {
@@ -104,22 +126,6 @@ function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
-
-  const loadChatSessions = async () => {
-    setLoadingSessions(true);
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/chat/sessions`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.data.status === "success") {
-        setChatSessions(response.data.data);
-      }
-    } catch (err) {
-      console.error("Error loading chat sessions:", err);
-    } finally {
-      setLoadingSessions(false);
-    }
-  };
 
   const loadChatSession = async (sessionId) => {
     setCurrentSessionId(sessionId);
@@ -281,12 +287,12 @@ function ChatPage() {
             <motion.div 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setSidebarOpen(false)}
-                className="md:hidden fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
+                className="md:hidden fixed inset-0 bg-black/50 z-20 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed md:static inset-y-0 left-0 w-72 bg-white border-r border-gray-200 flex flex-col h-full shadow-2xl md:shadow-none z-[70]"
+              className="fixed md:static inset-y-0 left-0 w-72 bg-white border-r border-gray-200 flex flex-col h-full shadow-2xl md:shadow-none z-20"
             >
               <div className="p-5 border-b border-gray-100 flex-shrink-0 bg-white">
                 <div className="flex items-center justify-between mb-6">
@@ -337,8 +343,8 @@ function ChatPage() {
       {/* ===== MAIN CHAT AREA ===== */}
       <div className="flex-grow flex flex-col h-full w-full bg-page-bg relative">
         
-        {/* HEADER CHAT */}
-        <div className="bg-white/90 backdrop-blur-xl border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        {/* HEADER CHAT (z-10) */}
+        <div className="bg-white/90 backdrop-blur-xl border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-3">
             {!sidebarOpen && <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors md:hidden text-gray-600"><Menu size={24} /></button>}
             <div className="relative">
@@ -363,7 +369,7 @@ function ChatPage() {
               </button>
               
               {showLangMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                  <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20">
                       <button onClick={() => changeLanguage('id')} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${language === 'id' ? 'font-bold text-primary' : 'text-text-main'}`}>Indonesia</button>
                       <button onClick={() => changeLanguage('jowo')} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${language === 'jowo' ? 'font-bold text-primary' : 'text-text-main'}`}>Jawa</button>
                       <button onClick={() => changeLanguage('madura')} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${language === 'madura' ? 'font-bold text-primary' : 'text-text-main'}`}>Madura</button>
@@ -476,8 +482,8 @@ function ChatPage() {
           </div>
         </div>
 
-        {/* INPUT AREA (FIXED BOTTOM WITH SAFE AREA) */}
-        <div className="bg-white border-t border-gray-200 p-3 md:p-4 sticky bottom-0 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] safe-area-bottom">
+        {/* INPUT AREA (FIXED BOTTOM WITH SAFE AREA - z-10) */}
+        <div className="bg-white border-t border-gray-200 p-3 md:p-4 sticky bottom-0 z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] safe-area-bottom">
           <div className="max-w-3xl mx-auto w-full">
               <form onSubmit={handleSend} className="relative flex items-center gap-2 sm:gap-3">
                   

@@ -96,6 +96,14 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
+        
+        # Skip security headers untuk static files (gambar wisata & avatar)
+        # agar tidak memblokir cross-origin image loading
+        if request.url.path.startswith("/images") or request.url.path.startswith("/uploads"):
+            # Hanya tambahkan header minimal yang aman untuk static files
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            return response
+        
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
@@ -139,6 +147,9 @@ def create_default_admin():
 
 # --- KONFIGURASI GAMBAR ---
 os.makedirs("uploads", exist_ok=True)
+os.makedirs("uploads/wisata", exist_ok=True)
+os.makedirs("uploads/profiles", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.mount("/images", StaticFiles(directory="uploads"), name="images")
 
 # --- CORS ---
@@ -148,8 +159,12 @@ origins = [
     "https://jembertrip.vercel.app"
 ]
 app.add_middleware(
-    CORSMiddleware, allow_origins=origins, allow_credentials=True, 
-    allow_methods=["*"], allow_headers=["*"]
+    CORSMiddleware, 
+    allow_origins=origins, 
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True, 
+    allow_methods=["*"], 
+    allow_headers=["*"]
 )
 app.add_middleware(SecurityHeadersMiddleware)
 
