@@ -97,13 +97,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         
-        # Skip security headers untuk static files (gambar wisata & avatar)
-        # agar tidak memblokir cross-origin image loading
+        # Cache control untuk static files (gambar wisata & avatar)
         if request.url.path.startswith("/images") or request.url.path.startswith("/uploads"):
-            # Hanya tambahkan header minimal yang aman untuk static files
             response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            response.headers["Access-Control-Allow-Origin"] = "*"
             return response
         
+        # Default API response: no-cache + OWASP headers
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
