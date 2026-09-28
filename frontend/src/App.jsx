@@ -3,7 +3,7 @@
 import MobileNav from './components/MobileNav';
 import Footer from './components/Footer';
 import { getAvatarUrl } from './utils/imageHelper';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 // Import Routing
 import { Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 // Import Library UI
@@ -11,17 +11,28 @@ import { Toaster, toast } from 'react-hot-toast';
 // Import Icon Modern
 import { MapPin, LogOut, LogIn, Home, Sparkles, LayoutDashboard } from 'lucide-react'; 
 
-// Import Halaman
-import AdminPage from './pages/AdminPage';
+// Eager load landing page
 import WisataHome from './pages/WisataHome';
-import WisataDetail from './pages/WisataDetail';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ChatPage from './pages/ChatPage';
-import ProfilePage from './pages/ProfilePage'; 
-import OnboardingPage from './pages/OnboardingPage';
-import NotFoundPage from './pages/NotFoundPage';
+
+// Lazy load route chunks untuk optimasi bundle size
+const WisataDetail = lazy(() => import('./pages/WisataDetail'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ChatPage = lazy(() => import('./pages/ChatPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+
 import { trackPageView, initGA } from './utils/analytics';
+
+// Loading fallback spinner
+const PageLoader = () => (
+  <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
+    <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
+    <span className="text-xs font-medium text-slate-400">Memuat halaman...</span>
+  </div>
+);
 
 // --- KOMPONEN PROTEKSI RUTE ADMIN ---
 const ProtectedAdminRoute = ({ children }) => {
@@ -214,27 +225,29 @@ function App() {
 
       {/* --- MAIN CONTENT --- */}
       <main className={`flex-grow ${!shouldShowFooter ? 'h-[calc(100vh-80px)] overflow-hidden' : 'pb-12 px-4 md:px-0'}`}>
-        <Routes>
-          <Route path="/" element={<WisataHome />} />
-          <Route path="/wisata/:id" element={<WisataDetail />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/onboard" element={<OnboardingPage />} />
-          <Route path="/rekomendasi" element={<ChatPage />} />
-          <Route path="/chat" element={<Navigate to="/rekomendasi" replace />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          
-          <Route 
-            path="/admin" 
-            element={
-                <ProtectedAdminRoute>
-                    <AdminPage />
-                </ProtectedAdminRoute>
-            } 
-          />
-          {/* Fallback Route 404 - Halaman Custom */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<WisataHome />} />
+            <Route path="/wisata/:id" element={<WisataDetail />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/onboard" element={<OnboardingPage />} />
+            <Route path="/rekomendasi" element={<ChatPage />} />
+            <Route path="/chat" element={<Navigate to="/rekomendasi" replace />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            
+            <Route 
+              path="/admin" 
+              element={
+                  <ProtectedAdminRoute>
+                      <AdminPage />
+                  </ProtectedAdminRoute>
+              } 
+            />
+            {/* Fallback Route 404 - Halaman Custom */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
       </main>
 
       {/* --- FOOTER DENGAN SITEMAP & INTERNAL LINKS --- */}
