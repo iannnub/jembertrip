@@ -1,70 +1,61 @@
-// frontend/src/components/Footer.jsx
-// Distinctive minimal footer: accent line gradasi, 1 baris, pill links
-// Hapus total blok teks panjang (4-kolom lama)
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Compass, Sparkles, ArrowUpRight, Heart } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer className="mt-16 bg-slate-900 text-slate-300">
-      {/* Top accent gradient line */}
-      <div className="h-1 w-full bg-gradient-to-r from-rose-500 via-orange-400 to-emerald-500" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-
+    <footer className="bg-slate-900 text-slate-300 mt-16">
+      {/* accent hairline */}
+      <div className="h-1 h-[3px] w-full bg-gradient-to-r from-rose-500 via-orange-400 to-emerald-500" />
+      <div className="max-w-6xl mx-auto px-6">
+        {/* top grid */}
+        <div className="grid md:grid-cols-[1.6fr_1fr_1fr] gap-10 py-10">
           {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-md shrink-0">
-              <Compass size={18} className="text-slate-900" />
-            </div>
-            <div>
-              <p className="font-bold text-white tracking-tight leading-none">JemberTrip</p>
-              <p className="text-xs text-slate-400 mt-0.5">Jelajahi Bumi Pandalungan dengan AI</p>
+          <div>
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-white text-slate-900 grid place-items-center font-black text-sm">JT</div>
+              <div>
+                <div className="font-bold text-white leading-none tracking-tight">JemberTrip</div>
+                <div className="text-xs text-slate-400">Jelajahi Bumi Pandalungan dengan AI</div>
+              </div>
+            </Link>
+            <p className="mt-4 text-sm leading-relaxed text-slate-400 max-w-sm">
+              Kurasi pantai selatan, tembakau, dan panorama Jember. Dipandu Cak Jember — asisten AI berdialek Pandalungan.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <a href="https://github.com/iannnub/jembertrip" target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 grid place-items-center hover:bg-slate-700 transition text-xs" title="GitHub iannnub">↗</a>
+              <span className="text-xs text-slate-500 self-center">Pandalungan • Tembakau • Pantai Selatan</span>
             </div>
           </div>
 
-          {/* Pill Navigation Links */}
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Link
-              to="/"
-              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white hover:text-slate-900 transition-all duration-200 font-medium"
-            >
-              Home
-            </Link>
-            <Link
-              to="/rekomendasi"
-              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white hover:text-slate-900 transition-all duration-200 font-medium inline-flex items-center gap-1.5"
-            >
-              <Sparkles size={13} className="text-orange-300" />
-              Cak Jember AI
-            </Link>
-            <a
-              href="https://github.com/iannnub/jembertrip"
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white hover:text-slate-900 transition-all duration-200 font-medium inline-flex items-center gap-1"
-            >
-              GitHub <ArrowUpRight size={13} />
-            </a>
+          {/* Jelajahi */}
+          <div>
+            <div className="text-[11px] tracking-widest font-semibold text-slate-400 mb-3">JELAJAHI</div>
+            <ul className="space-y-2 text-sm">
+              <li><Link to="/" className="hover:text-white transition">Beranda</Link></li>
+              <li><Link to="/wisata" className="hover:text-white transition">Eksplor Wisata</Link></li>
+              <li><Link to="/rekomendasi" className="hover:text-white transition">Rekomendasi AI</Link></li>
+              <li><Link to="/rekomendasi" className="hover:text-white transition">Chat Cak Jember</Link></li>
+            </ul>
           </div>
 
-          {/* Copyright & Watermark */}
-          <div className="text-xs text-slate-500 leading-relaxed">
-            <p>
-              © {new Date().getFullYear()} JemberTrip. Crafted with{' '}
-              <Heart size={11} className="inline text-rose-400 fill-rose-400" />{' '}
-              for Jember.
-            </p>
-            <p className="text-slate-600 mt-0.5">
-              Pandalungan • Tembakau • Pantai Selatan
-            </p>
-            <p className="text-slate-600 mt-0.5">
-              Dibuat oleh{' '}
-              <span className="font-semibold text-slate-400">iannnub</span>
-              {' '}• Universitas Muhammadiyah Jember
-            </p>
+          {/* Kategori */}
+          <div>
+            <div className="text-[11px] tracking-widest font-semibold text-slate-400 mb-3">KATEGORI</div>
+            <div className="flex flex-wrap gap-2">
+              {["Pantai","Air Terjun","Agrowisata","Edukasi","Religi","Panorama"].map(c=>(
+                <Link key={c} to={`/?kategori=${encodeURIComponent(c)}`} className="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs hover:bg-slate-700 hover:text-white transition">{c}</Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* bottom bar */}
+        <div className="border-t border-slate-800 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+          <div className="text-slate-500">© 2026 JemberTrip. Crafted with <span className="text-rose-400">♥</span> for Jember.</div>
+          <div className="flex items-center gap-2">
+            <span className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> System Online
+            </span>
+            <span className="text-slate-500">Dibuat oleh <span className="text-slate-300 font-medium">iannnub</span> — Universitas Muhammadiyah Jember</span>
           </div>
         </div>
       </div>
