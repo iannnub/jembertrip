@@ -4,6 +4,10 @@ import App from './App.jsx'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
 import axios from 'axios';
+import { logWebVitals } from './utils/performance';
+
+// Performance monitoring
+logWebVitals();
 
 // Bypass Ngrok Browser Warning
 axios.defaults.headers.common['ngrok-skip-browser-warning'] = '69420';
