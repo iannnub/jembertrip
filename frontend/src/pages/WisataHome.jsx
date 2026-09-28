@@ -382,8 +382,8 @@ function WisataHome() {
                     <div>
                       <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-primary transition-colors">{wisata.nama_wisata}</h4>
                       <p className="text-xs text-text-muted line-clamp-2 mb-3">{wisata.alamat}</p>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-gradient-to-r from-primary to-accent px-2 py-1 rounded-md shadow-sm">
-                        <Star size={10} fill="currentColor" /> Memory-Based CF
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-white bg-gradient-to-r from-rose-500 to-orange-400 px-2.5 py-1 rounded-md shadow-sm">
+                        <Star size={10} fill="currentColor" /> Cocok Untukmu
                       </span>
                     </div>
                   </div>
