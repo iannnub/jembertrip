@@ -434,8 +434,9 @@ function ChatPage() {
                                                       key={idx} 
                                                       onClick={() => {
                                                           trackEvent('click_recommendation', {
+                                                              source: 'chatbot_rag',
+                                                              wisata_id: rec.id,
                                                               recommendation_type: 'chatbot_rag',
-                                                              target_wisata_id: rec.id,
                                                               target_wisata_name: rec.nama_wisata
                                                           });
                                                           window.location.href = `/wisata/${rec.id}`;

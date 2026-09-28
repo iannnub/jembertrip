@@ -59,6 +59,7 @@ function OnboardingPage() {
       localStorage.setItem('user', JSON.stringify(userData));
 
       trackEvent('complete_onboarding', {
+        selected_categories_count: selected.length,
         selected_categories: selected.join(','),
         count: selected.length
       });

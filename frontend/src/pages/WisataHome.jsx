@@ -313,6 +313,9 @@ function WisataHome() {
             </div>
             <button 
               onClick={() => {
+                if (searchTerm.trim()) {
+                  trackEvent('search_wisata', { search_term: searchTerm.trim(), result_count: displayedWisata.length });
+                }
                 if (resultsRef.current) {
                   resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
