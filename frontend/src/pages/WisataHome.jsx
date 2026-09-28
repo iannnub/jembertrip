@@ -523,22 +523,22 @@ function WisataHome() {
 
               {/* mockup chat */}
               <div className="relative">
-                <div className="bg-slate-900 rounded-[1.25rem] p-4 shadow-xl border border-slate-800">
+                <div className="bg-white md:bg-slate-900 rounded-[1.25rem] p-4 shadow-xl border border-slate-200 md:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 to-orange-400 grid place-items-center text-white text-xs font-bold">CJ</div>
                     <div className="text-xs">
-                      <div className="font-semibold text-white leading-none">Cak Jember</div>
-                      <div className="text-emerald-400 text-[11px]">● Online</div>
+                      <div className="font-semibold text-slate-900 md:text-white leading-none">Cak Jember</div>
+                      <div className="text-emerald-600 md:text-emerald-400 text-[11px]">Online</div>
                     </div>
-                    <div className="ml-auto w-2 h-2 rounded-full bg-white/20" />
+                    <div className="ml-auto w-2 h-2 rounded-full bg-slate-300 md:bg-white/20" />
                   </div>
                   <div className="space-y-3">
-                    <div className="bg-white text-slate-700 rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed">Rekomendasi pantai sepi sing cocok gawe healing, Cak?</div>
-                    <div className="bg-gradient-to-br from-rose-500 to-orange-400 text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed ml-6">Wes, coba nang Pantai Papuma pas sunrise, Lur! Sepi, ombake apik, cocok gawe ngopi santai.</div>
+                    <div className="bg-slate-50 md:bg-white text-slate-700 rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed">Rekomendasi pantai sepi sing cocok gawe healing, Cak?</div>
+                    <div className="bg-gradient-to-br from-rose-500 to-orange-400 text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed ml-6">Wes, coba nang Pantai Papuma pas sunrise, Lur! Sepi, ombake apik.</div>
                     <div className="flex gap-1.5 ml-6">
-                      <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/80">Papuma</span>
-                      <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/80">Watu Ulo</span>
-                      <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/80">Kuliner</span>
+                      <span className="px-2.5 py-1 rounded-full bg-slate-100 md:bg-white/10 border border-slate-200 md:border-white/10 text-xs text-slate-700 md:text-white/80">Papuma</span>
+                      <span className="px-2.5 py-1 rounded-full bg-slate-100 md:bg-white/10 border border-slate-200 md:border-white/10 text-xs text-slate-700 md:text-white/80">Watu Ulo</span>
+                      <span className="px-2.5 py-1 rounded-full bg-slate-100 md:bg-white/10 border border-slate-200 md:border-white/10 text-xs text-slate-700 md:text-white/80">Kuliner</span>
                     </div>
                   </div>
                 </div>
