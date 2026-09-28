@@ -1437,6 +1437,27 @@ def upload_gambar_admin(
     except Exception as e:
         raise HTTPException(500, f"Gagal upload gambar: {str(e)}")
 
+@app.post("/api/upload/wisata")
+def upload_wisata_image(file: UploadFile = File(...)):
+    """Upload dan optimasi gambar wisata ke format WebP terkompresi."""
+    try:
+        raw_base = os.path.splitext(file.filename)[0] if file.filename else "upload"
+        clean_base = f"wisata_{int(datetime.now().timestamp())}_{re.sub(r'[^a-zA-Z0-9_-]', '_', raw_base)}"
+        saved_filename = process_and_save_image(file, "uploads", clean_base, max_width=1200, quality=85)
+        image_url = f"{get_public_url()}/images/{saved_filename}"
+        return {
+            "status": "success",
+            "url": image_url,
+            "relative_path": f"/uploads/{saved_filename}",
+            "filename": saved_filename,
+            "format": "webp"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Gagal upload gambar wisata: {str(e)}")
+
+
 class ReorderRequest(BaseModel):
 
     new_order_ids: List[str]
