@@ -1,0 +1,7 @@
+__pycache__
+*.pyc
+.env
+venv
+db_jembertrip_v2
+uploads
+jembertrip.db
