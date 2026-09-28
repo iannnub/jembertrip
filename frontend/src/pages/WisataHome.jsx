@@ -443,13 +443,15 @@ function WisataHome() {
 
         {/* 2. ALL WISATA LIST */}
         <section>
-          <div className="flex items-end justify-between mb-8">
+          <div className="flex items-end justify-between border-b border-slate-200 pb-4 mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-text-main">Destinasi Populer</h2>
-              <p className="text-text-muted mt-1">Jelajahi tempat hits di Jember</p>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Destinasi Populer</h2>
+              <p className="text-sm text-slate-500 mt-1">Jelajahi tempat hits di Jember</p>
             </div>
-            <div className="text-sm font-medium text-text-muted bg-white border border-gray-200 px-4 py-2 rounded-full shadow-sm">
-              Total: <span className="text-primary font-bold">{displayedWisata.length}</span>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-[3px] bg-gradient-to-b from-rose-500 via-orange-400 to-emerald-500 rounded-full" />
+              <span className="text-3xl font-black text-slate-900 tabular-nums">{displayedWisata.length || 66}</span>
+              <span className="text-xs text-slate-500 font-medium">destinasi</span>
             </div>
           </div>
 
