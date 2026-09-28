@@ -191,6 +191,35 @@ def get_public_url() -> str:
     """Ambil URL publik dari env. Fallback ke ngrok domain default."""
     url = os.getenv("PUBLIC_URL", "https://numbness-afterglow-parade.ngrok-free.dev")
     return url.rstrip("/")
+
+def transform_image_url(url_or_path: str) -> str:
+    """Generate absolute HTTPS URL untuk gambar wisata/profil."""
+    if not url_or_path or url_or_path == "Tidak ada data":
+        return ""
+    if url_or_path.startswith("data:") or url_or_path.startswith("blob:"):
+        return url_or_path
+    
+    pub_url = get_public_url()
+    
+    # URL lengkap http/https
+    if url_or_path.startswith("http://") or url_or_path.startswith("https://"):
+        if url_or_path.startswith("http://"):
+            url_or_path = url_or_path.replace("http://", "https://")
+        if "ngrok" in url_or_path and not url_or_path.startswith(pub_url):
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(url_or_path)
+                return f"{pub_url}{parsed.path}"
+            except Exception:
+                pass
+        return url_or_path
+        
+    # Static asset di frontend bundle
+    if url_or_path.startswith("assets/") or url_or_path.startswith("/assets/"):
+        return url_or_path
+        
+    clean = url_or_path.lstrip("/")
+    return f"{pub_url}/{clean}"
 GROQ_API_KEYS = []
 current_key_index = 0
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -1173,12 +1202,27 @@ def get_similar_wisata(req: RecommendationRequest):
 @app.get("/api/v1/list-wisata")
 def list_wisata():
     global data_wisata_csv
-    return {"status": "success", "data": data_wisata_csv}
+    transformed = []
+    for item in data_wisata_csv:
+        d = dict(item)
+        if "gambar" in d:
+            img = transform_image_url(d.get("gambar", ""))
+            d["gambar"] = img
+            d["foto_url"] = img
+        transformed.append(d)
+    return {"status": "success", "data": transformed}
 
 @app.get("/api/v1/wisata/{id}")
 def detail_wisata(id: str):
+    global data_wisata_csv
     res = next((i for i in data_wisata_csv if str(i["id"]) == id), None)
-    if res: return {"status": "success", "data": res}
+    if res:
+        d = dict(res)
+        if "gambar" in d:
+            img = transform_image_url(d.get("gambar", ""))
+            d["gambar"] = img
+            d["foto_url"] = img
+        return {"status": "success", "data": d}
     raise HTTPException(404, "Not found")
 
 # ==========================================
