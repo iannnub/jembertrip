@@ -1,11 +1,11 @@
 // src/pages/WisataHome.jsx
 
-import NgrokImage from '../components/NgrokImage';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link, useSearchParams } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { trackEvent } from '../utils/analytics';
+import { getImageUrl } from '../utils/imageHelper';
 // Import Icon
 import { Search, MapPin, Star, Compass, Sparkles, MessageSquare, ArrowRight } from 'lucide-react';
 // Import Animasi
@@ -82,24 +82,7 @@ function WisataHome() {
     }
   };
 
-  // --- HELPER GAMBAR SAKTI (Hybrid Logic) ---
-  const getImageUrl = (gambarPath) => {
-      if (!gambarPath) return "https://placehold.co/600x400?text=No+Image";
-      
-      // Jika URL eksternal / ngrok / http
-      if (gambarPath.startsWith('http')) {
-          return gambarPath;
-      }
-
-      // Jika upload path (/uploads/... atau /images/...)
-      if (gambarPath.startsWith('/uploads') || gambarPath.startsWith('uploads/') || gambarPath.startsWith('/images') || gambarPath.startsWith('images/')) {
-          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
-          return `${API_BASE_URL}${cleanPath}`;
-      }
-      
-      // Gambar lokal yang ada di public/assets/...
-      return gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
-  };
+  // getImageUrl sekarang dari utils/imageHelper.js (terpusat)
 
 
   useEffect(() => {
@@ -382,8 +365,7 @@ function WisataHome() {
                   className="group block h-full"
                 >
                   <div className="bg-gradient-to-br from-white to-page-bg rounded-2xl p-4 border border-primary/10 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/10 h-full flex items-start gap-4">
-                    <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 shrink-0"
-                    />
+                    <img src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 shrink-0" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder-wisata.svg'; }} />
                     <div>
                       <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-primary transition-colors">{wisata.nama_wisata}</h4>
                       <p className="text-xs text-text-muted line-clamp-2 mb-3">{wisata.alamat}</p>
@@ -424,8 +406,7 @@ function WisataHome() {
                   className="group block h-full"
                 >
                   <div className="bg-gradient-to-br from-white to-pink-50 rounded-2xl p-4 border border-pink-200 hover:border-pink-400 transition-all hover:shadow-xl hover:shadow-pink-200 h-full flex items-start gap-4">
-                    <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 shrink-0"
-                    />
+                    <img src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} className="w-24 h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 shrink-0" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder-wisata.svg'; }} />
                     <div>
                       <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-pink-600 transition-colors">{wisata.nama_wisata}</h4>
                       <p className="text-xs text-text-muted line-clamp-2 mb-3">{wisata.alamat}</p>
@@ -480,14 +461,14 @@ function WisataHome() {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
                     <Link to={`/wisata/${wisata.id}`} className="block h-full bg-card-bg rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-primary/10 border border-gray-100 overflow-hidden transition-all duration-300 group">
-                      {/* Image Container */}
-                      <div className="relative h-56 overflow-hidden">
-                        <NgrokImage src={getImageUrl(wisata.gambar)} alt={wisata.nama_wisata} loading="lazy"
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          onError={(e) => {
-                            e.target.onerror = null; 
-                            e.target.src = "https://placehold.co/600x400?text=No+Image";
-                          }}
+                      {/* Image Container - h-48 solid bg agar tidak collapse jika gambar gagal load */}
+                      <div className="relative h-48 bg-slate-50 overflow-hidden">
+                        <img
+                          src={getImageUrl(wisata.gambar)}
+                          alt={wisata.nama_wisata}
+                          loading="lazy"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder-wisata.svg'; }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
                         <div className="absolute top-4 left-4">

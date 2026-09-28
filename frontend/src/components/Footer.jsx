@@ -1,110 +1,70 @@
 // frontend/src/components/Footer.jsx
+// Distinctive minimal footer: accent line gradasi, 1 baris, pill links
+// Hapus total blok teks panjang (4-kolom lama)
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Sparkles, Compass, Shield, FileText, ExternalLink } from 'lucide-react';
+import { Compass, Sparkles, ArrowUpRight, Heart } from 'lucide-react';
 
 export default function Footer() {
-  const categories = [
-    { name: 'Pantai', query: 'Pantai' },
-    { name: 'Air Terjun', query: 'Air Terjun' },
-    { name: 'Rekreasi', query: 'Rekreasi' },
-    { name: 'Agrowisata', query: 'Agrowisata' },
-    { name: 'Edukasi', query: 'Edukasi' },
-    { name: 'Religi', query: 'Religi' },
-    { name: 'Panorama', query: 'Panorama' },
-  ];
-
   return (
-    <footer className="bg-white border-t border-primary/10 pt-12 pb-8 mt-auto text-text-muted">
-      <div className="container mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-          
-          {/* Kolom 1: About */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="bg-gradient-to-br from-primary to-accent p-2 rounded-xl text-white shadow-sm">
-                <MapPin size={18} fill="currentColor" />
-              </div>
-              <span className="text-xl font-bold text-text-main tracking-tight">
-                JemberTrip
-              </span>
+    <footer className="mt-16 bg-slate-900 text-slate-300">
+      {/* Top accent gradient line */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-rose-500 via-orange-400 to-emerald-500" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+
+          {/* Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-md shrink-0">
+              <Compass size={18} className="text-slate-900" />
             </div>
-            <p className="text-xs md:text-sm text-text-muted leading-relaxed mb-4">
-              Platform eksplorasi pariwisata cerdas Kabupaten Jember berbasis AI. Menghadirkan asisten Cak Jember dan sistem rekomendasi personalisasi.
-            </p>
-            <div className="flex items-center gap-2 text-xs text-primary font-semibold">
-              <Sparkles size={14} /> Didukung AI RAG & Hybrid Filtering
+            <div>
+              <p className="font-bold text-white tracking-tight leading-none">JemberTrip</p>
+              <p className="text-xs text-slate-400 mt-0.5">Jelajahi Bumi Pandalungan dengan AI</p>
             </div>
           </div>
 
-          {/* Kolom 2: Jelajahi Destinasi */}
-          <div>
-            <h4 className="text-sm font-bold text-text-main uppercase tracking-wider mb-3">
-              Jelajahi Wisata
-            </h4>
-            <ul className="space-y-2 text-xs md:text-sm">
-              {categories.map((cat) => (
-                <li key={cat.name}>
-                  <Link 
-                    to={`/?kategori=${encodeURIComponent(cat.query)}`} 
-                    className="hover:text-primary transition-colors flex items-center gap-1.5"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
-                    Wisata {cat.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          {/* Pill Navigation Links */}
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <Link
+              to="/"
+              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white hover:text-slate-900 transition-all duration-200 font-medium"
+            >
+              Home
+            </Link>
+            <Link
+              to="/rekomendasi"
+              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white hover:text-slate-900 transition-all duration-200 font-medium inline-flex items-center gap-1.5"
+            >
+              <Sparkles size={13} className="text-orange-300" />
+              Cak Jember AI
+            </Link>
+            <a
+              href="https://github.com/iannnub/jembertrip"
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white hover:text-slate-900 transition-all duration-200 font-medium inline-flex items-center gap-1"
+            >
+              GitHub <ArrowUpRight size={13} />
+            </a>
           </div>
 
-          {/* Kolom 3: Fitur Utama */}
-          <div>
-            <h4 className="text-sm font-bold text-text-main uppercase tracking-wider mb-3">
-              Fitur Platform
-            </h4>
-            <ul className="space-y-2 text-xs md:text-sm">
-              <li>
-                <Link to="/" className="hover:text-primary transition-colors flex items-center gap-1.5">
-                  <Compass size={14} className="text-primary/70" /> Eksplorasi Destinasi
-                </Link>
-              </li>
-              <li>
-                <Link to="/rekomendasi" className="hover:text-primary transition-colors flex items-center gap-1.5">
-                  <Sparkles size={14} className="text-accent" /> Chatbot AI Cak Jember
-                </Link>
-              </li>
-              <li>
-                <Link to="/login" className="hover:text-primary transition-colors flex items-center gap-1.5">
-                  Masuk Akun Wisatawan
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" className="hover:text-primary transition-colors flex items-center gap-1.5">
-                  Daftar Akun Baru
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-        </div>
-
-        {/* Divider & Watermark Lisensi iannnub */}
-        <div className="border-t border-primary/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-          <div>
-            <p className="text-xs text-text-muted">
-              Semua Karna ❤️ untuk <span className="text-primary font-bold">Masyarakat & Wisatawan Jember</span>
+          {/* Copyright & Watermark */}
+          <div className="text-xs text-slate-500 leading-relaxed">
+            <p>
+              © {new Date().getFullYear()} JemberTrip. Crafted with{' '}
+              <Heart size={11} className="inline text-rose-400 fill-rose-400" />{' '}
+              for Jember.
             </p>
-            <p className="text-[11px] text-text-muted/70 mt-1">
-              Didesain, dikembangkan & dilisensikan oleh <span className="font-semibold text-text-main">iannnub</span> • Universitas Muhammadiyah Jember
+            <p className="text-slate-600 mt-0.5">
+              Pandalungan • Tembakau • Pantai Selatan
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-              <Sparkles size={12} /> Karya Asli iannnub
-            </span>
-            <span className="text-xs text-text-muted">
-              &copy; {new Date().getFullYear()} JemberTrip
-            </span>
+            <p className="text-slate-600 mt-0.5">
+              Dibuat oleh{' '}
+              <span className="font-semibold text-slate-400">iannnub</span>
+              {' '}• Universitas Muhammadiyah Jember
+            </p>
           </div>
         </div>
       </div>

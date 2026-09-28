@@ -1,212 +1,176 @@
 // src/components/MobileNav.jsx
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Sparkles, LayoutDashboard, User, LogOut, LogIn, MapPin } from 'lucide-react';
-import NgrokImage from './NgrokImage';
-
-// Helper Avatar URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-const getAvatarUrl = (avatar) => {
-  if (!avatar) return null;
-  if (avatar.startsWith('http')) return avatar;
-  const clean = avatar.startsWith('/') ? avatar : `/${avatar}`;
-  return `${API_BASE_URL}${clean}`;
-};
+// Solid white drawer dari kiri: z-50 (drawer) + z-40 (backdrop) + body scroll lock
+import React, { useEffect, useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import {
+  Home, MessageSquare, LayoutDashboard, User,
+  LogOut, LogIn, Menu, X, Compass
+} from 'lucide-react';
+import { getAvatarUrl } from '../utils/imageHelper';
 
 export default function MobileNav({ user, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
-  const location = useLocation();
 
-  const toggleMenu = () => setIsOpen(prev => !prev);
-  const closeMenu = () => setIsOpen(false);
 
-  // Prevent background scrolling when drawer is open
+  // Body scroll lock saat drawer terbuka
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  const isActive = (path) => location.pathname === path;
+  const close = () => setIsOpen(false);
+
+  const handleLogout = () => {
+    close();
+    onLogout?.();
+  };
+
+  const navLinkClass = ({ isActive }) =>
+    `flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
+      isActive
+        ? 'bg-slate-900 text-white shadow-md shadow-slate-900/20'
+        : 'text-slate-700 hover:bg-rose-50 hover:text-rose-600'
+    }`;
 
   return (
-    <div className="md:hidden flex items-center">
-      {/* Hamburger Toggle Button (Min 44x44px touch area) */}
+    <>
+      {/* Hamburger Button */}
       <button
-        onClick={toggleMenu}
-        className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-primary/15 text-text-main hover:text-primary hover:bg-primary/5 active:scale-95 transition-all shadow-sm focus:outline-none"
-        aria-label={isOpen ? "Tutup menu" : "Buka menu navigasi"}
+        onClick={() => setIsOpen(true)}
+        className="md:hidden p-2.5 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 active:scale-95 transition-all"
+        aria-label="Buka menu navigasi"
         aria-expanded={isOpen}
       >
-        {isOpen ? <X size={22} className="text-primary" /> : <Menu size={22} />}
+        <Menu size={20} className="text-slate-700" />
       </button>
 
-      {/* Backdrop Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/50 backdrop-blur-xs z-40 transition-opacity duration-300 md:hidden ${
-          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={closeMenu}
-        aria-hidden="true"
-      />
+      {/* Backdrop — z-40, opaque */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Drawer */}
-      <aside
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+      {/* Drawer — z-50, SOLID white, slide dari kiri */}
+      <div
+        className={`fixed top-0 left-0 bottom-0 w-[82%] max-w-[340px] bg-white z-50 shadow-2xl shadow-slate-900/20 flex flex-col transform transition-transform duration-300 ease-out md:hidden ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         role="dialog"
         aria-modal="true"
-        aria-label="Menu navigasi mobile"
+        aria-label="Menu navigasi"
       >
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-page-bg/50">
-          <div className="flex items-center gap-2.5 select-none">
-            <div className="bg-gradient-to-br from-primary to-accent p-2 rounded-xl text-white shadow-md shadow-primary/20">
-              <MapPin size={20} fill="currentColor" />
+        {/* Header — Solid */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-orange-400 flex items-center justify-center text-white shadow-md shadow-rose-200 shrink-0">
+              <Compass size={18} />
             </div>
             <div>
-              <p className="text-lg font-bold text-text-main leading-none">JemberTrip</p>
-              <p className="text-[10px] font-bold tracking-widest text-secondary uppercase mt-0.5">Explore Jatim</p>
+              <p className="font-bold text-slate-900 leading-none tracking-tight">JemberTrip</p>
+              <p className="text-[11px] tracking-[0.14em] text-emerald-600 font-bold mt-0.5">EXPLORE JATIM</p>
             </div>
           </div>
-
           <button
-            onClick={closeMenu}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-text-muted hover:text-text-main transition-colors"
+            onClick={close}
+            className="w-8 h-8 grid place-items-center rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
             aria-label="Tutup menu"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Drawer Body - Navigation Links */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6">
-          <div>
-            <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-3 px-1">
-              Navigasi Utama
-            </p>
-            <nav className="flex flex-col space-y-2">
-              <Link
-                to="/"
-                onClick={closeMenu}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl font-medium transition-all min-h-[48px] ${
-                  isActive('/')
-                    ? 'bg-primary text-white shadow-md shadow-primary/25 font-semibold'
-                    : 'text-text-main hover:bg-primary/5 hover:text-primary active:bg-primary/10'
-                }`}
-              >
-                <Home size={20} />
-                <span>Beranda</span>
-              </Link>
-
-              <Link
-                to="/rekomendasi"
-                onClick={closeMenu}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl font-medium transition-all min-h-[48px] ${
-                  isActive('/rekomendasi')
-                    ? 'bg-primary text-white shadow-md shadow-primary/25 font-semibold'
-                    : 'text-text-main hover:bg-primary/5 hover:text-primary active:bg-primary/10'
-                }`}
-              >
-                <Sparkles size={20} />
-                <span>Chat Cak Jember (AI)</span>
-              </Link>
-
-              {user && user.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  onClick={closeMenu}
-                  className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl font-medium transition-all min-h-[48px] ${
-                    isActive('/admin')
-                      ? 'bg-accent text-white shadow-md shadow-accent/25 font-semibold'
-                      : 'text-yellow-700 bg-yellow-50 hover:bg-yellow-100 active:bg-yellow-200'
-                  }`}
-                >
-                  <LayoutDashboard size={20} />
-                  <span>Dashboard Admin</span>
-                </Link>
-              )}
-
-              {user && (
-                <Link
-                  to="/profile"
-                  onClick={closeMenu}
-                  className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl font-medium transition-all min-h-[48px] ${
-                    isActive('/profile')
-                      ? 'bg-primary text-white shadow-md shadow-primary/25 font-semibold'
-                      : 'text-text-main hover:bg-primary/5 hover:text-primary active:bg-primary/10'
-                  }`}
-                >
-                  <User size={20} />
-                  <span>Profil Saya</span>
-                </Link>
-              )}
-            </nav>
-          </div>
-        </div>
-
-        {/* Drawer Footer - User Section */}
-        <div className="p-5 border-t border-gray-100 bg-page-bg/40 safe-area-bottom">
-          {user ? (
-            <div className="space-y-3">
-              <Link
-                to="/profile"
-                onClick={closeMenu}
-                className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-primary/10 hover:border-primary/30 transition-all shadow-xs"
-              >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary-soft flex items-center justify-center text-white font-bold text-sm shadow-xs overflow-hidden shrink-0">
-                  {user.avatar ? (
-                    <NgrokImage src={getAvatarUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    user.full_name?.charAt(0)?.toUpperCase() || 'U'
-                  )}
-                </div>
-                <div className="overflow-hidden">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                    {user.role === 'admin' ? 'Administrator' : 'Wisatawan'}
-                  </p>
-                  <p className="font-bold text-text-main text-sm truncate">{user.full_name}</p>
-                </div>
-              </Link>
-
-              <button
-                onClick={() => {
-                  onLogout();
-                  closeMenu();
-                }}
-                className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 font-semibold text-sm transition-colors min-h-[44px]"
-              >
-                <LogOut size={18} />
-                <span>Keluar Aplikasi</span>
-              </button>
+        {/* User Card */}
+        {user && (
+          <div className="mx-4 mt-4 p-3.5 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-100 flex items-center gap-3 shrink-0">
+            <img
+              src={getAvatarUrl(user.avatar || user.foto_profil, user.full_name || user.username || 'User')}
+              alt={user.full_name || user.username}
+              className="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-sm shrink-0"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                const name = encodeURIComponent(user.full_name || user.username || 'U');
+                e.currentTarget.src = `https://ui-avatars.com/api/?name=${name}&background=f43f5e&color=fff&bold=true`;
+              }}
+            />
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold tracking-widest text-rose-500 uppercase">
+                {user.role === 'admin' ? 'Administrator' : 'Wisatawan'}
+              </p>
+              <p className="font-semibold text-slate-900 truncate text-sm">
+                {user.full_name || user.username}
+              </p>
+              <p className="text-xs text-slate-400 truncate">{user.email}</p>
             </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+          <NavLink to="/" onClick={close} className={navLinkClass} end>
+            <Home size={18} />
+            <span>Beranda</span>
+          </NavLink>
+
+          <NavLink to="/rekomendasi" onClick={close} className={navLinkClass}>
+            <MessageSquare size={18} />
+            <span>AI Chat Cak Jember</span>
+            <span className="ml-auto text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">AI</span>
+          </NavLink>
+
+          {user && (
+            <NavLink to="/profile" onClick={close} className={navLinkClass}>
+              <User size={18} />
+              <span>Profil Saya</span>
+            </NavLink>
+          )}
+
+          {user?.role === 'admin' && (
+            <NavLink to="/admin" onClick={close} className={navLinkClass}>
+              <LayoutDashboard size={18} />
+              <span>Dashboard Admin</span>
+              <span className="ml-auto text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold">ADM</span>
+            </NavLink>
+          )}
+        </nav>
+
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-slate-100 bg-white shrink-0">
+          {user ? (
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white border border-rose-100 text-rose-600 font-semibold text-sm hover:bg-rose-50 active:bg-rose-100 transition-colors min-h-[44px]"
+            >
+              <LogOut size={18} />
+              Keluar Aplikasi
+            </button>
           ) : (
             <div className="space-y-2">
               <Link
                 to="/login"
-                onClick={closeMenu}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary hover:bg-primary-soft text-white font-bold text-sm shadow-md shadow-primary/25 transition-all min-h-[48px]"
+                onClick={close}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-black transition-colors min-h-[44px]"
               >
                 <LogIn size={18} />
-                <span>Masuk Akun</span>
+                Masuk Akun
               </Link>
               <Link
                 to="/register"
-                onClick={closeMenu}
-                className="w-full flex items-center justify-center py-2.5 rounded-xl text-primary font-semibold text-xs hover:bg-primary/5 transition-all min-h-[40px]"
+                onClick={close}
+                className="w-full flex items-center justify-center py-2.5 rounded-xl text-slate-600 font-medium text-xs hover:bg-slate-50 transition-colors"
               >
-                Belum punya akun? Daftar
+                Belum punya akun? Daftar gratis
               </Link>
             </div>
           )}
+          <p className="text-center text-[10px] text-slate-400 mt-3">
+            © {new Date().getFullYear()} JemberTrip • Crafted by{' '}
+            <span className="font-semibold text-slate-500">iannnub</span>
+          </p>
         </div>
-      </aside>
-    </div>
+      </div>
+    </>
   );
 }

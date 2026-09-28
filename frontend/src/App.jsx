@@ -1,8 +1,8 @@
 // src/App.jsx
 
-import NgrokImage from './components/NgrokImage';
 import MobileNav from './components/MobileNav';
 import Footer from './components/Footer';
+import { getAvatarUrl } from './utils/imageHelper';
 import React, { useState, useEffect } from 'react';
 // Import Routing
 import { Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
@@ -43,12 +43,6 @@ const ProtectedAdminRoute = ({ children }) => {
 
 // Helper Avatar URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-const getAvatarUrl = (avatar) => {
-  if (!avatar) return null;
-  if (avatar.startsWith('http')) return avatar;
-  const clean = avatar.startsWith('/') ? avatar : `/${avatar}`;
-  return `${API_BASE_URL}${clean}`;
-};
 
 function App() {
   const [user, setUser] = useState(null);
@@ -187,7 +181,7 @@ function App() {
                   {/* Avatar: Pink Gradient */}
                   <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-xs overflow-hidden ${user.role === 'admin' ? 'bg-gradient-to-tr from-accent to-orange-400 shadow-orange-200' : 'bg-gradient-to-tr from-primary to-primary-soft shadow-pink-200'}`}>
                     {user.avatar ? (
-                        <NgrokImage src={getAvatarUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                        <img src={getAvatarUrl(user.avatar, user.full_name || 'User')} alt="Avatar" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name||'U')}&background=f43f5e&color=fff`; }} />
                     ) : (
                         user.full_name?.charAt(0)?.toUpperCase() || 'U'
                     )}

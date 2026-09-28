@@ -6,20 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import { 
     User, Mail, Lock, Camera, Save, LogOut, Shield 
 } from 'lucide-react';
-import NgrokImage from '../components/NgrokImage';
+import { getAvatarUrl } from '../utils/imageHelper';
 // Import Animasi
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-
-const getAvatarUrl = (avatar) => {
-    if (!avatar) return null;
-    if (avatar.startsWith('http')) return avatar;
-    const clean = avatar.startsWith('/') ? avatar : `/${avatar}`;
-    return `${API_BASE_URL}${clean}`;
-};
 
 function ProfilePage() {
     const navigate = useNavigate();
@@ -145,7 +138,16 @@ function ProfilePage() {
                         <div className="relative mt-8 mb-4 group inline-block">
                             <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-page-bg mx-auto">
                                 {user.avatar ? (
-                                    <NgrokImage src={getAvatarUrl(user.avatar)} alt="Profile" className="w-full h-full object-cover" />
+                                    <img
+                                      src={getAvatarUrl(user.avatar, user.full_name || 'User')}
+                                      alt="Profile"
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        const name = encodeURIComponent(user.full_name || 'U');
+                                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${name}&background=f43f5e&color=fff&bold=true&size=128`;
+                                      }}
+                                    />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-4xl font-bold">
                                         {user.full_name?.charAt(0).toUpperCase()}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250">
+  <rect width="400" height="250" rx="16" fill="#FFF1F2"/>
+  <!-- Map pin icon -->
+  <g transform="translate(176 80)">
+    <rect x="0" y="0" width="48" height="48" rx="12" fill="#F43F5E" opacity="0.12"/>
+    <path d="M24 10 C17.4 10 12 15.4 12 22 C12 30.5 24 42 24 42 C24 42 36 30.5 36 22 C36 15.4 30.6 10 24 10Z" fill="#F43F5E" opacity="0.7"/>
+    <circle cx="24" cy="22" r="5" fill="white"/>
+  </g>
+  <text x="200" y="148" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="600" fill="#94A3B8">Gambar tidak tersedia</text>
+  <text x="200" y="166" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="11" fill="#CBD5E1">JemberTrip • Wisata Jember</text>
+</svg>
