@@ -562,11 +562,6 @@ function WisataHome() {
                     </div>
                   </div>
                 </div>
-                {/* floating badge */}
-                <div className="absolute -bottom-3 -left-3 bg-white border border-slate-100 shadow-lg rounded-full px-3 py-1.5 flex items-center gap-2 text-xs">
-                  <span className="w-6 h-6 rounded-full bg-emerald-50 border border-emerald-100 grid place-items-center">✦</span>
-                  <span className="font-medium text-slate-700">Hybrid RAG • 4.8/5</span>
-                </div>
               </div>
             </div>
           </div>
