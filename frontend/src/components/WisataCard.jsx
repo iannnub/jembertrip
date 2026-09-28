@@ -13,7 +13,7 @@ export default function WisataCard({ wisata }) {
       {isVisible ? (
         <Link
           to={`/wisata/${wisata.id}`}
-          className="block h-full bg-card-bg rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-primary/10 border border-gray-100 overflow-hidden transition-all duration-300 group"
+          className="group block h-full bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 overflow-hidden"
         >
           {/* Image Container */}
           <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden rounded-t-2xl">
@@ -32,16 +32,14 @@ export default function WisataCard({ wisata }) {
           </div>
 
           {/* Content */}
-          <div className="p-5 flex flex-col flex-1">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-lg font-bold text-text-main leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                {wisata.nama_wisata}
-              </h3>
-            </div>
+          <div className="p-4 flex flex-col flex-1">
+            <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+              {wisata.nama_wisata}
+            </h3>
 
-            <div className="flex items-start gap-2 text-sm text-text-muted mb-4">
-              <MapPin size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <p className="line-clamp-2 text-xs leading-relaxed">{wisata.alamat}</p>
+            <div className="flex items-start gap-1.5 text-xs text-slate-500 leading-relaxed line-clamp-2 mt-1 mb-3">
+              <MapPin size={14} className="text-slate-400 mt-0.5 flex-shrink-0" />
+              <p className="line-clamp-2">{wisata.alamat}</p>
             </div>
 
             <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
