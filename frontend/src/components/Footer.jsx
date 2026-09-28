@@ -9,7 +9,7 @@ export default function Footer() {
   return (
     <footer className="mt-16 bg-slate-900 text-slate-300">
       {/* Top accent gradient line */}
-      <div className="h-[3px] w-full bg-gradient-to-r from-rose-500 via-orange-400 to-emerald-500" />
+      <div className="h-1 w-full bg-gradient-to-r from-rose-500 via-orange-400 to-emerald-500" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
