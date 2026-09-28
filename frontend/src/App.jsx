@@ -129,7 +129,7 @@ function App() {
 
   return (
     // Global Wrapper: Gunakan page-bg dan text-main
-    <div className="flex flex-col min-h-screen bg-page-bg font-sans text-text-main selection:bg-primary/20 selection:text-primary overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-page-bg font-sans text-text-main selection:bg-primary/20 selection:text-primary overflow-x-clip">
       
       {/* --- TOASTER --- */}
       <Toaster 
