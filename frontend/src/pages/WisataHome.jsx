@@ -291,51 +291,55 @@ function WisataHome() {
         </div>
       </div>  
 
-      {/* === SEARCH & FILTER === */}
-      <div className="container mx-auto px-4 -mt-16 relative z-20">
+      {/* === SEARCH & FILTER GLASS (TASK 2) === */}
+      <div className="relative z-10 max-w-3xl mx-auto px-4 -mt-10">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-primary/5 p-6 border border-white/50"
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="bg-white/95 backdrop-blur-md border border-white/30 shadow-2xl rounded-[1.5rem] p-2"
         >
-          <div className="flex flex-col lg:flex-row gap-6 items-center">
-            
-            {/* Input Search */}
-            <div className="relative w-full lg:flex-1 group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
-                <Search size={20} />
-              </div>
-              <input 
-                type="text" 
-                placeholder="Cari pantai, gunung, atau cafe... (Tekan Enter)" 
-                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-page-bg border border-gray-200 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder-gray-400 text-text-main font-medium"
+          <div className="flex items-center gap-3">
+            <div className="flex-1 flex items-center gap-3 px-4">
+              <Search className="w-5 h-5 text-slate-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Cari pantai, gunung, atau cafe... (Tekan Enter)"
+                className="flex-1 bg-transparent border-0 text-slate-700 placeholder:text-slate-500 focus:outline-0 text-sm py-2"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown} 
+                onKeyDown={handleKeyDown}
               />
             </div>
-
-            {/* Filter Categories */}
-            <div className="w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
-              <div className="flex gap-2">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => handleCategoryClick(cat)}
-                    className={`px-5 py-3 rounded-xl text-sm font-semibold transition-all whitespace-nowrap border ${
-                      selectedCategory === cat 
-                      ? "bg-primary text-white border-primary shadow-lg shadow-primary/30 transform scale-105" 
-                      : "bg-white text-text-muted border-gray-200 hover:border-primary/50 hover:text-primary hover:bg-white"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <button 
+              onClick={() => {
+                if (resultsRef.current) {
+                  resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
+              className="bg-gradient-to-r from-rose-500 to-orange-400 text-white px-6 py-3 rounded-full font-semibold text-sm hover:shadow-lg transition shrink-0"
+            >
+              Cari
+            </button>
           </div>
         </motion.div>
+        
+        {/* Integrated Category Pills */}
+        <div className="mt-4 flex flex-wrap gap-2 justify-center">
+          {categories.map((k) => (
+            <button
+              key={k}
+              onClick={() => handleCategoryClick(k)}
+              className={`px-4 py-2 rounded-full text-xs font-medium transition ${
+                selectedCategory === k
+                  ? "bg-rose-500 text-white shadow-sm"
+                  : "bg-white/90 backdrop-blur-sm text-slate-700 border border-white/40 hover:bg-white"
+              }`}
+            >
+              {k}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* === CONTENT SECTION === */}
