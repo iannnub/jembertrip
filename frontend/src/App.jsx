@@ -57,9 +57,19 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
 
 function App() {
   const [user, setUser] = useState(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Scroll listener for sticky navbar shadow & blur
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const noFooterPaths = ['/rekomendasi', '/login', '/register', '/onboard'];
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
@@ -132,8 +142,14 @@ function App() {
         }}
       />
 
-      {/* --- NAVBAR MODERN STICKY (z-30) --- */}
-      <header className="sticky top-0 left-0 w-full z-30 bg-page-bg/90 backdrop-blur-md border-b border-primary/10 shadow-xs transition-all duration-300">
+      {/* --- NAVBAR MODERN STICKY (z-50) --- */}
+      <header 
+        className={`sticky top-0 left-0 w-full z-50 border-b transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-white/95 backdrop-blur-md shadow-sm border-slate-200' 
+            : 'bg-page-bg/90 backdrop-blur-md border-primary/10 shadow-xs'
+        }`}
+      >
         <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
           
           {/* LOGO */}
