@@ -228,6 +228,7 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<WisataHome />} />
+            <Route path="/wisata" element={<WisataHome />} />
             <Route path="/wisata/:id" element={<WisataDetail />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
