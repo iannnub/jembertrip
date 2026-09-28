@@ -24,7 +24,15 @@ const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
-import { trackPageView, initGA } from './utils/analytics';
+import { trackPageView } from './utils/analytics';
+
+function RouteTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    trackPageView(location.pathname + location.search, document.title);
+  }, [location]);
+  return null;
+}
 
 // Loading fallback spinner
 const PageLoader = () => (
@@ -74,15 +82,6 @@ function App() {
   const noFooterPaths = ['/rekomendasi', '/login', '/register', '/onboard'];
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
 
-  // Initialize GA4 once on mount
-  useEffect(() => {
-    initGA();
-  }, []);
-
-  // GA4 Page View Tracking on Route Change
-  useEffect(() => {
-    trackPageView(location.pathname + location.search, document.title);
-  }, [location]);
 
   // 1. Cek Login
   useEffect(() => {
@@ -130,6 +129,7 @@ function App() {
   return (
     // Global Wrapper: Gunakan page-bg dan text-main
     <div className="flex flex-col min-h-screen bg-page-bg font-sans text-text-main selection:bg-primary/20 selection:text-primary overflow-x-clip">
+      <RouteTracker />
       
       {/* --- TOASTER --- */}
       <Toaster 
