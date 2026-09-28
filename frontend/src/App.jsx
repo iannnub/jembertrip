@@ -221,6 +221,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/onboard" element={<OnboardingPage />} />
           <Route path="/rekomendasi" element={<ChatPage />} />
+          <Route path="/chat" element={<Navigate to="/rekomendasi" replace />} />
           <Route path="/profile" element={<ProfilePage />} />
           
           <Route 
