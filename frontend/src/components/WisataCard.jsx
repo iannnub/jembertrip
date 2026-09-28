@@ -16,7 +16,7 @@ export default function WisataCard({ wisata }) {
           className="block h-full bg-card-bg rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-primary/10 border border-gray-100 overflow-hidden transition-all duration-300 group"
         >
           {/* Image Container */}
-          <div className="relative h-48 bg-slate-100 overflow-hidden">
+          <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden rounded-t-2xl">
             <ProgressiveImage
               src={getImageUrl(wisata.gambar)}
               alt={wisata.nama_wisata}
@@ -32,7 +32,7 @@ export default function WisataCard({ wisata }) {
           </div>
 
           {/* Content */}
-          <div className="p-5 flex flex-col h-[calc(100%-12rem)]">
+          <div className="p-5 flex flex-col flex-1">
             <div className="flex justify-between items-start mb-2">
               <h3 className="text-lg font-bold text-text-main leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                 {wisata.nama_wisata}
@@ -60,7 +60,7 @@ export default function WisataCard({ wisata }) {
         </Link>
       ) : (
         <div className="h-full min-h-[340px] bg-slate-50 border border-slate-100 rounded-3xl p-4 flex flex-col justify-between animate-pulse">
-          <div className="h-48 bg-slate-200 rounded-2xl w-full" />
+          <div className="aspect-[4/3] bg-slate-200 rounded-2xl w-full" />
           <div className="space-y-3 mt-4">
             <div className="h-4 bg-slate-200 rounded w-3/4" />
             <div className="h-3 bg-slate-200 rounded w-1/2" />
