@@ -41,9 +41,12 @@ export default function Footer() {
           <div>
             <div className="text-[11px] tracking-widest font-semibold text-slate-400 mb-3">KATEGORI</div>
             <div className="flex flex-wrap gap-2">
-              {["Pantai","Air Terjun","Agrowisata","Edukasi","Religi","Panorama"].map(c=>(
-                <Link key={c} to={`/?kategori=${encodeURIComponent(c)}`} className="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs hover:bg-slate-700 hover:text-white transition">{c}</Link>
+              {["Pantai","Air Terjun","Agrowisata","Edukasi"].map((c) => (
+                <Link key={c} to={`/wisata?kategori=${encodeURIComponent(c)}`} className="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                  {c}
+                </Link>
               ))}
+              <Link to="/wisata" className="px-3 py-1.5 rounded-full border border-slate-700 text-xs text-slate-400 hover:text-white transition">+2 lagi</Link>
             </div>
           </div>
         </div>
