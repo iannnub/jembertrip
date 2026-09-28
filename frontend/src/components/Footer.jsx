@@ -50,12 +50,15 @@ export default function Footer() {
 
         {/* bottom bar */}
         <div className="border-t border-slate-800 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-          <div className="text-slate-500">© 2026 JemberTrip. Crafted with <span className="text-rose-400">♥</span> for Jember.</div>
-          <div className="flex items-center gap-2">
+          <div className="text-slate-400">© 2026 JemberTrip. Crafted with <span className="text-rose-400">♥</span> for Jember.</div>
+          <div className="flex items-center gap-3">
             <span className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> System Online
             </span>
-            <span className="text-slate-500">Dibuat oleh <span className="text-slate-300 font-medium">iannnub</span></span>
+            <span className="text-slate-400">Dibuat oleh</span>
+            <a href="https://github.com/iannnub" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-slate-900 font-bold hover:bg-slate-100 transition">
+              iannnub <span className="text-[10px]">↗</span>
+            </a>
           </div>
         </div>
       </div>
