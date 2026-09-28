@@ -1,6 +1,7 @@
 // src/components/MobileNav.jsx
 // Solid white drawer dari kiri: z-50 (drawer) + z-40 (backdrop) + body scroll lock
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, NavLink } from 'react-router-dom';
 import {
   Home, MessageSquare, LayoutDashboard, User,
@@ -10,7 +11,6 @@ import { getAvatarUrl } from '../utils/imageHelper';
 
 export default function MobileNav({ user, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
-
 
   // Body scroll lock saat drawer terbuka
   useEffect(() => {
@@ -32,18 +32,8 @@ export default function MobileNav({ user, onLogout }) {
         : 'text-slate-700 hover:bg-rose-50 hover:text-rose-600'
     }`;
 
-  return (
+  const drawerContent = (
     <>
-      {/* Hamburger Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="md:hidden p-2.5 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 active:scale-95 transition-all"
-        aria-label="Buka menu navigasi"
-        aria-expanded={isOpen}
-      >
-        <Menu size={20} className="text-slate-700" />
-      </button>
-
       {/* Backdrop — z-40, opaque */}
       {isOpen && (
         <div
@@ -55,7 +45,7 @@ export default function MobileNav({ user, onLogout }) {
 
       {/* Drawer — z-50, SOLID white, slide dari kiri */}
       <div
-        className={`fixed top-0 left-0 bottom-0 w-[82%] max-w-[340px] bg-white z-50 shadow-2xl shadow-slate-900/20 flex flex-col transform transition-transform duration-300 ease-out md:hidden ${
+        className={`fixed top-0 left-0 bottom-0 h-screen h-[100dvh] w-[82%] max-w-[340px] bg-white z-50 shadow-2xl shadow-slate-900/20 flex flex-col transform transition-transform duration-300 ease-out md:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         role="dialog"
@@ -173,4 +163,22 @@ export default function MobileNav({ user, onLogout }) {
       </div>
     </>
   );
+
+  return (
+    <>
+      {/* Hamburger Button */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="md:hidden p-2.5 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 active:scale-95 transition-all"
+        aria-label="Buka menu navigasi"
+        aria-expanded={isOpen}
+      >
+        <Menu size={20} className="text-slate-700" />
+      </button>
+
+      {/* Render drawer via portal directly on document.body */}
+      {typeof document !== 'undefined' && createPortal(drawerContent, document.body)}
+    </>
+  );
 }
+
