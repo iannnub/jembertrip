@@ -510,35 +510,67 @@ function WisataHome() {
           )}
         </section>
 
-        {/* === BANNER CTA: TANYA CAK JEMBER === */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary via-pink-600 to-accent p-8 md:p-12 text-white shadow-2xl shadow-primary/20"
-        >
-          <div className="absolute -top-12 -right-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-          <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-black/10 rounded-full blur-2xl pointer-events-none"></div>
+        {/* CAK JEMBER — Editorial Card (bukan gradient block) */}
+        <section className="mt-12">
+          <div className="relative overflow-hidden rounded-[2rem] bg-white border border-slate-100 shadow-sm">
+            {/* soft wash */}
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-white to-orange-50/60" />
+            <div className="absolute -right-24 -top-24 w-96 h-96 bg-gradient-to-br from-rose-500/10 to-orange-400/10 rounded-full blur-3xl" />
+            <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage:"radial-gradient(circle at 1px 1px, #0F172A 1px, transparent 0)", backgroundSize:"20px 20px"}} />
 
-          <div className="relative z-10 max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 py-1 px-3.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-4">
-              <MessageSquare size={14} /> Asisten Cerdas Cak Jember
-            </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 leading-tight">
-              Bingung Mau Liburan ke Mana di Jember?
-            </h2>
-            <p className="text-white/90 text-sm md:text-base leading-relaxed mb-6 font-light">
-              Tanyakan langsung ke <strong>Cak Jember</strong>! Asisten AI berdialek Pandalungan yang siap memberikan ide liburan, rekomendasi pantai tersembunyi, hingga kuliner legendaris sesuai seleramu.
-            </p>
-            <Link
-              to="/rekomendasi"
-              onClick={() => trackEvent('click_cta_cak_jember', { location: 'home_bottom_banner' })}
-              className="inline-flex items-center gap-2 bg-white text-primary font-bold px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:bg-pink-50 hover:scale-105 active:scale-95 transition-all min-h-[48px]"
-            >
-              Mulai Ngobrol dengan Cak Jember <ArrowRight size={18} />
-            </Link>
+            <div className="relative grid md:grid-cols-[1.15fr_0.85fr] gap-8 p-7 md:p-10 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 text-[11px] tracking-widest font-semibold text-rose-600 bg-rose-50 border border-rose-100 px-3 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> ASISTEN CERDAS CAK JEMBER
+                </div>
+                <h2 className="mt-4 text-[1.7rem] md:text-[2rem] font-extrabold tracking-tight text-slate-900 leading-[1.1]">
+                  Bingung mau liburan<br/>ke mana di Jember?
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600 max-w-[48ch]">
+                  Tanya langsung ke Cak Jember — asisten AI berdialek Pandalungan. Rekomendasi pantai tersembunyi sampai kuliner legendaris, sesuai seleramu.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link 
+                    to="/rekomendasi" 
+                    onClick={() => trackEvent('click_cta_cak_jember', { location: 'home_bottom_banner' })}
+                    className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-black transition shadow-sm hover:shadow-md"
+                  >
+                    Mulai Ngobrol dengan Cak Jember <span aria-hidden>→</span>
+                  </Link>
+                  <span className="inline-flex items-center text-xs text-slate-500 self-center">Gratis • Dialek Pandalungan • RAG</span>
+                </div>
+              </div>
+
+              {/* mockup chat */}
+              <div className="relative">
+                <div className="bg-slate-900 rounded-[1.25rem] p-4 shadow-xl border border-slate-800">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 to-orange-400 grid place-items-center text-white text-xs font-bold">CJ</div>
+                    <div className="text-xs">
+                      <div className="font-semibold text-white leading-none">Cak Jember</div>
+                      <div className="text-emerald-400 text-[11px]">● Online</div>
+                    </div>
+                    <div className="ml-auto w-2 h-2 rounded-full bg-white/20" />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="bg-white text-slate-700 rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed">Rekomendasi pantai sepi sing cocok gawe healing, Cak?</div>
+                    <div className="bg-gradient-to-br from-rose-500 to-orange-400 text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed ml-6">Wes, coba nang Pantai Papuma pas sunrise, Lur! Sepi, ombake apik — cocok gawe ngopi santai.</div>
+                    <div className="flex gap-1.5 ml-6">
+                      <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/80">Papuma</span>
+                      <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/80">Watu Ulo</span>
+                      <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/80">Kuliner</span>
+                    </div>
+                  </div>
+                </div>
+                {/* floating badge */}
+                <div className="absolute -bottom-3 -left-3 bg-white border border-slate-100 shadow-lg rounded-full px-3 py-1.5 flex items-center gap-2 text-xs">
+                  <span className="w-6 h-6 rounded-full bg-emerald-50 border border-emerald-100 grid place-items-center">✦</span>
+                  <span className="font-medium text-slate-700">Hybrid RAG • 4.8/5</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </section>
 
       </div>
     </div>
