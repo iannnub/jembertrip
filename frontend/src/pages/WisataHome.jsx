@@ -510,7 +510,7 @@ function WisataHome() {
           )}
         </section>
 
-        {/* CAK JEMBER — Editorial Card (bukan gradient block) */}
+        {/* CAK JEMBER: Editorial Card (bukan gradient block) */}
         <section className="mt-12">
           <div className="relative overflow-hidden rounded-[2rem] bg-white border border-slate-100 shadow-sm">
             {/* soft wash */}
@@ -527,7 +527,7 @@ function WisataHome() {
                   Bingung mau liburan<br/>ke mana di Jember?
                 </h2>
                 <p className="mt-3 text-sm leading-relaxed text-slate-600 max-w-[48ch]">
-                  Tanya langsung ke Cak Jember — asisten AI berdialek Pandalungan. Rekomendasi pantai tersembunyi sampai kuliner legendaris, sesuai seleramu.
+                  Tanya langsung ke Cak Jember. Asisten AI berdialek Pandalungan yang siap bantu rekomendasikan pantai tersembunyi sampai kuliner legendaris sesuai seleramu.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link 
@@ -554,7 +554,7 @@ function WisataHome() {
                   </div>
                   <div className="space-y-3">
                     <div className="bg-white text-slate-700 rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed">Rekomendasi pantai sepi sing cocok gawe healing, Cak?</div>
-                    <div className="bg-gradient-to-br from-rose-500 to-orange-400 text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed ml-6">Wes, coba nang Pantai Papuma pas sunrise, Lur! Sepi, ombake apik — cocok gawe ngopi santai.</div>
+                    <div className="bg-gradient-to-br from-rose-500 to-orange-400 text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed ml-6">Wes, coba nang Pantai Papuma pas sunrise, Lur! Sepi, ombake apik, cocok gawe ngopi santai.</div>
                     <div className="flex gap-1.5 ml-6">
                       <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/80">Papuma</span>
                       <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/80">Watu Ulo</span>

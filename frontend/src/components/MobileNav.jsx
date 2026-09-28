@@ -34,7 +34,7 @@ export default function MobileNav({ user, onLogout }) {
 
   const drawerContent = (
     <>
-      {/* Backdrop — z-40, opaque */}
+      {/* Backdrop: z-40, opaque */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden"
@@ -43,7 +43,7 @@ export default function MobileNav({ user, onLogout }) {
         />
       )}
 
-      {/* Drawer — z-50, SOLID white, slide dari kiri */}
+      {/* Drawer: z-50, SOLID white, slide dari kiri */}
       <div
         className={`fixed top-0 left-0 bottom-0 h-screen h-[100dvh] w-[82%] max-w-[340px] bg-white z-50 shadow-2xl shadow-slate-900/20 flex flex-col transform transition-transform duration-300 ease-out md:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -52,7 +52,7 @@ export default function MobileNav({ user, onLogout }) {
         aria-modal="true"
         aria-label="Menu navigasi"
       >
-        {/* Header — Solid */}
+        {/* Header: Solid */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-orange-400 flex items-center justify-center text-white shadow-md shadow-rose-200 shrink-0">

@@ -18,7 +18,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-slate-400 max-w-sm">
-              Kurasi pantai selatan, tembakau, dan panorama Jember. Dipandu Cak Jember — asisten AI berdialek Pandalungan.
+              Kurasi pantai selatan, tembakau, dan panorama Jember. Dipandu Cak Jember, asisten AI berdialek Pandalungan.
             </p>
             <div className="mt-4 flex gap-2">
               <a href="https://github.com/iannnub/jembertrip" target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 grid place-items-center hover:bg-slate-700 transition text-xs" title="GitHub iannnub">↗</a>
@@ -55,7 +55,7 @@ export default function Footer() {
             <span className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> System Online
             </span>
-            <span className="text-slate-500">Dibuat oleh <span className="text-slate-300 font-medium">iannnub</span> — Universitas Muhammadiyah Jember</span>
+            <span className="text-slate-500">Dibuat oleh <span className="text-slate-300 font-medium">iannnub</span></span>
           </div>
         </div>
       </div>

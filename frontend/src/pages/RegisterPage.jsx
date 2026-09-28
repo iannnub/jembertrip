@@ -42,12 +42,12 @@ function validateField(name, value) {
   switch (name) {
     case 'username':
       if (!value)                                      return 'Username wajib diisi.';
-      if (value.length < 3 || value.length > 30)      return 'Username harus 3–30 karakter.';
+      if (value.length < 3 || value.length > 30)      return 'Username harus 3-30 karakter.';
       if (!REGEX_USERNAME.test(value))                 return 'Hanya huruf, angka, dan underscore (_) yang diperbolehkan.';
       return '';
     case 'full_name':
       if (!value)                                      return 'Nama lengkap wajib diisi.';
-      if (value.length < 2 || value.length > 100)     return 'Nama harus 2–100 karakter.';
+      if (value.length < 2 || value.length > 100)     return 'Nama harus 2-100 karakter.';
       return '';
     case 'email':
       if (!value)                                      return 'Email wajib diisi.';
