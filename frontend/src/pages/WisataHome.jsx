@@ -291,21 +291,21 @@ function WisataHome() {
         </div>
       </div>  
 
-      {/* === SEARCH & FILTER GLASS (TASK 2) === */}
-      <div className="relative z-10 max-w-3xl mx-auto px-4 -mt-10">
+      {/* === SEARCH & FILTER GLASS (TASK 1) === */}
+      <div className="relative z-10 max-w-3xl mx-4 md:mx-auto -mt-10">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="bg-white/95 backdrop-blur-md border border-white/30 shadow-2xl rounded-[1.5rem] p-2"
+          className="bg-white/95 backdrop-blur-md border border-white/30 shadow-2xl rounded-full p-1.5 md:p-2"
         >
-          <div className="flex items-center gap-3">
-            <div className="flex-1 flex items-center gap-3 px-4">
-              <Search className="w-5 h-5 text-slate-400 shrink-0" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex-1 flex items-center gap-2 md:gap-3 px-3 md:px-6 min-w-0">
+              <Search className="w-4 h-4 md:w-5 md:h-5 text-slate-400 shrink-0" />
               <input
                 type="text"
-                placeholder="Cari pantai, gunung, atau cafe... (Tekan Enter)"
-                className="flex-1 bg-transparent border-0 text-slate-700 placeholder:text-slate-500 focus:outline-0 text-sm py-2"
+                placeholder="Cari pantai, gunung, atau tempat wisata..."
+                className="w-full min-w-0 bg-transparent border-0 text-slate-700 placeholder:text-slate-500 focus:outline-0 text-xs sm:text-sm md:text-base py-2 truncate"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -320,9 +320,11 @@ function WisataHome() {
                   resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
               }}
-              className="bg-gradient-to-r from-rose-500 to-orange-400 text-white px-6 py-3 rounded-full font-semibold text-sm hover:shadow-lg transition shrink-0"
+              className="shrink-0 bg-gradient-to-r from-rose-500 to-orange-400 text-white px-4 md:px-8 py-2.5 md:py-3.5 rounded-full font-semibold text-xs sm:text-sm md:text-base hover:shadow-lg transition flex items-center justify-center gap-1.5"
+              aria-label="Cari Destinasi"
             >
-              Cari
+              <span className="hidden sm:inline">Cari</span>
+              <span className="sm:hidden font-bold">🔍</span>
             </button>
           </div>
         </motion.div>
