@@ -75,8 +75,7 @@ function OnboardingPage() {
 
   return (
     <div 
-      className="w-full min-h-screen bg-page-bg flex flex-col items-center justify-start sm:justify-center p-4 py-8 pb-32 overflow-y-auto overscroll-contain"
-      style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+      className="w-full min-h-full bg-page-bg flex flex-col items-center justify-start sm:justify-center p-4 py-8 pb-32"
     >
       <div className="max-w-3xl w-full text-center my-auto">
         <motion.div 

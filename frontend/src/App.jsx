@@ -129,7 +129,7 @@ function App() {
 
   return (
     // Global Wrapper: Gunakan page-bg dan text-main
-    <div className="flex flex-col min-h-screen bg-page-bg font-sans text-text-main selection:bg-primary/20 selection:text-primary overflow-x-clip">
+    <div className="flex flex-col min-h-screen bg-page-bg font-sans text-text-main selection:bg-primary/20 selection:text-primary">
       <RouteTracker />
       
       {/* --- TOASTER --- */}
@@ -241,7 +241,7 @@ function App() {
       </header>
 
       {/* --- MAIN CONTENT --- */}
-      <main className={`flex-grow ${isChatRoute ? 'h-[calc(100vh-80px)] overflow-hidden' : 'min-h-[calc(100vh-80px)] ' + (!shouldShowFooter ? 'overflow-y-auto pb-12 px-4' : 'pb-12 px-4 md:px-0')}`}>
+      <main className={`flex-grow ${isChatRoute ? 'h-[calc(100vh-80px)] overflow-hidden' : 'min-h-[calc(100vh-80px)] pb-12 px-4 md:px-0'}`}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<WisataHome />} />

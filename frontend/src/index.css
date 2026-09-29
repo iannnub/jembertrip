@@ -25,15 +25,17 @@
   }
 }
 
-/* ===== MOBILE SCROLL FIX & TOUCH UX ===== */
-html, body {
+/* ===== MOBILE SCROLL & TOUCH UX ===== */
+html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y pinch-zoom;
-  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
   width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.drawer-open {
@@ -44,9 +46,6 @@ body.drawer-open {
 #root {
   min-height: 100vh;
   min-height: 100dvh;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 * {
@@ -56,13 +55,6 @@ body.drawer-open {
 button, a, [role="button"] {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-}
-
-.scrollable-content {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  touch-action: pan-y;
 }
 
 /* Prevent iOS auto-zoom on input focus */

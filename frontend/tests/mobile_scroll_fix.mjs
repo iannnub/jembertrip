@@ -48,30 +48,33 @@ async function runMobileScrollTests() {
       console.log(`  ✅ PASS: Container overflow allows scrolling`);
     }
 
-    // Measure scroll capability
+    // Measure real touch gesture scroll capability
     const initialOnboardScrollY = await page.evaluate(() => window.scrollY || document.documentElement.scrollTop);
-    await page.evaluate(() => window.scrollBy(0, 300));
-    await page.waitForTimeout(300);
-    const newOnboardScrollY = await page.evaluate(() => window.scrollY || document.documentElement.scrollTop);
-
-    console.log(`  Scroll execution: ${initialOnboardScrollY}px -> ${newOnboardScrollY}px`);
-    if (newOnboardScrollY > initialOnboardScrollY) {
-      console.log(`  ✅ PASS: /onboard is freely scrollable on ${device.name}`);
-    } else {
-      // Check if root or main container scrolled
-      const mainScrolled = await page.evaluate(() => {
-        const m = document.querySelector('main') || document.querySelector('.min-h-screen');
-        if (m) {
-          m.scrollTop += 200;
-          return m.scrollTop > 0;
-        }
-        return false;
+    const client = await context.newCDPSession(page);
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: 180, y: 500 }]
+    });
+    for (let y = 480; y >= 150; y -= 20) {
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: 180, y }]
       });
-      if (mainScrolled) {
-        console.log(`  ✅ PASS: Internal /onboard container is scrollable`);
-      } else {
-        console.log(`  ℹ️ Content fits or scrollable: ${newOnboardScrollY}px`);
-      }
+      await page.waitForTimeout(16);
+    }
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchEnd',
+      touchPoints: []
+    });
+    await page.waitForTimeout(500);
+
+    const newOnboardScrollY = await page.evaluate(() => window.scrollY || document.documentElement.scrollTop);
+    console.log(`  Touch gesture execution: ${initialOnboardScrollY}px -> ${newOnboardScrollY}px`);
+    if (newOnboardScrollY >= 200) {
+      console.log(`  ✅ PASS: /onboard is freely scrollable with touch gestures on ${device.name}`);
+    } else {
+      console.error(`  ❌ FAIL: Touch gesture scroll failed to move window.scrollY (current: ${newOnboardScrollY}px)`);
+      allPassed = false;
     }
 
     // ------------------------------------------------------------------

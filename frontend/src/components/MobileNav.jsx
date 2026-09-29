@@ -16,8 +16,8 @@ export default function MobileNav({ user, onLogout }) {
   const close = () => {
     setIsOpen(false);
     document.body.classList.remove('drawer-open');
-    document.body.style.overflow = 'auto';
-    document.body.style.touchAction = 'auto';
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
   };
 
   // Body scroll lock saat drawer terbuka & cleanup saat tutup / unmount
@@ -28,14 +28,14 @@ export default function MobileNav({ user, onLogout }) {
       document.body.style.touchAction = 'none';
     } else {
       document.body.classList.remove('drawer-open');
-      document.body.style.overflow = 'auto';
-      document.body.style.touchAction = 'auto';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
 
     return () => {
       document.body.classList.remove('drawer-open');
-      document.body.style.overflow = 'auto';
-      document.body.style.touchAction = 'auto';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -43,8 +43,8 @@ export default function MobileNav({ user, onLogout }) {
   useEffect(() => {
     return () => {
       document.body.classList.remove('drawer-open');
-      document.body.style.overflow = 'auto';
-      document.body.style.touchAction = 'auto';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, []);
 
