@@ -1,4 +1,12 @@
-🚀 JemberTrip.AI: Smart Local Tourism Assistant
+# 🚀 JemberTrip.AI: Smart Local Tourism Assistant
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Status](https://img.shields.io/badge/status-production-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
+
+🚀 **Live Demo:** [https://jembertrip.vercel.app](https://jembertrip.vercel.app)
+
 JemberTrip.AI adalah platform asisten perjalanan cerdas berbasis Artificial Intelligence (AI) yang dirancang khusus untuk mengeksplorasi potensi pariwisata di Kabupaten Jember, Jawa Timur. Dengan mengimplementasikan arsitektur Retrieval-Augmented Generation (RAG), aplikasi ini memberikan rekomendasi yang akurat, personal, dan berbasis data pengetahuan lokal yang faktual.
 
 ✨ Fitur Unggulan
@@ -57,38 +65,49 @@ Groq API Key
 Langkah-langkah
 Clone Repository
 
-Bash
-git clone https://github.com/username/jembertrip.git
+```bash
+git clone https://github.com/iannnub/jembertrip.git
 cd jembertrip
+```
+
 Setup Backend
 
-Bash
+```bash
 cd backend
 pip install -r requirements.txt
-# Jalankan Ingestion untuk pertama kali
-python ingestion.py
 # Jalankan Server
 uvicorn main:app --reload
+```
+
 Setup Frontend
 
-Bash
+```bash
 cd frontend
 npm install
 npm run dev
+```
+
 📂 Struktur Proyek
-Plaintext
+
+```plaintext
 jembertrip/
-├── backend/
-│   ├── data/             # Dataset CSV & PDF
+├── backend/               # FastAPI + ChromaDB + AI Logic
+│   ├── data/             # Dataset CSV
 │   ├── db_jembertrip_v2/ # Vector Store (ChromaDB)
 │   ├── models.py         # Database Schema
-│   ├── main.py           # API Logic & AI Middle Brain
-│   └── ingestion.py      # Script pemrosesan data ke Vektor
-├── frontend/
+│   └── main.py           # API Logic & AI Middle Brain
+├── frontend/              # React + Vite + Tailwind CSS
 │   ├── src/
 │   │   ├── pages/        # WisataHome, WisataDetail, ChatPage, dll.
 │   │   └── App.jsx       # Routing & Global Layout
 │   └── tailwind.config.js
 └── README.md
-🎓 Konteks Akademik
-Proyek ini dikembangkan sebagai bagian dari penelitian Skripsi/Tugas Akhir pada Program Studi Sistem Informasi, Universitas Muhammadiyah Jember.
+```
+
+---
+
+## 📱 Social Media & Contact
+- **LinkedIn:** [@iannnub](https://www.linkedin.com/in/iannnub/)
+- **Instagram:** [@iannnub](https://www.instagram.com/iannnub)
+- **TikTok:** [@iannnub](https://www.tiktok.com/@iannnub)
+- **GitHub:** [@iannnub](https://github.com/iannnub)
