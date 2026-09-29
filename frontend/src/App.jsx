@@ -81,6 +81,7 @@ function App() {
 
   const noFooterPaths = ['/rekomendasi', '/login', '/register', '/onboard'];
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
+  const isChatRoute = location.pathname === '/rekomendasi' || location.pathname === '/chat';
 
 
   // 1. Cek Login
@@ -240,7 +241,7 @@ function App() {
       </header>
 
       {/* --- MAIN CONTENT --- */}
-      <main className={`flex-grow ${!shouldShowFooter ? 'h-[calc(100vh-80px)] overflow-hidden' : 'pb-12 px-4 md:px-0'}`}>
+      <main className={`flex-grow ${isChatRoute ? 'h-[calc(100vh-80px)] overflow-hidden' : 'min-h-[calc(100vh-80px)] ' + (!shouldShowFooter ? 'overflow-y-auto pb-12 px-4' : 'pb-12 px-4 md:px-0')}`}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<WisataHome />} />

@@ -74,8 +74,11 @@ function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-page-bg flex flex-col items-center justify-center p-4">
-      <div className="max-w-3xl w-full text-center">
+    <div 
+      className="w-full min-h-screen bg-page-bg flex flex-col items-center justify-start sm:justify-center p-4 py-8 pb-32 overflow-y-auto overscroll-contain"
+      style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+    >
+      <div className="max-w-3xl w-full text-center my-auto">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -92,16 +95,19 @@ function OnboardingPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10"
+          className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-8"
         >
           {CATEGORIES.map((cat) => {
             const isSelected = selected.includes(cat.id);
             return (
-              <div 
+              <button 
+                type="button"
                 key={cat.id}
                 onClick={() => toggleCategory(cat.id)}
-                className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 h-32
+                className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 h-32 touch-manipulation
                   ${isSelected ? 'bg-primary/5 border-primary shadow-lg shadow-primary/20 scale-105' : 'bg-white border-gray-100 hover:border-primary/30 hover:shadow-md'}`}
+                style={{ touchAction: 'manipulation' }}
+                aria-pressed={isSelected}
               >
                 {isSelected && (
                   <div className="absolute top-2 right-2 text-primary">
@@ -110,7 +116,7 @@ function OnboardingPage() {
                 )}
                 <span className="text-4xl">{cat.icon}</span>
                 <span className={`font-bold ${isSelected ? 'text-primary' : 'text-text-main'}`}>{cat.name}</span>
-              </div>
+              </button>
             );
           })}
         </motion.div>
@@ -119,14 +125,17 @@ function OnboardingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="pb-8"
         >
           <button 
+            type="button"
             onClick={handleSave}
             disabled={loading || selected.length !== 3}
-            className={`w-full md:w-auto px-12 py-4 rounded-full font-bold text-lg shadow-xl transition-all duration-300 flex items-center justify-center gap-2 mx-auto
+            className={`w-full md:w-auto px-12 py-4 rounded-full font-bold text-lg shadow-xl transition-all duration-300 flex items-center justify-center gap-2 mx-auto touch-manipulation min-h-[48px]
               ${selected.length === 3 
                 ? 'bg-gradient-to-r from-primary to-accent text-white hover:scale-105 hover:shadow-primary/40 cursor-pointer' 
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+            style={{ touchAction: 'manipulation' }}
           >
             {loading ? "Menyiapkan AI..." : (
               <>
