@@ -1,0 +1,1167 @@
+{
+  "url": "https://jembertrip.vercel.app",
+  "timestamp": "2026-09-29T13:28:44.299Z",
+  "globalChecks": {
+    "lang": "id",
+    "title": "JemberTrip - Panduan Wisata Cerdas Kabupaten Jember",
+    "viewport": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+    "charset": "UTF-8"
+  },
+  "semantics": {
+    "landmarks": {
+      "header": 1,
+      "nav": 1,
+      "main": 1,
+      "section": 2,
+      "footer": 1,
+      "article": 0,
+      "aside": 0
+    },
+    "h1Count": 1,
+    "totalHeadings": 7,
+    "headingsHierarchy": [
+      {
+        "level": 1,
+        "tag": "H1",
+        "text": "Temukan Pesona Bumi Pandalungan"
+      },
+      {
+        "level": 2,
+        "tag": "H2",
+        "text": "Destinasi Populer"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Pantai Watu Ulo"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Teluk Love"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Puncak Rembangan Resort"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Puslit Kopi & Kakao Indonesia"
+      },
+      {
+        "level": 2,
+        "tag": "H2",
+        "text": "Bingung mau liburan ke mana di Jember?"
+      }
+    ],
+    "skippedLevels": [],
+    "totalImages": 5,
+    "missingAltCount": 0,
+    "imagesSample": [
+      {
+        "src": "https://jembertrip.vercel.app/assets/home.png",
+        "alt": "Background",
+        "hasAlt": true,
+        "isDecorative": false,
+        "ariaHidden": null
+      },
+      {
+        "src": "https://jembertrip.vercel.app/assets/images/2.png",
+        "alt": "Pantai Watu Ulo",
+        "hasAlt": true,
+        "isDecorative": false,
+        "ariaHidden": null
+      },
+      {
+        "src": "blob:https://jembertrip.vercel.app/d3c0dc87-381d-48b7-ad68-5",
+        "alt": "Teluk Love",
+        "hasAlt": true,
+        "isDecorative": false,
+        "ariaHidden": null
+      },
+      {
+        "src": "https://jembertrip.vercel.app/assets/images/1.png",
+        "alt": "Puncak Rembangan Resort",
+        "hasAlt": true,
+        "isDecorative": false,
+        "ariaHidden": null
+      },
+      {
+        "src": "https://jembertrip.vercel.app/assets/images/3.png",
+        "alt": "Puslit Kopi & Kakao Indonesia",
+        "hasAlt": true,
+        "isDecorative": false,
+        "ariaHidden": null
+      }
+    ]
+  },
+  "ariaLabels": {
+    "passed": [
+      {
+        "tag": "a",
+        "text": "JemberTrip\nEXPLORE JATIM",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "JemberTrip\nEXPLORE JATIM",
+        "className": "flex items-center gap-2.5 group select-none min-h-",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Home",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Home",
+        "className": "px-4 py-2 rounded-full text-sm flex items-center g",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "AI Chat",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "AI Chat",
+        "className": "px-4 py-2 rounded-full text-sm flex items-center g",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Masuk Akun",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Masuk Akun",
+        "className": "group relative inline-flex items-center justify-ce",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "ariaLabel": "Buka menu navigasi",
+        "title": null,
+        "accessibleName": "Buka menu navigasi",
+        "className": "md:hidden p-2.5 rounded-xl bg-white border border-",
+        "id": ""
+      },
+      {
+        "tag": "input",
+        "text": "",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Cari pantai, gunung, atau tempat wisata...",
+        "className": "w-full min-w-0 bg-transparent border-0 text-slate-",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Cari",
+        "ariaLabel": "Cari Destinasi",
+        "title": null,
+        "accessibleName": "Cari Destinasi",
+        "className": "shrink-0 bg-gradient-to-r from-rose-500 to-orange-",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Semua",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Semua",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Pantai",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Pantai",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Rekreasi",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Rekreasi",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Agrowisata",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Agrowisata",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Edukasi",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Edukasi",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Religi",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Religi",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Rural Tourism",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Rural Tourism",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Air Terjun",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Air Terjun",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Situs",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Situs",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "Panorama",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Panorama",
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounde",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "PANTAI\nPantai Watu Ulo\n\nSumberrejo, Kec.",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "PANTAI\nPantai Watu Ulo\n\nSumberrejo, Kec. Ambulu, Kabupaten Jember, Jawa Timur 68172\n\n4.8\n(Review)",
+        "className": "group block h-full bg-white rounded-2xl border bor",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "REKREASI\nTeluk Love\n\nJl. Ambulu - Watu U",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "REKREASI\nTeluk Love\n\nJl. Ambulu - Watu Ulo, Sido Mulyo, Sumberrejo, Kec. Ambulu, Kabupaten Jember, Jawa Timur 68162\n\n4.8\n(Review)",
+        "className": "group block h-full bg-white rounded-2xl border bor",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "REKREASI\nPuncak Rembangan Resort\n\nDarung",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "REKREASI\nPuncak Rembangan Resort\n\nDarungan, Kemuning Lor, Kec. Arjasa, Kabupaten Jember, Jawa Timur\n\n4.8\n(Review)",
+        "className": "group block h-full bg-white rounded-2xl border bor",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "AGROWISATA\nPuslit Kopi & Kakao Indonesia",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "AGROWISATA\nPuslit Kopi & Kakao Indonesia\n\nPuslitkoka Renteng, Gebang, Nogosari, Kec. Rambipuji, Kabupaten Jember, Jawa Timur 68175\n\n4.8\n(Review)",
+        "className": "group block h-full bg-white rounded-2xl border bor",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Mulai Ngobrol dengan Cak Jember\n→",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Mulai Ngobrol dengan Cak Jember\n→",
+        "className": "inline-flex items-center gap-2 bg-slate-900 text-w",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "JT\nJemberTrip\nJelajahi Bumi Pandalungan ",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "JT\nJemberTrip\nJelajahi Bumi Pandalungan dengan AI",
+        "className": "flex items-center gap-3",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "GitHub",
+        "title": "GitHub (@iannnub)",
+        "accessibleName": "GitHub",
+        "className": "w-8 h-8 rounded-full bg-slate-800/80 border border",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "LinkedIn",
+        "title": "LinkedIn (iannnub)",
+        "accessibleName": "LinkedIn",
+        "className": "w-8 h-8 rounded-full bg-slate-800/80 border border",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "Instagram",
+        "title": "Instagram (@iannnub)",
+        "accessibleName": "Instagram",
+        "className": "w-8 h-8 rounded-full bg-slate-800/80 border border",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "TikTok",
+        "title": "TikTok (@iannnub)",
+        "accessibleName": "TikTok",
+        "className": "w-8 h-8 rounded-full bg-slate-800/80 border border",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Beranda",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Beranda",
+        "className": "hover:text-white transition",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Eksplor Wisata",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Eksplor Wisata",
+        "className": "hover:text-white transition",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Rekomendasi AI",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Rekomendasi AI",
+        "className": "hover:text-white transition",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Chat Cak Jember",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Chat Cak Jember",
+        "className": "hover:text-white transition",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Pantai",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Pantai",
+        "className": "px-3 py-1.5 rounded-full bg-slate-800 border borde",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Air Terjun",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Air Terjun",
+        "className": "px-3 py-1.5 rounded-full bg-slate-800 border borde",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Agrowisata",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Agrowisata",
+        "className": "px-3 py-1.5 rounded-full bg-slate-800 border borde",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Edukasi",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Edukasi",
+        "className": "px-3 py-1.5 rounded-full bg-slate-800 border borde",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "+2 lagi",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "+2 lagi",
+        "className": "px-3 py-1.5 rounded-full border border-slate-700 t",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "iannnub\n↗",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "iannnub\n↗",
+        "className": "inline-flex items-center gap-1.5 px-3 py-1.5 round",
+        "id": ""
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "ariaLabel": "Tutup menu",
+        "title": null,
+        "accessibleName": "Tutup menu",
+        "className": "w-8 h-8 grid place-items-center rounded-full bg-sl",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Beranda",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Beranda",
+        "className": "flex items-center gap-3 px-4 py-3 rounded-xl font-",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "AI Chat Cak JemberAI",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "AI Chat Cak JemberAI",
+        "className": "flex items-center gap-3 px-4 py-3 rounded-xl font-",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Masuk Akun",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Masuk Akun",
+        "className": "w-full flex items-center justify-center gap-2 py-3",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "Belum punya akun? Daftar gratis",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "Belum punya akun? Daftar gratis",
+        "className": "w-full flex items-center justify-center py-2.5 rou",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "GitHub",
+        "title": "GitHub (@iannnub)",
+        "accessibleName": "GitHub",
+        "className": "w-8 h-8 rounded-full bg-slate-800/80 border border",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "LinkedIn",
+        "title": "LinkedIn (iannnub)",
+        "accessibleName": "LinkedIn",
+        "className": "w-8 h-8 rounded-full bg-slate-800/80 border border",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "Instagram",
+        "title": "Instagram (@iannnub)",
+        "accessibleName": "Instagram",
+        "className": "w-8 h-8 rounded-full bg-slate-800/80 border border",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "TikTok",
+        "title": "TikTok (@iannnub)",
+        "accessibleName": "TikTok",
+        "className": "w-8 h-8 rounded-full bg-slate-800/80 border border",
+        "id": ""
+      },
+      {
+        "tag": "a",
+        "text": "iannnub",
+        "ariaLabel": null,
+        "title": null,
+        "accessibleName": "iannnub",
+        "className": "font-semibold text-slate-600 hover:text-primary tr",
+        "id": ""
+      }
+    ],
+    "failed": []
+  },
+  "keyboardFlow": {
+    "desktop": [
+      {
+        "step": 1,
+        "tag": "a",
+        "id": "",
+        "text": "JemberTrip EXPLORE JATIM",
+        "ariaLabel": null,
+        "className": "flex items-center gap-2.5 group select-n",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(16, 16, 16)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 2,
+        "tag": "a",
+        "id": "",
+        "text": "Home",
+        "ariaLabel": null,
+        "className": "px-4 py-2 rounded-full text-sm flex item",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(106, 39, 72)",
+        "boxShadow": "rgb(255, 255, 255) 0px 0px 0px 0px, rgba(236, 72, 153, 0.2) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 3,
+        "tag": "a",
+        "id": "",
+        "text": "AI Chat",
+        "ariaLabel": null,
+        "className": "px-4 py-2 rounded-full text-sm flex item",
+        "outlineStyle": "auto",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(65, 69, 77)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 4,
+        "tag": "a",
+        "id": "",
+        "text": "Masuk Akun",
+        "ariaLabel": null,
+        "className": "group relative inline-flex items-center ",
+        "outlineStyle": "solid",
+        "outlineWidth": "2px",
+        "outlineColor": "rgba(255, 255, 255, 0.224)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 5,
+        "tag": "input",
+        "id": "",
+        "text": "",
+        "ariaLabel": null,
+        "className": "w-full min-w-0 bg-transparent border-0 t",
+        "outlineStyle": "solid",
+        "outlineWidth": "0px",
+        "outlineColor": "rgba(0, 0, 0, 0)",
+        "boxShadow": "rgb(255, 255, 255) 0px 0px 0px 0px, rgb(37, 99, 235) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 6,
+        "tag": "button",
+        "id": "",
+        "text": "Cari",
+        "ariaLabel": "Cari Destinasi",
+        "className": "shrink-0 bg-gradient-to-r from-rose-500 ",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(16, 16, 16)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 7,
+        "tag": "button",
+        "id": "",
+        "text": "Semua",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(70, 70, 70)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 8,
+        "tag": "button",
+        "id": "",
+        "text": "Pantai",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(24, 27, 31)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 9,
+        "tag": "button",
+        "id": "",
+        "text": "Rekreasi",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(21, 23, 25)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 10,
+        "tag": "button",
+        "id": "",
+        "text": "Agrowisata",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(28, 33, 40)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 11,
+        "tag": "button",
+        "id": "",
+        "text": "Edukasi",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(24, 27, 31)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 12,
+        "tag": "button",
+        "id": "",
+        "text": "Religi",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(24, 27, 31)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 13,
+        "tag": "button",
+        "id": "",
+        "text": "Rural Tourism",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(24, 27, 31)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 14,
+        "tag": "button",
+        "id": "",
+        "text": "Air Terjun",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(24, 27, 31)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 15,
+        "tag": "button",
+        "id": "",
+        "text": "Situs",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(24, 27, 31)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 16,
+        "tag": "button",
+        "id": "",
+        "text": "Panorama",
+        "ariaLabel": null,
+        "className": "category-pill px-3.5 sm:px-4 py-1.5 sm:p",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(28, 33, 40)",
+        "boxShadow": "none",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 17,
+        "tag": "a",
+        "id": "",
+        "text": "PANTAI Pantai Watu Ulo Sumberr",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(32, 36, 43)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 18,
+        "tag": "a",
+        "id": "",
+        "text": "REKREASI Teluk Love Jl. Ambulu",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(32, 36, 43)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 19,
+        "tag": "a",
+        "id": "",
+        "text": "REKREASI Puncak Rembangan Reso",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(37, 43, 51)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 20,
+        "tag": "a",
+        "id": "",
+        "text": "AGROWISATA Puslit Kopi & Kakao",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(37, 43, 51)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 21,
+        "tag": "a",
+        "id": "",
+        "text": "EDUKASI Bin Cigar Jl. Brawijay",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(37, 43, 51)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 22,
+        "tag": "a",
+        "id": "",
+        "text": "RELIGI Makam Habib Soleh Tangg",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(43, 50, 61)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 23,
+        "tag": "a",
+        "id": "",
+        "text": "RURAL TOURISM Desa Wisata Sido",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(37, 43, 51)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 24,
+        "tag": "a",
+        "id": "",
+        "text": "AGROWISATA Gunung Gambir Lanas",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(37, 43, 51)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      },
+      {
+        "step": 25,
+        "tag": "a",
+        "id": "",
+        "text": "REKREASI Pemandian Kebon Agung",
+        "ariaLabel": null,
+        "className": "group block h-full bg-white rounded-2xl ",
+        "outlineStyle": "auto",
+        "outlineWidth": "2px",
+        "outlineColor": "rgb(37, 43, 51)",
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "hasVisibleFocus": true
+      }
+    ],
+    "mobileDrawer": {
+      "hamburgerAriaLabel": "Buka menu navigasi",
+      "initialAriaExpanded": "false",
+      "updatedAriaExpanded": "true",
+      "drawerDetected": true
+    }
+  },
+  "colorContrast": [
+    {
+      "name": "Header Subtitle (EXPLORE JATIM)",
+      "selector": "a[href=\"/\"] span.text-secondary",
+      "textColor": "rgb(22, 163, 74)",
+      "bgColor": "rgb(255, 245, 247)",
+      "fontSize": "10px",
+      "fontWeight": "700",
+      "isLargeText": false,
+      "contrastRatio": 3.08,
+      "minRequired": 4.5,
+      "passes": false
+    },
+    {
+      "name": "Active Category Pill (Semua)",
+      "selector": "button.category-pill:first-of-type",
+      "textColor": "rgb(255, 255, 255)",
+      "bgColor": "rgb(244, 63, 94)",
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "isLargeText": false,
+      "contrastRatio": 3.67,
+      "minRequired": 4.5,
+      "passes": false
+    },
+    {
+      "name": "Search Input Text",
+      "selector": "input[placeholder*=\"Cari\"]",
+      "textColor": "rgb(51, 65, 85)",
+      "bgColor": "rgb(255, 255, 255)",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "isLargeText": false,
+      "contrastRatio": 10.35,
+      "minRequired": 4.5,
+      "passes": true
+    },
+    {
+      "name": "Hero Main Heading",
+      "selector": "main h1",
+      "textColor": "rgb(255, 255, 255)",
+      "bgColor": "rgb(17, 24, 39)",
+      "fontSize": "60px",
+      "fontWeight": "700",
+      "isLargeText": true,
+      "contrastRatio": 17.74,
+      "minRequired": 3,
+      "passes": true
+    },
+    {
+      "name": "Section Subtitle / Description",
+      "selector": "main p.text-slate-500, main p.text-slate-600",
+      "textColor": "rgb(100, 116, 139)",
+      "bgColor": "rgb(255, 245, 247)",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "isLargeText": false,
+      "contrastRatio": 4.45,
+      "minRequired": 4.5,
+      "passes": false
+    },
+    {
+      "name": "Footer Container",
+      "selector": "footer",
+      "textColor": "rgb(203, 213, 225)",
+      "bgColor": "rgb(15, 23, 42)",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "isLargeText": false,
+      "contrastRatio": 12.02,
+      "minRequired": 4.5,
+      "passes": true
+    },
+    {
+      "name": "Footer Navigation Links",
+      "selector": "footer a",
+      "textColor": "rgb(203, 213, 225)",
+      "bgColor": "rgb(15, 23, 42)",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "isLargeText": false,
+      "contrastRatio": 12.02,
+      "minRequired": 4.5,
+      "passes": true
+    },
+    {
+      "name": "Footer Copyright Text",
+      "selector": "footer p",
+      "textColor": "rgb(148, 163, 184)",
+      "bgColor": "rgb(15, 23, 42)",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "isLargeText": false,
+      "contrastRatio": 6.96,
+      "minRequired": 4.5,
+      "passes": true
+    }
+  ],
+  "touchTargets": [
+    {
+      "tag": "a",
+      "name": "JemberTrip EXPLORE JATIM",
+      "width": 162,
+      "height": 44,
+      "meetsTarget": true,
+      "className": "flex items-center gap-2.5 grou"
+    },
+    {
+      "tag": "button",
+      "name": "Buka menu navigasi",
+      "width": 42,
+      "height": 42,
+      "meetsTarget": false,
+      "className": "md:hidden p-2.5 rounded-xl bg-"
+    },
+    {
+      "tag": "input",
+      "name": "input",
+      "width": 212,
+      "height": 41,
+      "meetsTarget": false,
+      "className": "w-full min-w-0 bg-transparent "
+    },
+    {
+      "tag": "button",
+      "name": "Cari Destinasi",
+      "width": 44,
+      "height": 36,
+      "meetsTarget": false,
+      "className": "shrink-0 bg-gradient-to-r from"
+    },
+    {
+      "tag": "button",
+      "name": "Semua",
+      "width": 71,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Pantai",
+      "width": 69,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Rekreasi",
+      "width": 81,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Agrowisata",
+      "width": 99,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Edukasi",
+      "width": 77,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Religi",
+      "width": 63,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Rural Tourism",
+      "width": 113,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Air Terjun",
+      "width": 87,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Situs",
+      "width": 59,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "button",
+      "name": "Panorama",
+      "width": 94,
+      "height": 30,
+      "meetsTarget": false,
+      "className": "category-pill px-3.5 sm:px-4 p"
+    },
+    {
+      "tag": "a",
+      "name": "PANTAI Pantai Watu Ulo Sumberr",
+      "width": 326,
+      "height": 399,
+      "meetsTarget": true,
+      "className": "group block h-full bg-white ro"
+    },
+    {
+      "tag": "button",
+      "name": "Tutup menu",
+      "width": 32,
+      "height": 32,
+      "meetsTarget": false,
+      "className": "w-8 h-8 grid place-items-cente"
+    },
+    {
+      "tag": "a",
+      "name": "Beranda",
+      "width": 296,
+      "height": 44,
+      "meetsTarget": true,
+      "className": "flex items-center gap-3 px-4 p"
+    },
+    {
+      "tag": "a",
+      "name": "AI Chat Cak Jember AI",
+      "width": 296,
+      "height": 48,
+      "meetsTarget": true,
+      "className": "flex items-center gap-3 px-4 p"
+    },
+    {
+      "tag": "a",
+      "name": "Masuk Akun",
+      "width": 288,
+      "height": 44,
+      "meetsTarget": true,
+      "className": "w-full flex items-center justi"
+    },
+    {
+      "tag": "a",
+      "name": "Belum punya akun? Daftar grati",
+      "width": 288,
+      "height": 36,
+      "meetsTarget": false,
+      "className": "w-full flex items-center justi"
+    },
+    {
+      "tag": "a",
+      "name": "GitHub",
+      "width": 32,
+      "height": 32,
+      "meetsTarget": false,
+      "className": "w-8 h-8 rounded-full bg-slate-"
+    },
+    {
+      "tag": "a",
+      "name": "LinkedIn",
+      "width": 32,
+      "height": 32,
+      "meetsTarget": false,
+      "className": "w-8 h-8 rounded-full bg-slate-"
+    },
+    {
+      "tag": "a",
+      "name": "Instagram",
+      "width": 32,
+      "height": 32,
+      "meetsTarget": false,
+      "className": "w-8 h-8 rounded-full bg-slate-"
+    },
+    {
+      "tag": "a",
+      "name": "TikTok",
+      "width": 32,
+      "height": 32,
+      "meetsTarget": false,
+      "className": "w-8 h-8 rounded-full bg-slate-"
+    },
+    {
+      "tag": "a",
+      "name": "iannnub",
+      "width": 43,
+      "height": 15,
+      "meetsTarget": false,
+      "className": "font-semibold text-slate-600 h"
+    }
+  ],
+  "focusVisible": {
+    "checked": [],
+    "failed": []
+  }
+}
