@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import SocialLinks from "./SocialLinks";
 
 export default function Footer() {
   return (
@@ -20,9 +21,11 @@ export default function Footer() {
             <p className="mt-4 text-sm leading-relaxed text-slate-400 max-w-sm">
               Kurasi pantai selatan, tembakau, dan panorama Jember. Dipandu Cak Jember, asisten AI berdialek Pandalungan.
             </p>
-            <div className="mt-4 flex gap-2">
-              <a href="https://github.com/iannnub/jembertrip" target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 grid place-items-center hover:bg-slate-700 transition text-xs" title="GitHub iannnub">↗</a>
-              <span className="text-xs text-slate-500 self-center">Pandalungan • Tembakau • Pantai Selatan</span>
+            <div className="mt-5">
+              <div className="text-[11px] tracking-wider uppercase font-semibold text-slate-400 mb-2">
+                Terhubung dengan Pengembang
+              </div>
+              <SocialLinks variant="compact" />
             </div>
           </div>
 

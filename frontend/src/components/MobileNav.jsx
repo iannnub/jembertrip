@@ -8,6 +8,7 @@ import {
   LogOut, LogIn, Menu, X, Compass
 } from 'lucide-react';
 import { getAvatarUrl } from '../utils/imageHelper';
+import SocialLinks from './SocialLinks';
 
 export default function MobileNav({ user, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -155,10 +156,18 @@ export default function MobileNav({ user, onLogout }) {
               </Link>
             </div>
           )}
-          <p className="text-center text-[10px] text-slate-400 mt-3">
-            © {new Date().getFullYear()} JemberTrip • Crafted by{' '}
-            <span className="font-semibold text-slate-500">iannnub</span>
-          </p>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col items-center">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              Connect with @iannnub
+            </div>
+            <SocialLinks variant="compact" />
+            <p className="text-center text-[10px] text-slate-400 mt-2.5">
+              © {new Date().getFullYear()} JemberTrip • Crafted by{' '}
+              <a href="https://github.com/iannnub" target="_blank" rel="noreferrer" className="font-semibold text-slate-600 hover:text-primary transition underline">
+                iannnub
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </>
