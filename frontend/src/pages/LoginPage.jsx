@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
-import TurnstileWidget from '../components/TurnstileWidget';
 import { trackEvent } from '../utils/analytics';
 // Import Icons
 import { User, Lock, LogIn, ArrowLeft, Eye, EyeOff, XCircle } from 'lucide-react';
@@ -42,7 +41,6 @@ function LoginPage() {
   const [loading,     setLoading]     = useState(false);
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -79,11 +77,7 @@ function LoginPage() {
     setServerError(null);
 
     try {
-      const payload = {
-        ...formData,
-        turnstile_token: turnstileToken || undefined
-      };
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, payload);
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, formData);
 
       if (response.data.status === 'success') {
         const { access_token, user } = response.data;
@@ -180,7 +174,7 @@ function LoginPage() {
                 name="username"
                 autoComplete="username"
                 className={fieldClass('username')}
-                placeholder="Username kamu"
+                placeholder="isi username"
                 value={formData.username}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -207,7 +201,7 @@ function LoginPage() {
                 name="password"
                 autoComplete="current-password"
                 className={fieldClass('password')}
-                placeholder="••••••••"
+                placeholder="isi password"
                 value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -229,11 +223,6 @@ function LoginPage() {
             </AnimatePresence>
           </div>
 
-          {/* Cloudflare Turnstile Anti-Spam / CAPTCHA */}
-          <TurnstileWidget
-            onVerify={(token) => setTurnstileToken(token)}
-            onExpire={() => setTurnstileToken('')}
-          />
 
           {/* Tombol Login */}
           <button

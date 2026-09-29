@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
-import TurnstileWidget from '../components/TurnstileWidget';
 import { trackEvent } from '../utils/analytics';
 // Import Icons
 import { User, Mail, Lock, UserPlus, ArrowLeft, Type, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
@@ -21,20 +20,18 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
 const REGEX_EMAIL       = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGEX_USERNAME    = /^[a-zA-Z0-9_]+$/;
 const REGEX_HAS_LETTER  = /[a-zA-Z]/;
-const REGEX_HAS_NUMBER  = /[0-9]/;
 
 function getPasswordStrength(password) {
   if (!password) return { level: 0, label: '', color: '' };
   let score = 0;
-  if (password.length >= 8)            score++;
-  if (password.length >= 12)           score++;
+  if (password.length >= 6)            score++;
+  if (password.length >= 10)           score++;
   if (REGEX_HAS_LETTER.test(password)) score++;
-  if (REGEX_HAS_NUMBER.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password))  score++;
 
-  if (score <= 2) return { level: 1, label: 'Lemah',       color: 'bg-red-400'     };
-  if (score <= 3) return { level: 2, label: 'Sedang',      color: 'bg-yellow-400'  };
-  if (score <= 4) return { level: 3, label: 'Kuat',        color: 'bg-green-400'   };
+  if (score <= 1) return { level: 1, label: 'Lemah',       color: 'bg-red-400'     };
+  if (score <= 2) return { level: 2, label: 'Sedang',      color: 'bg-yellow-400'  };
+  if (score <= 3) return { level: 3, label: 'Kuat',        color: 'bg-green-400'   };
   return            { level: 4, label: 'Sangat Kuat', color: 'bg-emerald-500' };
 }
 
@@ -55,9 +52,7 @@ function validateField(name, value) {
       return '';
     case 'password':
       if (!value)                                      return 'Password wajib diisi.';
-      if (value.length < 8)                            return 'Password minimal 8 karakter.';
-      if (!REGEX_HAS_LETTER.test(value))              return 'Password harus mengandung huruf.';
-      if (!REGEX_HAS_NUMBER.test(value))              return 'Password harus mengandung angka.';
+      if (value.length < 6)                            return 'Password minimal 6 karakter.';
       return '';
     default:
       return '';
@@ -79,7 +74,6 @@ function RegisterPage() {
   const [loading,     setLoading]     = useState(false);
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -115,11 +109,7 @@ function RegisterPage() {
     setServerError(null);
 
     try {
-      const payload = {
-        ...formData,
-        turnstile_token: turnstileToken || undefined
-      };
-      const response = await axios.post(`${API_BASE_URL}/api/auth/register`, payload);
+      const response = await axios.post(`${API_BASE_URL}/api/auth/register`, formData);
       if (response.data.status === 'success') {
         trackEvent('user_registered', {
           method: 'email',
@@ -211,7 +201,7 @@ function RegisterPage() {
                 name="username"
                 autoComplete="username"
                 className={fieldClass('username')}
-                placeholder="min. 3 karakter (huruf, angka, _)"
+                placeholder="isi username"
                 value={formData.username}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -279,7 +269,7 @@ function RegisterPage() {
                 name="email"
                 autoComplete="email"
                 className={fieldClass('email')}
-                placeholder="email@contoh.com"
+                placeholder="isi email"
                 value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -313,7 +303,7 @@ function RegisterPage() {
                 name="password"
                 autoComplete="new-password"
                 className={fieldClass('password')}
-                placeholder="Min. 8 karakter (huruf + angka)"
+                placeholder="isi password"
                 value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -359,11 +349,6 @@ function RegisterPage() {
             </AnimatePresence>
           </div>
 
-          {/* Cloudflare Turnstile Anti-Spam / CAPTCHA */}
-          <TurnstileWidget
-            onVerify={(token) => setTurnstileToken(token)}
-            onExpire={() => setTurnstileToken('')}
-          />
 
           {/* Tombol Submit */}
           <button
