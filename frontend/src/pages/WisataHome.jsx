@@ -1,6 +1,6 @@
 // src/pages/WisataHome.jsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { Link, useSearchParams } from 'react-router-dom';
 import SEO from '../components/SEO';
@@ -21,9 +21,10 @@ const API_DESTINASI_URL = `${API_BASE_URL}/api/v1/list-wisata?limit=100&offset=0
 function WisataHome() {
   // --- STATE ---
   const [masterWisataList, setMasterWisataList] = useState([]);
-  const [displayedWisata, setDisplayedWisata] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const filterTimeoutRef = useRef(null);
 
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get('kategori') || "Semua";
@@ -99,7 +100,6 @@ function WisataHome() {
         const response = await axios.get(API_DESTINASI_URL);
         const dataBersih = response.data.data;
         setMasterWisataList(dataBersih);
-        setDisplayedWisata(dataBersih);
       } catch (err) {
         console.error("Error API:", err);
         setError("Gagal memuat data wisata. Cek koneksi backend!");
@@ -154,8 +154,8 @@ function WisataHome() {
   }, []);
 
 
-  // --- 3. LOGIKA FILTERING (REAL-TIME) ---
-  useEffect(() => {
+  // --- 3. LOGIKA FILTERING (MEMOIZED & INSTANT) ---
+  const displayedWisata = useMemo(() => {
     let result = masterWisataList;
     
     // Filter Kategori
@@ -168,11 +168,11 @@ function WisataHome() {
     // Filter Search
     if (searchTerm) {
       result = result.filter(item => 
-        item.nama_wisata.toLowerCase().includes(searchTerm.toLowerCase())
+        item.nama_wisata && item.nama_wisata.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
-    setDisplayedWisata(result);
+    return result;
   }, [searchTerm, selectedCategory, masterWisataList]);
 
 
@@ -190,20 +190,28 @@ function WisataHome() {
     }
   };
 
-  const handleCategoryClick = (cat) => {
+  const handleCategoryClick = useCallback((cat) => {
+    if (isFiltering) return; // Prevent spam click
+    
+    setIsFiltering(true);
     setSelectedCategory(cat);
     trackEvent('select_category', { category_name: cat });
+    
     if (resultsRef.current) {
       setTimeout(() => {
         resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     }
-  };
+
+    if (filterTimeoutRef.current) clearTimeout(filterTimeoutRef.current);
+    filterTimeoutRef.current = setTimeout(() => {
+      setIsFiltering(false);
+    }, 300);
+  }, [isFiltering]);
 
   const handleReset = () => {
     setSearchTerm("");
     setSelectedCategory("Semua");
-    setDisplayedWisata(masterWisataList);
   };
 
   // --- RENDER LOADING ---
@@ -335,7 +343,10 @@ function WisataHome() {
             <button
               key={k}
               onClick={() => handleCategoryClick(k)}
-              className={`px-4 py-2 rounded-full text-xs font-medium transition ${
+              disabled={isFiltering}
+              className={`category-pill px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium transition ${
+                isFiltering ? "opacity-70 cursor-wait" : ""
+              } ${
                 selectedCategory === k
                   ? "bg-rose-500 text-white shadow-sm"
                   : "bg-white/90 backdrop-blur-sm text-slate-700 border border-white/40 hover:bg-white"
