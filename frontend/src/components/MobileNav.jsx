@@ -13,13 +13,51 @@ import SocialLinks from './SocialLinks';
 export default function MobileNav({ user, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Body scroll lock saat drawer terbuka
+  const close = () => {
+    setIsOpen(false);
+    document.body.classList.remove('drawer-open');
+    document.body.style.overflow = 'auto';
+    document.body.style.touchAction = 'auto';
+  };
+
+  // Body scroll lock saat drawer terbuka & cleanup saat tutup / unmount
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (isOpen) {
+      document.body.classList.add('drawer-open');
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.classList.remove('drawer-open');
+      document.body.style.overflow = 'auto';
+      document.body.style.touchAction = 'auto';
+    }
+
+    return () => {
+      document.body.classList.remove('drawer-open');
+      document.body.style.overflow = 'auto';
+      document.body.style.touchAction = 'auto';
+    };
   }, [isOpen]);
 
-  const close = () => setIsOpen(false);
+  // Global unmount cleanup
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('drawer-open');
+      document.body.style.overflow = 'auto';
+      document.body.style.touchAction = 'auto';
+    };
+  }, []);
+
+  // Tutup drawer dengan tombol Escape (a11y & UX)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        close();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   const handleLogout = () => {
     close();
@@ -47,11 +85,12 @@ export default function MobileNav({ user, onLogout }) {
       {/* Drawer: z-50, SOLID white, slide dari kiri */}
       <div
         className={`fixed top-0 left-0 bottom-0 h-screen h-[100dvh] w-[82%] max-w-[340px] bg-white z-50 shadow-2xl shadow-slate-900/20 flex flex-col transform transition-transform duration-300 ease-out md:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? 'translate-x-0 pointer-events-auto visible' : '-translate-x-full pointer-events-none invisible'
         }`}
         role="dialog"
         aria-modal="true"
         aria-label="Menu navigasi"
+        style={{ touchAction: 'pan-y' }}
       >
         {/* Header: Solid */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white shrink-0">
@@ -66,10 +105,10 @@ export default function MobileNav({ user, onLogout }) {
           </div>
           <button
             onClick={close}
-            className="w-8 h-8 grid place-items-center rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
+            className="w-10 h-10 grid place-items-center rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors touch-manipulation"
             aria-label="Tutup menu"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
@@ -178,7 +217,7 @@ export default function MobileNav({ user, onLogout }) {
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden p-2.5 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 active:scale-95 transition-all"
+        className="md:hidden p-2.5 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 active:scale-95 transition-all touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Buka menu navigasi"
         aria-expanded={isOpen}
       >
