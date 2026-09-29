@@ -18,6 +18,21 @@ import { motion, AnimatePresence } from "framer-motion";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const API_DESTINASI_URL = `${API_BASE_URL}/api/v1/list-wisata?limit=100&offset=0`;
 
+// Skeleton Card untuk feedback transisi filter kategori
+const WisataCardSkeleton = () => (
+  <div className="bg-white rounded-2xl overflow-hidden shadow-xs animate-pulse border border-slate-100 flex flex-col h-full min-h-[340px]">
+    <div className="aspect-[4/3] bg-slate-200 rounded-t-2xl w-full" />
+    <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+      <div className="space-y-2">
+        <div className="h-4 bg-slate-200 rounded w-3/4" />
+        <div className="h-3 bg-slate-200 rounded w-full" />
+        <div className="h-3 bg-slate-200 rounded w-1/2" />
+      </div>
+      <div className="h-6 bg-slate-100 rounded-lg w-1/3" />
+    </div>
+  </div>
+);
+
 function WisataHome() {
   // --- STATE ---
   const [masterWisataList, setMasterWisataList] = useState([]);
@@ -471,7 +486,13 @@ function WisataHome() {
             </div>
           </div>
 
-          {displayedWisata.length === 0 ? (
+          {isFiltering ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 wisata-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <WisataCardSkeleton key={`filter-skeleton-${i}`} />
+              ))}
+            </div>
+          ) : displayedWisata.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
               <div className="text-4xl mb-4">🤔</div>
               <h3 className="text-lg font-bold text-text-main">Tidak ditemukan</h3>
@@ -484,25 +505,11 @@ function WisataHome() {
               </button>
             </div>
           ) : (
-            <motion.div 
-              layout
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
-            >
-              <AnimatePresence>
-                {displayedWisata.map((wisata, index) => (
-                  <motion.div
-                    layout
-                    key={wisata.id || index}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
-                    <WisataCard wisata={wisata} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 wisata-grid">
+              {displayedWisata.map((wisata) => (
+                <WisataCard key={wisata.id_wisata || wisata.id} wisata={wisata} />
+              ))}
+            </div>
           )}
         </section>
 
