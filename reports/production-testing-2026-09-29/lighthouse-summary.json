@@ -1,0 +1,15 @@
+{
+  "scores": {
+    "Performance": 67,
+    "Accessibility": 96,
+    "Best Practices": 100,
+    "SEO": 100
+  },
+  "metrics": {
+    "FCP": "2.8 s",
+    "LCP": "32.7 s",
+    "TBT": "80 ms",
+    "CLS": "0",
+    "SpeedIndex": "4.6 s"
+  }
+}

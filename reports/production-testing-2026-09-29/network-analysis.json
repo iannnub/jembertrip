@@ -1,0 +1,80 @@
+{
+  "totalRequests": 21,
+  "totalTransferBytes": 11757869,
+  "totalTransferMB": "11.21 MB",
+  "totalTransferKB": "11482.3 KB",
+  "loadDurationMs": 3982,
+  "byType": {
+    "document": "0.0 KB",
+    "stylesheet": "0.0 KB",
+    "script": "88.3 KB",
+    "font": "38.4 KB",
+    "xhr": "164.4 KB",
+    "image": "11137.4 KB",
+    "fetch": "53.8 KB"
+  },
+  "jsBundles": [
+    {
+      "name": "js",
+      "sizeBytes": 90385,
+      "sizeKB": "88.3 KB"
+    },
+    {
+      "name": "index-BrHpNtpl.js",
+      "sizeBytes": 0,
+      "sizeKB": "0.0 KB"
+    },
+    {
+      "name": "react-vendor-BUddmZ6S.js",
+      "sizeBytes": 0,
+      "sizeKB": "0.0 KB"
+    },
+    {
+      "name": "api.js",
+      "sizeBytes": 0,
+      "sizeKB": "0.0 KB"
+    },
+    {
+      "name": "ui-vendor-CBhe6ugh.js",
+      "sizeBytes": 0,
+      "sizeKB": "0.0 KB"
+    },
+    {
+      "name": "api.js",
+      "sizeBytes": 0,
+      "sizeKB": "0.0 KB"
+    }
+  ],
+  "topImages": [
+    {
+      "name": "home.png",
+      "sizeBytes": 5951323,
+      "sizeKB": "5811.8 KB"
+    },
+    {
+      "name": "3.png",
+      "sizeBytes": 3103317,
+      "sizeKB": "3030.6 KB"
+    },
+    {
+      "name": "1.png",
+      "sizeBytes": 1229124,
+      "sizeKB": "1200.3 KB"
+    },
+    {
+      "name": "2.png",
+      "sizeBytes": 1065041,
+      "sizeKB": "1040.1 KB"
+    },
+    {
+      "name": "eeb9aefc-82a9-4159-9ccf-e29a2d0a8d32",
+      "sizeBytes": 55094,
+      "sizeKB": "53.8 KB"
+    },
+    {
+      "name": "placeholder-wisata.svg",
+      "sizeBytes": 810,
+      "sizeKB": "0.8 KB"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-09-29T09:22:35.268Z",
+  "url": "https://jembertrip.vercel.app",
+  "consoleErrors": [],
+  "consoleWarnings": [],
+  "network": {
+    "totalRequests": 0,
+    "totalBytes": 0,
+    "byType": {},
+    "largestImages": [],
+    "jsBundles": [],
+    "slowestRequests": [],
+    "totalKB": "0.0"
+  },
+  "responsive": {
+    "375px-mobile-iphone-se": {
+      "width": 375,
+      "height": 667,
+      "screenshot": "screenshots/375px-mobile-iphone-se.png"
+    },
+    "390px-mobile-iphone-14": {
+      "width": 390,
+      "height": 844,
+      "screenshot": "screenshots/390px-mobile-iphone-14.png"
+    },
+    "768px-tablet-ipad": {
+      "width": 768,
+      "height": 1024,
+      "screenshot": "screenshots/768px-tablet-ipad.png"
+    },
+    "1920px-desktop-fhd": {
+      "width": 1920,
+      "height": 1080,
+      "screenshot": "screenshots/1920px-desktop-fhd.png"
+    }
+  },
+  "memoryTest": {
+    "iterations": 20,
+    "initialHeapMB": "5.45",
+    "finalHeapMB": "7.32",
+    "growthMB": "1.87",
+    "growthPercent": "34.3%",
+    "leakDetected": false,
+    "samples": [
+      {
+        "iteration": 0,
+        "heapMB": "5.45"
+      },
+      {
+        "iteration": 5,
+        "heapMB": "6.87"
+      },
+      {
+        "iteration": 10,
+        "heapMB": "7.61"
+      },
+      {
+        "iteration": 15,
+        "heapMB": "8.26"
+      },
+      {
+        "iteration": 20,
+        "heapMB": "7.30"
+      }
+    ]
+  }
+}
