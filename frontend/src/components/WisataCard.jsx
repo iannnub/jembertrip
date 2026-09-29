@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Star, Sparkles } from 'lucide-react';
 import ProgressiveImage from './ProgressiveImage';
 import { getImageUrl } from '../utils/imageHelper';
 import { useLazyLoad } from '../hooks/useLazyLoad';
 
-export default function WisataCard({ wisata }) {
+function WisataCard({ wisata }) {
   const [ref, isVisible] = useLazyLoad({ rootMargin: '150px' });
 
   return (
@@ -69,3 +69,11 @@ export default function WisataCard({ wisata }) {
     </div>
   );
 }
+
+export default memo(WisataCard, (prevProps, nextProps) => {
+  return (
+    (prevProps.wisata?.id || prevProps.wisata?.id_wisata) === (nextProps.wisata?.id || nextProps.wisata?.id_wisata) &&
+    prevProps.wisata?.nama_wisata === nextProps.wisata?.nama_wisata &&
+    prevProps.wisata?.gambar === nextProps.wisata?.gambar
+  );
+});
