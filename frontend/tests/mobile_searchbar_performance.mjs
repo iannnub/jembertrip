@@ -18,7 +18,7 @@ import { chromium } from 'playwright';
     await page.waitForTimeout(2000);
 
     // Test 1: Searchbar tidak overflow di viewport 375px
-    const searchButton = page.locator('button[aria-label="Cari Destinasi"], button:has-text("Cari"), button:has-text("🔍")').first();
+    const searchButton = page.locator('button[aria-label="Cari Destinasi"], button:has-text("Cari")').first();
     await searchButton.waitFor({ state: 'visible', timeout: 10000 });
     const box = await searchButton.boundingBox();
     const viewportWidth = page.viewportSize().width;
