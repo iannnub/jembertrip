@@ -9,7 +9,7 @@ import { getImageUrl } from '../utils/imageHelper';
 import ProgressiveImage from '../components/ProgressiveImage';
 import WisataCard from '../components/WisataCard';
 // Import Icon
-import { Search, Star, Compass, Sparkles } from 'lucide-react';
+import { Search, Compass, Sparkles, MapPin } from 'lucide-react';
 // Import Animasi
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
@@ -18,28 +18,11 @@ import { motion } from "framer-motion";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const API_DESTINASI_URL = `${API_BASE_URL}/api/v1/list-wisata?limit=100&offset=0`;
 
-// Skeleton Card untuk feedback transisi filter kategori
-const WisataCardSkeleton = () => (
-  <div className="liquid-card rounded-3xl overflow-hidden animate-pulse flex flex-col h-full min-h-[340px]">
-    <div className="aspect-[4/3] bg-slate-200 rounded-t-3xl w-full" />
-    <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-      <div className="space-y-2">
-        <div className="h-4 bg-slate-200 rounded w-3/4" />
-        <div className="h-3 bg-slate-200 rounded w-full" />
-        <div className="h-3 bg-slate-200 rounded w-1/2" />
-      </div>
-      <div className="h-6 bg-slate-100 rounded-lg w-1/3" />
-    </div>
-  </div>
-);
-
 function WisataHome() {
   // --- STATE ---
   const [masterWisataList, setMasterWisataList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const filterTimeoutRef = useRef(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || "";
@@ -106,30 +89,47 @@ function WisataHome() {
     document.title = "Beranda - JemberTrip";
   }, []);
   
-  // --- 1. FETCH DATA UTAMA (WITH OFFLINE STATIC FALLBACK) ---
+  // --- 1. FETCH DATA UTAMA (INSTANT HYDRATION + BACKGROUND REFRESH) ---
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
-      setLoading(true);
+      // 1. Hydrate immediately from local static bundle (< 15ms) so user never waits for tunnel
       try {
-        const response = await axios.get(API_DESTINASI_URL, { timeout: 6000 });
-        const dataBersih = response.data.data;
-        setMasterWisataList(dataBersih);
+        const fallbackRes = await axios.get('/data/wisata-fallback.json');
+        if (isMounted && Array.isArray(fallbackRes.data) && fallbackRes.data.length > 0) {
+          setMasterWisataList(fallbackRes.data);
+          setLoading(false);
+        }
       } catch {
-        try {
-          const fallbackRes = await axios.get('/data/wisata-fallback.json');
-          if (Array.isArray(fallbackRes.data)) {
-            setMasterWisataList(fallbackRes.data);
-          } else {
-            setError("Gagal memuat data wisata. Cek koneksi backend!");
-          }
-        } catch {
-          setError("Gagal memuat data wisata. Cek koneksi backend!");
+        // Continue to backend API if local static JSON fails
+      }
+
+      // 2. Refresh in background from live Backend API
+      try {
+        const response = await axios.get(API_DESTINASI_URL, { timeout: 5000 });
+        if (isMounted && Array.isArray(response.data?.data) && response.data.data.length > 0) {
+          setMasterWisataList(response.data.data);
+          setError(null);
+        }
+      } catch {
+        if (isMounted) {
+          setMasterWisataList((prev) => {
+            if (prev.length === 0) {
+              setError("Gagal memuat data wisata. Cek koneksi backend!");
+            }
+            return prev;
+          });
         }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
+
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // --- 2. FETCH PERSONALISASI (AI) ---
@@ -138,55 +138,53 @@ function WisataHome() {
     const userData = localStorage.getItem('user');
 
     if (token && userData) {
+      let isMounted = true;
       try {
         const handleAuthError = (err) => {
           if (err.response?.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            setUser(null);
+            if (isMounted) setUser(null);
           }
         };
 
+        // Pre-seed immediately from local fallback so 6 cards appear without delay
+        axios.get('/data/wisata-fallback.json')
+          .then((fb) => {
+            if (isMounted && Array.isArray(fb.data)) {
+              setPersonalRek((prev) => (prev.length > 0 ? prev : fb.data.slice(0, 6)));
+              setHybridRek((prev) => (prev.length > 0 ? prev : fb.data.slice(6, 12)));
+            }
+          })
+          .catch(() => {});
+
         axios.get(`${API_BASE_URL}/api/v1/recommendations/personal`, {
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 6000
+          timeout: 5000
         })
         .then(res => {
-          if (res.data.status === "success") setPersonalRek(res.data.data.slice(0, 6));
-        })
-        .catch(async (err) => {
-          handleAuthError(err);
-          if (err.response?.status !== 401) {
-            try {
-              const fb = await axios.get('/data/wisata-fallback.json');
-              if (Array.isArray(fb.data)) setPersonalRek(fb.data.slice(0, 6));
-            } catch {
-              // ignore fallback error
-            }
+          if (isMounted && res.data?.status === "success" && Array.isArray(res.data.data) && res.data.data.length > 0) {
+            setPersonalRek(res.data.data.slice(0, 6));
           }
-        });
+        })
+        .catch(handleAuthError);
 
         axios.get(`${API_BASE_URL}/api/v1/recommendations/hybrid`, {
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 6000
+          timeout: 5000
         })
         .then(res => {
-          if (res.data.status === "success") setHybridRek(res.data.data.slice(0, 6));
-        })
-        .catch(async (err) => {
-          handleAuthError(err);
-          if (err.response?.status !== 401) {
-            try {
-              const fb = await axios.get('/data/wisata-fallback.json');
-              if (Array.isArray(fb.data)) setHybridRek(fb.data.slice(6, 12));
-            } catch {
-              // ignore fallback error
-            }
+          if (isMounted && res.data?.status === "success" && Array.isArray(res.data.data) && res.data.data.length > 0) {
+            setHybridRek(res.data.data.slice(0, 6));
           }
-        });
+        })
+        .catch(handleAuthError);
       } catch (e) {
         console.error("User data error", e);
       }
+      return () => {
+        isMounted = false;
+      };
     }
   }, []);
 
@@ -226,9 +224,6 @@ function WisataHome() {
   };
 
   const handleCategoryClick = useCallback((cat) => {
-    if (isFiltering) return;
-    
-    setIsFiltering(true);
     trackEvent('select_category', { category_name: cat });
     
     setSearchParams((prev) => {
@@ -240,18 +235,7 @@ function WisataHome() {
       }
       return next;
     }, { replace: true });
-
-    if (resultsRef.current) {
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-
-    if (filterTimeoutRef.current) clearTimeout(filterTimeoutRef.current);
-    filterTimeoutRef.current = setTimeout(() => {
-      setIsFiltering(false);
-    }, 220);
-  }, [isFiltering, setSearchParams]);
+  }, [setSearchParams]);
 
   const handleReset = () => {
     setSearchTerm("");
@@ -310,7 +294,7 @@ function WisataHome() {
       <div className="relative bg-slate-900 pt-24 pb-28 md:pt-32 md:pb-36 overflow-hidden rounded-b-[2.5rem] shadow-lg">
         <div className="absolute inset-0 z-0">
           <img 
-            src="/assets/home.png"
+            src="/assets/home.webp"
             alt="Panorama Destinasi Wisata Jember" 
             fetchPriority="high"
             decoding="async"
@@ -320,12 +304,7 @@ function WisataHome() {
         </div>
 
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <motion.div 
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className="h-full"
-          >
+          <div className="h-full">
             <span className="liquid-glass-dark inline-flex items-center gap-2 py-2 px-4 rounded-full text-white text-xs font-bold uppercase tracking-widest mb-6">
               <Compass size={14} className="text-rose-400" /> Explore Jatim • {masterWisataList.length || 56} Destinasi
             </span>
@@ -339,18 +318,13 @@ function WisataHome() {
             <p className="text-slate-200 max-w-2xl mx-auto text-base md:text-lg leading-relaxed font-normal">
               Cari {masterWisataList.length || 56} destinasi wisata dan rekomendasi rute di Jember bersama asisten Cak Jember.
             </p>
-          </motion.div>
+          </div>
         </div>
       </div>  
 
       {/* Search and category filter */}
       <div className="relative z-20 max-w-3xl mx-4 md:mx-auto -mt-12">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 360, damping: 30, delay: 0.1 }}
-          className="liquid-glass rounded-full p-2 md:p-2.5"
-        >
+        <div className="liquid-glass rounded-full p-2 md:p-2.5">
           <div className="flex items-center gap-2 md:gap-3">
             <div className="flex-1 flex items-center gap-2.5 md:gap-3 px-4 md:px-6 min-w-0">
               <Search className="w-4 h-4 md:w-5 md:h-5 text-slate-500 shrink-0" />
@@ -380,7 +354,7 @@ function WisataHome() {
               <span className="hidden sm:inline">Cari</span>
             </button>
           </div>
-        </motion.div>
+        </div>
         
         {/* iOS Morphing Category Pills */}
         <div
@@ -396,10 +370,7 @@ function WisataHome() {
                 role="tab"
                 aria-selected={isSelected}
                 onClick={() => handleCategoryClick(k)}
-                disabled={isFiltering}
                 className={`category-pill relative px-4 py-2 min-h-[44px] rounded-full text-xs font-bold transition-colors ${
-                  isFiltering ? "opacity-75 cursor-wait" : ""
-                } ${
                   isSelected
                     ? "text-white"
                     : "liquid-glass-pill text-slate-700 hover:text-slate-900"
@@ -421,22 +392,18 @@ function WisataHome() {
       </div>
 
       {/* === CONTENT SECTION === */}
-      <div ref={resultsRef} className="container mx-auto px-4 mt-16 space-y-16 scroll-mt-32 transition-all duration-500">
+      <div ref={resultsRef} className="container mx-auto px-4 sm:px-6 lg:px-8 mt-14 space-y-14 scroll-mt-28">
 
         {/* 1. PERSONALISASI (AI) */}
         {personalRek.length > 0 && user && (
-          <motion.section 
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="flex items-center gap-3 mb-8">
+          <section>
+            <div className="flex items-center gap-3 mb-6">
               <div className="h-11 w-11 rounded-2xl bg-rose-600 flex items-center justify-center text-white shadow-lg shadow-rose-600/25">
                 <Sparkles size={20} />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-text-main">Rekomendasi Pilihan</h3>
-                <p className="text-sm text-text-muted">Destinasi yang disukai wisatawan dengan minat serupa untuk {user.full_name.split(' ')[0]}</p>
+                <p className="text-sm text-text-muted">Destinasi yang disukai wisatawan dengan minat serupa untuk {user.full_name?.split(' ')[0] || 'Anda'}</p>
               </div>
             </div>
 
@@ -448,8 +415,8 @@ function WisataHome() {
                   onClick={() => trackEvent('click_recommendation', { source: 'cf', wisata_id: wisata.id, wisata_name: wisata.nama_wisata })}
                   className="group block h-full"
                 >
-                  <div className="liquid-card rounded-3xl p-4 h-full flex items-start gap-4">
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-sm shrink-0">
+                  <div className="liquid-card rounded-3xl p-5 h-full flex items-center gap-4">
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 shadow-xs shrink-0">
                       <ProgressiveImage
                         src={getImageUrl(wisata.gambar)}
                         alt={wisata.nama_wisata}
@@ -457,28 +424,27 @@ function WisataHome() {
                         fallback="/placeholder-wisata.svg"
                       />
                     </div>
-                    <div>
-                      <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-primary transition-colors">{wisata.nama_wisata}</h4>
-                      <p className="text-xs text-text-muted line-clamp-2 mb-3">{wisata.alamat}</p>
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-white bg-rose-600 px-2.5 py-1 rounded-full shadow-xs">
-                        <Star size={10} fill="currentColor" /> Cocok Untukmu
+                    <div className="min-w-0 flex-1">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full mb-1.5">
+                        <Sparkles size={10} /> Rekomendasi Personal
                       </span>
+                      <h4 className="font-bold text-slate-900 text-base line-clamp-1 mb-1 group-hover:text-rose-600 transition-colors">{wisata.nama_wisata}</h4>
+                      <p className="text-xs text-slate-600 line-clamp-2 flex items-start gap-1">
+                        <MapPin size={12} className="text-slate-400 mt-0.5 shrink-0" />
+                        <span className="line-clamp-2">{wisata.alamat}</span>
+                      </p>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
-          </motion.section>
+          </section>
         )}
 
         {/* 1.B. PERSONALISASI (HYBRID) */}
         {hybridRek.length > 0 && user && (
-          <motion.section 
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="flex items-center gap-3 mb-8">
+          <section>
+            <div className="flex items-center gap-3 mb-6">
               <div className="h-11 w-11 rounded-2xl bg-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-600/25">
                 <Compass size={20} />
               </div>
@@ -496,8 +462,8 @@ function WisataHome() {
                   onClick={() => trackEvent('click_recommendation', { source: 'hybrid', wisata_id: wisata.id, wisata_name: wisata.nama_wisata })}
                   className="group block h-full"
                 >
-                  <div className="liquid-card rounded-3xl p-4 h-full flex items-start gap-4">
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-sm shrink-0">
+                  <div className="liquid-card rounded-3xl p-5 h-full flex items-center gap-4">
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 shadow-xs shrink-0">
                       <ProgressiveImage
                         src={getImageUrl(wisata.gambar)}
                         alt={wisata.nama_wisata}
@@ -505,18 +471,21 @@ function WisataHome() {
                         fallback="/placeholder-wisata.svg"
                       />
                     </div>
-                    <div>
-                      <h4 className="font-bold text-text-main line-clamp-2 mb-1 group-hover:text-rose-600 transition-colors">{wisata.nama_wisata}</h4>
-                      <p className="text-xs text-text-muted line-clamp-2 mb-3">{wisata.alamat}</p>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-amber-600 px-2.5 py-1 rounded-full shadow-xs">
-                        <Star size={10} fill="currentColor" /> Pilihan Serupa
+                    <div className="min-w-0 flex-1">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full mb-1.5">
+                        <Compass size={10} /> {wisata.kategori || 'Pilihan Serupa'}
                       </span>
+                      <h4 className="font-bold text-slate-900 text-base line-clamp-1 mb-1 group-hover:text-rose-600 transition-colors">{wisata.nama_wisata}</h4>
+                      <p className="text-xs text-slate-600 line-clamp-2 flex items-start gap-1">
+                        <MapPin size={12} className="text-slate-400 mt-0.5 shrink-0" />
+                        <span className="line-clamp-2">{wisata.alamat}</span>
+                      </p>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
-          </motion.section>
+          </section>
         )}
 
         {/* 2. ALL WISATA LIST */}
@@ -528,18 +497,12 @@ function WisataHome() {
             </div>
             <div className="liquid-glass-pill px-4 py-2 rounded-2xl flex items-center gap-2">
               <div className="h-6 w-[3px] bg-rose-600 rounded-full" />
-              <span className="text-2xl font-black text-slate-900 tabular-nums">{displayedWisata.length || 56}</span>
+              <span className="text-2xl font-black text-slate-900 tabular-nums">{displayedWisata.length}</span>
               <span className="text-xs text-slate-600 font-semibold">destinasi</span>
             </div>
           </div>
 
-          {isFiltering ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 wisata-grid">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <WisataCardSkeleton key={`filter-skeleton-${i}`} />
-              ))}
-            </div>
-          ) : displayedWisata.length === 0 ? (
+          {displayedWisata.length === 0 ? (
             <div className="text-center py-20 liquid-card rounded-3xl">
               <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 shadow-xs">
                 <Search size={24} />
@@ -554,7 +517,7 @@ function WisataHome() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 wisata-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6 wisata-grid">
               {displayedWisata.map((wisata) => (
                 <WisataCard key={wisata.id_wisata || wisata.id} wisata={wisata} />
               ))}

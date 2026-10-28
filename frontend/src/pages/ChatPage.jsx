@@ -1,6 +1,7 @@
 // src/pages/ChatPage.jsx
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import NgrokImage from '../components/NgrokImage';
 import SEO from '../components/SEO';
 import axios from 'axios';
@@ -477,10 +478,11 @@ function ChatPage() {
                           <p className="text-xs font-bold text-slate-700 mb-2 px-1 flex items-center gap-1">
                             <Sparkles size={12} className="text-amber-500" /> Rekomendasi Pilihan:
                           </p>
-                          <div className="flex gap-3 overflow-x-auto pb-3 px-1 snap-x snap-mandatory max-w-full">
+                          <div className="flex gap-3.5 overflow-x-auto pb-3 px-1 snap-x snap-mandatory max-w-full">
                             {msg.recommendations.map((rec, idx) => (
-                              <div 
+                              <Link 
                                 key={idx} 
+                                to={`/wisata/${rec.id}`}
                                 onClick={() => {
                                   trackEvent('click_recommendation', {
                                     source: 'chatbot_rag',
@@ -488,25 +490,24 @@ function ChatPage() {
                                     recommendation_type: 'chatbot_rag',
                                     target_wisata_name: rec.nama_wisata
                                   });
-                                  window.location.href = `/wisata/${rec.id}`;
                                 }} 
-                                className="snap-center flex-shrink-0 w-[220px] sm:w-56 liquid-card rounded-2xl overflow-hidden cursor-pointer group"
+                                className="snap-center flex-shrink-0 w-[230px] sm:w-60 liquid-card rounded-2xl overflow-hidden cursor-pointer group block"
                               >
-                                <div className="h-28 sm:h-32 bg-slate-100 relative overflow-hidden">
+                                <div className="h-32 bg-slate-100 relative overflow-hidden">
                                   <NgrokImage src={getImageUrl(rec.gambar)} alt={rec.nama_wisata} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                  <div className="absolute top-2 right-2 liquid-glass-pill text-slate-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full">{rec.kategori}</div>
+                                  <div className="absolute top-2.5 left-2.5 liquid-glass-pill text-slate-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full">{rec.kategori}</div>
                                 </div>
-                                <div className="p-3">
-                                  <h4 className="font-bold text-slate-900 text-sm line-clamp-1 mb-1 group-hover:text-rose-600 transition-colors">{rec.nama_wisata}</h4>
-                                  <p className="text-xs text-slate-500 line-clamp-1 mb-2 flex items-center gap-1.5">
+                                <div className="p-4">
+                                  <h4 className="font-bold text-slate-900 text-sm line-clamp-1 mb-1.5 group-hover:text-rose-600 transition-colors">{rec.nama_wisata}</h4>
+                                  <p className="text-xs text-slate-500 line-clamp-1 mb-3 flex items-center gap-1.5">
                                     <MapPin size={12} className="text-slate-400 shrink-0" />
                                     <span className="truncate">{rec.alamat}</span>
                                   </p>
-                                  <button className="w-full bg-rose-50 text-rose-700 text-xs font-bold py-2 rounded-xl group-hover:bg-rose-600 group-hover:text-white transition-all flex items-center justify-center gap-1 min-h-[36px]">
+                                  <span className="w-full bg-rose-50 text-rose-700 text-xs font-bold py-2 rounded-xl group-hover:bg-rose-600 group-hover:text-white transition-all flex items-center justify-center gap-1 min-h-[36px]">
                                     Lihat Detail <ChevronRight size={12} />
-                                  </button>
+                                  </span>
                                 </div>
-                              </div>
+                              </Link>
                             ))}
                           </div>
                         </div>

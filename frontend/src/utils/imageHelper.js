@@ -49,9 +49,9 @@ export const getImageUrl = (input, fallback = FALLBACK_PLACEHOLDER) => {
       }
 
       const url = new URL(path);
-      // Jika URL mengarah ke static uploaded /images/..., gunakan local bundle path
-      if (url.pathname.startsWith("/images/")) {
-        return url.pathname;
+      // Jika URL mengarah ke static uploaded /images/..., gunakan local bundle path (.webp)
+      if (url.pathname.startsWith("/images/") || url.pathname.startsWith("/assets/images/")) {
+        return url.pathname.replace(/\.(png|jpe?g)$/i, ".webp");
       }
       // Jika URL ngrok dari sesi lama/berbeda, sesuaikan ke BACKEND_URL saat ini
       if (url.hostname.includes("ngrok") && !path.startsWith(BACKEND_URL)) {
@@ -67,9 +67,9 @@ export const getImageUrl = (input, fallback = FALLBACK_PLACEHOLDER) => {
   // Path relatif: /uploads/..., uploads/..., /images/..., atau assets/...
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
-  // Kalau path lokal di public bundle (/assets/images/... atau /images/...), biarkan apa adanya
+  // Kalau path lokal di public bundle (/assets/images/... atau /images/...), gunakan .webp yang sudah dioptimasi
   if (cleanPath.startsWith("/assets/") || cleanPath.startsWith("/images/")) {
-    return cleanPath;
+    return cleanPath.replace(/\.(png|jpe?g)$/i, ".webp");
   }
 
   // Semua path relatif lain diarahkan ke BACKEND_URL

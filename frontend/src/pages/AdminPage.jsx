@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   Plus, Upload, CheckCircle, AlertCircle, 
   MapPin, Tag, DollarSign, FileText, Trash2, Edit2, X, Search,
-  Users, MessageCircle, Star, LayoutDashboard, Sparkles,
+  Users, MessageCircle, LayoutDashboard, Sparkles,
   ChevronRight, GripVertical
 } from 'lucide-react';
 import NgrokImage from '../components/NgrokImage';
@@ -305,7 +305,7 @@ function AdminPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* === DASHBOARD STATS === */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="liquid-card p-6 rounded-2xl flex items-center gap-4">
             <div className="p-3 bg-rose-50 rounded-xl text-rose-600"><Users size={28} /></div>
             <div><p className="text-sm text-text-muted font-medium">Total User</p><h3 className="text-2xl font-bold text-text-main tabular-nums">{stats.total_users}</h3></div>
@@ -319,17 +319,17 @@ function AdminPage() {
             <div><p className="text-sm text-text-muted font-medium">Total Chat</p><h3 className="text-2xl font-bold text-text-main tabular-nums">{stats.total_chats}</h3></div>
           </div>
           <div className="liquid-card p-6 rounded-2xl flex items-center gap-4">
-            <div className="p-3 bg-rose-50 rounded-xl text-rose-600"><Star size={28} /></div>
+            <div className="p-3 bg-rose-50 rounded-xl text-rose-600"><Sparkles size={28} /></div>
             <div className="overflow-hidden">
               <p className="text-sm text-text-muted font-medium">Terpopuler</p>
               <h3 className="text-lg font-bold text-text-main truncate" title={stats.popular_wisata}>{stats.popular_wisata}</h3>
               <p className="text-xs text-text-muted tabular-nums">{stats.popular_count} kali diklik</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* === SECTION 2: FORM INPUT/EDIT === */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="liquid-card rounded-3xl overflow-hidden">
+        <div className="liquid-card rounded-3xl overflow-hidden">
           <div className={`p-8 text-white flex justify-between items-center ${isEditing ? 'bg-amber-600' : 'bg-rose-600'}`}>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-3">
@@ -411,7 +411,7 @@ function AdminPage() {
               </button>
             </div>
           </form>
-        </motion.div>
+        </div>
 
         {/* === SECTION 3: LIST DATA === */}
         <div className="liquid-card rounded-3xl p-8">

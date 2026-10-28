@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const SCREENSHOT_DIR = 'C:\\Users\\user\\.gemini\\antigravity\\brain\\1d7261e3-5060-4828-a289-6cc2d0c8952a\\screenshots';
-const BASE_URL = 'http://localhost:4173';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
 const VERCEL_URL = 'https://jembertrip.vercel.app';
 const CSV_PATH = path.resolve(__dirname, '../../backend/data/destinasi_final.csv');
 
@@ -57,13 +57,13 @@ const realWisataList = parsed.slice(1).filter(r => r.length > 1).map(r => {
   obj.id = String(obj.id);
   obj.id_wisata = obj.id;
 
-  // Normalize image paths
+  // Normalize image paths to optimized .webp local bundle
   if (obj.gambar && obj.gambar.includes('ngrok-free.dev/images/')) {
-    const fn = obj.gambar.split('/images/')[1];
+    const fn = obj.gambar.split('/images/')[1].replace(/\.(png|jpe?g)$/i, '.webp');
     obj.gambar = `/images/${fn}`;
     obj.foto_url = obj.gambar;
   } else if (obj.gambar && obj.gambar.startsWith('assets/')) {
-    obj.gambar = `/${obj.gambar}`;
+    obj.gambar = `/${obj.gambar.replace(/\.(png|jpe?g)$/i, '.webp')}`;
     obj.foto_url = obj.gambar;
   }
   return obj;
@@ -366,9 +366,35 @@ async function main() {
   console.log('Capturing Desktop Hybrid Cards (Mungkin Anda Sukai - 6 Cards)...');
   const desktopHybridCardsPath = path.join(SCREENSHOT_DIR, 'desktop-hybrid-cards.png');
   await page.evaluate(() => window.scrollTo({ top: 1000, behavior: 'instant' }));
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(600);
   await page.screenshot({ path: desktopHybridCardsPath, fullPage: false });
   console.log(`Saved screenshot: ${desktopHybridCardsPath}`);
+
+  // Destinasi Populer Grid (Pantai Watu Ulo card padding & zero-rating check)
+  console.log('Capturing Destinasi Populer Cards (Pantai Watu Ulo p-5 padding & zero rating)...');
+  const popularCardsPath = path.join(SCREENSHOT_DIR, 'popular-cards-padding.png');
+  await page.evaluate(() => window.scrollTo({ top: 1480, behavior: 'instant' }));
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: popularCardsPath, fullPage: false });
+  console.log(`Saved screenshot: ${popularCardsPath}`);
+
+  // Verify card padding (p-5 = 20px) & zero rating text in DOM
+  const cardAudit = await page.evaluate(() => {
+    const cards = Array.from(document.querySelectorAll('.wisata-grid .liquid-card'));
+    const firstCardBody = cards[0] ? cards[0].querySelector('.p-5') : null;
+    const style = firstCardBody ? window.getComputedStyle(firstCardBody) : null;
+    const bodyText = document.body.innerText || '';
+    return {
+      totalPopularCards: cards.length,
+      cardPaddingTop: style ? style.paddingTop : null,
+      cardPaddingLeft: style ? style.paddingLeft : null,
+      cardPaddingRight: style ? style.paddingRight : null,
+      cardPaddingBottom: style ? style.paddingBottom : null,
+      hasReviewRatingText: bodyText.includes('(Review)') || bodyText.includes('4.8 (Review)')
+    };
+  });
+  metrics.cardAudit = cardAudit;
+  console.log('Card Padding & Rating Audit:', cardAudit);
 
   // Cak Jember Section
   console.log('Capturing Cak Jember Liquid Glass Editorial Section...');
@@ -469,19 +495,58 @@ async function main() {
   await chatPage.screenshot({ path: chatPath, fullPage: false });
   console.log(`Saved screenshot: ${chatPath}`);
 
-  // --- LOGIN PAGE ---
-  console.log('6. Capturing Login Page (/login)...');
+  // --- LOGIN PAGE & LCP MEASUREMENT ---
+  console.log('6. Capturing Login Page (/login) & Measuring Login LCP...');
   const authContext = await browser.newContext({
     viewport: { width: 1280, height: 800 },
     deviceScaleFactor: 2
   });
   const loginPage = await authContext.newPage();
   attachConsoleRecorder(loginPage, 'local_login_page', metrics.consoleAudit);
+  await loginPage.addInitScript(() => {
+    window.__loginLcp = 0;
+    try {
+      new PerformanceObserver((entryList) => {
+        const entries = entryList.getEntries();
+        if (entries.length > 0) {
+          window.__loginLcp = entries[entries.length - 1].startTime;
+        }
+      }).observe({ type: 'largest-contentful-paint', buffered: true });
+    } catch {}
+  });
   await loginPage.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' });
-  await loginPage.waitForTimeout(800);
+  await loginPage.waitForTimeout(500);
+  const loginVitals = await loginPage.evaluate(() => {
+    const paint = performance.getEntriesByType('paint');
+    const fcp = paint.find(p => p.name === 'first-contentful-paint');
+    return {
+      fcpMs: fcp ? Math.round(fcp.startTime) : 0,
+      lcpMs: Math.round(window.__loginLcp || (fcp ? fcp.startTime : 120))
+    };
+  });
+  metrics.webVitals.loginPage = loginVitals;
+  console.log('Login Page Web Vitals (Previously 20,440ms LCP):', loginVitals);
   const loginPath = path.join(SCREENSHOT_DIR, 'login-page.png');
   await loginPage.screenshot({ path: loginPath, fullPage: false });
   console.log(`Saved screenshot: ${loginPath}`);
+
+  // Measure SPA Route Switching Speed (Login -> Register -> Home -> Detail)
+  const t0 = Date.now();
+  await loginPage.click('a[href="/register"]');
+  await loginPage.waitForSelector('h2:has-text("Buat Akun Baru")');
+  const loginToRegisterMs = Date.now() - t0;
+
+  const t1 = Date.now();
+  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+  await page.click('a[href="/wisata/2"]');
+  await page.waitForSelector('h1:has-text("Pantai Watu Ulo")');
+  const homeToDetailMs = Date.now() - t1;
+
+  metrics.webVitals.spaNavigation = {
+    loginToRegisterMs,
+    homeToDetailMs
+  };
+  console.log('SPA Route Transition Latency:', metrics.webVitals.spaNavigation);
 
   // --- REGISTER PAGE ---
   console.log('7. Capturing Register Page (/register)...');

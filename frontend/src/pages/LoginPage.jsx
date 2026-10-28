@@ -124,11 +124,8 @@ function LoginPage() {
       
       
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-primary/5 p-8 border border-white/50 relative z-10"
+      <div
+        className="max-w-md w-full liquid-card rounded-3xl p-8 relative z-10"
       >
         {/* Tombol Kembali */}
         <Link to="/" className="absolute top-6 left-6 text-text-muted hover:text-primary transition-colors">
@@ -250,7 +247,7 @@ function LoginPage() {
             </Link>
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

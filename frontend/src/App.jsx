@@ -4,6 +4,7 @@ import MobileNav from './components/MobileNav';
 import Footer from './components/Footer';
 import { getAvatarUrl } from './utils/imageHelper';
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import axios from 'axios';
 // Import Routing
 import { Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 // Import Library UI
@@ -13,14 +14,17 @@ import { motion } from 'framer-motion';
 // Import Icon Modern
 import { MapPin, LogOut, LogIn, Home, Sparkles, LayoutDashboard } from 'lucide-react'; 
 
-// Eager load landing page
-import WisataHome from './pages/WisataHome';
+// Bypass ngrok interstitial globally for all axios requests
+axios.defaults.headers.common['ngrok-skip-browser-warning'] = '69420';
 
-// Lazy load route chunks untuk optimasi bundle size
-const WisataDetail = lazy(() => import('./pages/WisataDetail'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const ChatPage = lazy(() => import('./pages/ChatPage'));
+// Eager load primary pages for 0ms instant navigation
+import WisataHome from './pages/WisataHome';
+import WisataDetail from './pages/WisataDetail';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ChatPage from './pages/ChatPage';
+
+// Lazy load secondary route chunks
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));

@@ -9,10 +9,7 @@ import axios from 'axios';
 import { trackEvent } from '../utils/analytics';
 import { getImageUrl } from '../utils/imageHelper';
 // Import Icon Modern
-import { MapPin, ArrowLeft, Tag, Info, DollarSign, Star, Sparkles, Compass, Clock, AlertTriangle } from 'lucide-react';
-// Import Animasi
-// eslint-disable-next-line no-unused-vars
-import { motion } from 'framer-motion';
+import { MapPin, ArrowLeft, Tag, Info, DollarSign, Sparkles, Compass, Clock, AlertTriangle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -67,19 +64,38 @@ function WisataDetail() {
     }
   };
 
-  // 1. Fetch Detail & Logic
+  // 1. Fetch Detail & Logic (Instant Local Hydration + Background Sync)
   useEffect(() => {
-    const fetchDetailAndRecommendation = async () => {
-      setLoading(true);
-      setRekomendasiList([]); 
-      
-      try {
-        const response = await axios.get(`${API_BASE_URL}/api/v1/wisata/${id}`, { timeout: 6000 });
-        const dataWisata = response.data.data;
-        setWisata(dataWisata);
-        setLoading(false); 
+    let isMounted = true;
 
-        if (dataWisata) {
+    const fetchDetailAndRecommendation = async () => {
+      // 1. Hydrate immediately from local static bundle (< 15ms) so page switch is instant
+      try {
+        const fallbackRes = await axios.get('/data/wisata-fallback.json');
+        if (isMounted && Array.isArray(fallbackRes.data)) {
+          const found = fallbackRes.data.find(item => String(item.id) === String(id));
+          if (found) {
+            setWisata(found);
+            setLoading(false);
+            const similar = fallbackRes.data
+              .filter(item => String(item.id) !== String(id) && item.kategori === found.kategori)
+              .slice(0, 3);
+            setRekomendasiList(similar);
+          }
+        }
+      } catch {
+        // Fallback to backend API below
+      }
+
+      // 2. Refresh in background from live Backend API & record user history
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/wisata/${id}`, { timeout: 5000 });
+        const dataWisata = response.data?.data;
+        if (isMounted && dataWisata) {
+          setWisata(dataWisata);
+          setError(null);
+          setLoading(false);
+
           fetchRekomendasiAI(dataWisata.nama_wisata + " " + dataWisata.kategori);
           recordHistory(dataWisata);
           trackEvent('view_wisata_detail', {
@@ -89,23 +105,11 @@ function WisataDetail() {
           });
         }
       } catch {
-        try {
-          const fallbackRes = await axios.get('/data/wisata-fallback.json');
-          const found = Array.isArray(fallbackRes.data)
-            ? fallbackRes.data.find(item => String(item.id) === String(id))
-            : null;
-          if (found) {
-            setWisata(found);
-            const similar = fallbackRes.data
-              .filter(item => String(item.id) !== String(id) && item.kategori === found.kategori)
-              .slice(0, 3);
-            setRekomendasiList(similar);
-          } else {
-            setError("Gagal mengambil data detail wisata.");
-          }
-        } catch {
-          setError("Gagal mengambil data detail wisata.");
-        } finally {
+        if (isMounted) {
+          setWisata((prev) => {
+            if (!prev) setError("Gagal mengambil data detail wisata.");
+            return prev;
+          });
           setLoading(false);
         }
       }
@@ -113,6 +117,9 @@ function WisataDetail() {
 
     fetchDetailAndRecommendation();
     window.scrollTo(0, 0);
+    return () => {
+      isMounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -192,12 +199,7 @@ function WisataDetail() {
         schema={schema}
       />
 
-      <motion.div 
-        initial={{ opacity: 0, y: 12 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        className="min-h-screen bg-page-bg pb-16 pt-6 md:pt-10"
-      >
+      <div className="min-h-screen bg-page-bg pb-16 pt-6 md:pt-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           
           {/* BREADCRUMB & BACK BUTTON */}
@@ -222,6 +224,9 @@ function WisataDetail() {
                 <NgrokImage 
                   src={getImageUrl(wisata.gambar)} 
                   alt={wisata.nama_wisata} 
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
                 />
                 <div className="absolute top-4 left-4 md:top-6 md:left-6">
@@ -267,7 +272,7 @@ function WisataDetail() {
                   <Sparkles className="text-amber-500" /> Wisata Serupa
                 </h3>
                 
-                {loadingRek ? (
+                {loadingRek && rekomendasiList.length === 0 ? (
                   <div className="flex items-center gap-3 text-slate-500 liquid-card p-4 rounded-2xl animate-pulse">
                     <div className="w-5 h-5 bg-slate-200 rounded-full"></div>
                     Sedang mencari rekomendasi terbaik...
@@ -284,22 +289,22 @@ function WisataDetail() {
                           target_wisata_id: rec.id,
                           target_wisata_name: rec.nama_wisata
                         })} 
-                        className="group liquid-card rounded-2xl p-3 flex flex-col"
+                        className="group liquid-card rounded-2xl p-4 flex flex-col"
                       >
-                        <div className="h-32 rounded-xl overflow-hidden bg-slate-100 mb-3 relative">
+                        <div className="h-32 rounded-xl overflow-hidden bg-slate-100 mb-3.5 relative">
                           <NgrokImage 
                             src={getImageUrl(rec.gambar)} 
                             alt={rec.nama_wisata} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                           />
-                          <div className="absolute top-2 right-2 liquid-glass-pill text-slate-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                          <div className="absolute top-2.5 left-2.5 liquid-glass-pill text-slate-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                             {rec.kategori}
                           </div>
                         </div>
                         <h4 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-rose-600 transition-colors">
                           {rec.nama_wisata}
                         </h4>
-                        <p className="text-xs text-slate-500 line-clamp-1 mt-1">{rec.alamat}</p>
+                        <p className="text-xs text-slate-500 line-clamp-2 mt-1.5 leading-relaxed">{rec.alamat}</p>
                       </Link>
                     ))}
                   </div>
@@ -315,14 +320,12 @@ function WisataDetail() {
             <div className="lg:col-span-1">
               <div className="liquid-glass rounded-3xl p-6 lg:sticky lg:top-28 space-y-6">
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2 leading-tight">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-rose-700 bg-rose-50 border border-rose-200 px-3 py-1 rounded-full mb-3">
+                    <Tag size={12} /> {wisata.kategori} • Kabupaten Jember
+                  </span>
+                  <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 leading-tight">
                     {wisata.nama_wisata}
                   </h1>
-                  
-                  <div className="flex items-center gap-1 tabular-nums">
-                    {[1,2,3,4,5].map(i => <Star key={i} size={16} className="text-amber-500 fill-amber-500" />)}
-                    <span className="text-sm text-slate-600 ml-2 font-semibold">4.8 (Review)</span>
-                  </div>
                 </div>
 
                 <div className="space-y-4">
@@ -342,7 +345,11 @@ function WisataDetail() {
                       <div>
                         <p className="text-xs font-extrabold text-sky-700 uppercase tracking-wider mb-1">Jam Buka</p>
                         <p className="text-slate-900 font-bold text-sm tabular-nums">
-                          {wisata.jam_buka ? `${wisata.jam_buka} - ${wisata.jam_tutup || 'Selesai'}` : "Setiap Hari"}
+                          {wisata.jam_buka
+                            ? (wisata.jam_tutup && wisata.jam_tutup !== wisata.jam_buka
+                                ? `${wisata.jam_buka} - ${wisata.jam_tutup}`
+                                : wisata.jam_buka)
+                            : "Setiap Hari"}
                         </p>
                       </div>
                     </div>
@@ -354,7 +361,11 @@ function WisataDetail() {
                     <div>
                       <p className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider mb-1">Harga Tiket</p>
                       <p className="text-slate-900 font-extrabold text-lg tabular-nums">
-                        {wisata.harga_tiket ? (isNaN(Number(wisata.harga_tiket)) ? wisata.harga_tiket : `Rp ${Number(wisata.harga_tiket).toLocaleString('id-ID')}`) : "Gratis / Info -"}
+                        {wisata.harga_tiket === "0" || wisata.harga_tiket === 0
+                          ? "Gratis"
+                          : wisata.harga_tiket && wisata.harga_tiket !== "[Unverified]"
+                            ? (isNaN(Number(wisata.harga_tiket)) ? wisata.harga_tiket : `Rp ${Number(wisata.harga_tiket).toLocaleString('id-ID')}`)
+                            : "Info di Lokasi"}
                       </p>
                     </div>
                   </div>
@@ -378,7 +389,7 @@ function WisataDetail() {
 
           </div>
         </div>
-      </motion.div>
+      </div>
     </>
   );
 }
