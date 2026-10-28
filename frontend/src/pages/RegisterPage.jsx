@@ -115,7 +115,7 @@ function RegisterPage() {
           method: 'email',
           username_length: formData.username.length
         });
-        toast.success('Yeay! Akun berhasil dibuat. Yuk login! 🎉');
+        toast.success('Akun berhasil dibuat. Silakan login ke akun Anda.');
         setTimeout(() => { navigate('/login'); }, 1500);
       }
     } catch (err) {
@@ -139,7 +139,7 @@ function RegisterPage() {
     }`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-page-bg to-pink-100 px-4 relative overflow-x-hidden overflow-y-auto py-20">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 relative overflow-x-hidden overflow-y-auto py-20">
       <SEO
         title="Daftar Akun Baru"
         description="Daftar akun JemberTrip untuk mulai menjelajahi pesona pariwisata Kabupaten Jember dengan panduan AI cerdas."
@@ -148,8 +148,8 @@ function RegisterPage() {
       />
 
       {/* Background Hiasan */}
-      <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-accent/20 rounded-full blur-3xl"></div>
+      
+      
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -354,7 +354,7 @@ function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-primary to-primary-soft text-white font-bold py-4 rounded-xl hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-none mt-2"
+            className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-4 rounded-xl hover:shadow-lg hover:shadow-rose-600/30 hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-none mt-2"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">

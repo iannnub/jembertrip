@@ -7,10 +7,9 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
+    <link rel="canonical" href="https://jembertrip.vercel.app/" />
     
-    <!-- Preconnect ke Backend & Avatar CDN untuk shaving network latency -->
-    <link rel="preconnect" href="https://numbness-afterglow-parade.ngrok-free.dev" crossorigin />
-    <link rel="dns-prefetch" href="https://numbness-afterglow-parade.ngrok-free.dev" />
+    <!-- Preconnect ke Avatar CDN untuk shaving network latency -->
     <link rel="preconnect" href="https://ui-avatars.com" crossorigin />
     <link rel="dns-prefetch" href="https://ui-avatars.com" />
     <link rel="preconnect" href="https://api.dicebear.com" crossorigin />
@@ -20,47 +19,86 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#EC4899" />
+    <meta name="theme-color" content="#E11D48" />
     
     <!-- ========================================== -->
-    <!-- 1. SEO DASAR (UNTUK GOOGLE SEARCH)         -->
+    <!-- 1. SEO DASAR (UNTUK GOOGLE SEARCH & GEO)   -->
     <!-- ========================================== -->
-    <meta name="description" content="JemberTrip - Platform rekomendasi pariwisata cerdas di Kabupaten Jember menggunakan AI. Temukan wisata pantai, alam, hingga kuliner terbaik." />
-    <meta name="keywords" content="wisata jember, jembertrip, rekomendasi wisata jember, pantai papuma, wisata alam jember, sistem rekomendasi wisata" />
+    <title>JemberTrip - Panduan Wisata Cerdas Kabupaten Jember</title>
+    <meta name="description" content="Eksplorasi 66 destinasi wisata pantai, alam, air terjun, rekreasi, dan kuliner di Kabupaten Jember dengan asisten AI Cak Jember dan sistem rekomendasi cerdas." />
+    <meta name="keywords" content="wisata jember, jembertrip, rekomendasi wisata jember, pantai papuma, teluk love, wisata alam jember, sistem rekomendasi wisata, cak jember" />
     <meta name="author" content="Septian Putra Rachman Hakim" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="geo.region" content="ID-JI" />
+    <meta name="geo.placename" content="Kabupaten Jember, Jawa Timur" />
+    <meta name="geo.position" content="-8.1724;113.7007" />
+    <meta name="ICBM" content="-8.1724, 113.7007" />
 
     <!-- ========================================== -->
     <!-- 2. OPEN GRAPH (UNTUK WHATSAPP, FB, TELEGRAM) -->
     <!-- ========================================== -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="JemberTrip" />
+    <meta property="og:locale" content="id_ID" />
     <meta property="og:url" content="https://jembertrip.vercel.app/" />
-    <meta property="og:title" content="JemberTrip - by iannnub" />
-    <meta property="og:description" content="Platform rekomendasi pariwisata cerdas di Kabupaten Jember berbasis AI. Temukan Hidden Gems Jember sekarang!" />
-    <!-- Link Gambar Thumbnail (Sangat Penting untuk WhatsApp) -->
+    <meta property="og:title" content="JemberTrip - Panduan Wisata Cerdas Kabupaten Jember" />
+    <meta property="og:description" content="Eksplorasi 66 destinasi wisata pantai, alam, air terjun, dan kuliner di Kabupaten Jember bersama asisten AI Cak Jember." />
     <meta property="og:image" content="https://jembertrip.vercel.app/banner-jembertrip.jpg" />
+    <meta property="og:image:secure_url" content="https://jembertrip.vercel.app/banner-jembertrip.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1201" />
+    <meta property="og:image:height" content="602" />
+    <meta property="og:image:alt" content="JemberTrip - Platform Wisata Digital Kabupaten Jember" />
     
     <!-- ========================================== -->
     <!-- 3. TWITTER CARD (UNTUK X / TWITTER)        -->
     <!-- ========================================== -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://jembertrip.vercel.app/" />
-    <meta name="twitter:title" content="JemberTrip - Eksplorasi Wisata Jember" />
-    <meta name="twitter:description" content="Platform rekomendasi pariwisata cerdas di Kabupaten Jember berbasis AI." />
+    <meta name="twitter:title" content="JemberTrip - Panduan Wisata Cerdas Kabupaten Jember" />
+    <meta name="twitter:description" content="Eksplorasi 66 destinasi wisata pantai, alam, air terjun, dan kuliner di Kabupaten Jember bersama asisten AI Cak Jember." />
     <meta name="twitter:image" content="https://jembertrip.vercel.app/banner-jembertrip.jpg" />
+    <meta name="twitter:image:alt" content="JemberTrip - Platform Wisata Digital Kabupaten Jember" />
 
-
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '%VITE_GA_MEASUREMENT_ID%', { send_page_view: false });
+    <!-- ========================================== -->
+    <!-- 4. STRUCTURED DATA JSON-LD (SCHEMA.ORG)    -->
+    <!-- ========================================== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://jembertrip.vercel.app/#website",
+            "url": "https://jembertrip.vercel.app/",
+            "name": "JemberTrip",
+            "description": "Platform eksplorasi 66 destinasi wisata, kuliner, dan budaya Kabupaten Jember berbasis AI RAG dan Hybrid Recommendation System.",
+            "inLanguage": "id-ID",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://jembertrip.vercel.app/?search={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://jembertrip.vercel.app/#organization",
+            "name": "JemberTrip",
+            "url": "https://jembertrip.vercel.app/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://jembertrip.vercel.app/banner-jembertrip.jpg",
+              "width": 1200,
+              "height": 630
+            },
+            "areaServed": {
+              "@type": "AdministrativeArea",
+              "name": "Kabupaten Jember, Jawa Timur, Indonesia"
+            }
+          }
+        ]
+      }
     </script>
-
-    <!-- UBAH JUDUL TAB DI SINI -->
-    <title>JemberTrip - Eksplorasi Wisata Jember</title>
   </head>
   <body>
     <div id="root"></div>

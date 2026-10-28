@@ -7,7 +7,7 @@ export default function SEO({
   description = 'Platform eksplorasi destinasi wisata, kuliner, dan budaya Jember dengan chatbot AI Cak Jember dan rekomendasi personalisasi.',
   keywords = 'wisata jember, pantai papuma, chatbot wisata, rekomendasi jember, kuliner jember, wisata jatim',
   image = 'https://jembertrip.vercel.app/banner-jembertrip.jpg',
-  url = 'https://jembertrip.id',
+  url = 'https://jembertrip.vercel.app/',
   type = 'website',
   author = 'JemberTrip Team',
   schema = null,

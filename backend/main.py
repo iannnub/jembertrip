@@ -1,3 +1,4 @@
+import secrets
 import sys
 import os
 import json
@@ -595,7 +596,9 @@ def get_current_admin(user: models.User = Depends(get_current_user)):
 
 @app.post("/api/auth/setup-admin")
 def setup_first_admin(username: str, secret_key: str, db: Session = Depends(get_db)):
-    if secret_key != os.getenv("ADMIN_MASTER_KEY", "skripsi2025_master_key"): raise HTTPException(403, "Salah kunci master!")
+    master_key = os.getenv("ADMIN_MASTER_KEY", "skripsi2025_master_key")
+    if not secrets.compare_digest(secret_key, master_key):
+        raise HTTPException(403, "Salah kunci master!")
     user = db.query(models.User).filter(models.User.username == username).first()
     if not user: raise HTTPException(404, "User tidak ditemukan. Daftar dulu!")
     user.role = "admin"
@@ -933,11 +936,20 @@ def chat_rag(request: Request, req: ChatRequest, current_user: models.User = Dep
     try:
         session_id = req.session_id
         
-        # 1. Handle Session
+        # 1. Handle Session (Ownership check to prevent IDOR)
         if not session_id:
             new_session = models.ChatSession(user_id=current_user.id, title=req.question[:30])
             db.add(new_session); db.commit(); db.refresh(new_session)
             session_id = new_session.id
+        else:
+            existing_session = db.query(models.ChatSession).filter(
+                models.ChatSession.id == session_id,
+                models.ChatSession.user_id == current_user.id
+            ).first()
+            if not existing_session:
+                new_session = models.ChatSession(user_id=current_user.id, title=req.question[:30])
+                db.add(new_session); db.commit(); db.refresh(new_session)
+                session_id = new_session.id
 
         # 2. Pandalungan Normalization
         normalized_query = pandalungan_normalizer(req.question)
@@ -1291,7 +1303,19 @@ def get_sessions(user: models.User = Depends(get_current_user), db: Session = De
 
 @app.get("/api/chat/{sid}/messages")
 def get_messages(sid: int, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    session = db.query(models.ChatSession).filter(models.ChatSession.id == sid, models.ChatSession.user_id == user.id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesi chat tidak ditemukan atau bukan milik Anda.")
     return {"status": "success", "data": [ChatMessageResponse.from_orm(m) for m in db.query(models.ChatMessage).filter(models.ChatMessage.session_id == sid).order_by(models.ChatMessage.timestamp.asc()).all()]}
+
+@app.delete("/api/chat/{sid}")
+def delete_chat_session(sid: int, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    session = db.query(models.ChatSession).filter(models.ChatSession.id == sid, models.ChatSession.user_id == user.id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesi chat tidak ditemukan atau bukan milik Anda.")
+    db.delete(session)
+    db.commit()
+    return {"status": "success", "message": "Percakapan berhasil dihapus."}
 
 # --- ADMIN ENDPOINTS ---
 @app.post("/api/admin/generate-desc")
@@ -1384,7 +1408,7 @@ def upload_gambar_admin(
         raise HTTPException(500, f"Gagal upload gambar: {str(e)}")
 
 @app.post("/api/upload/wisata")
-def upload_wisata_image(file: UploadFile = File(...)):
+def upload_wisata_image(file: UploadFile = File(...), admin_user: models.User = Depends(get_current_admin)):
     """Upload dan optimasi gambar wisata ke format WebP terkompresi."""
     try:
         raw_base = os.path.splitext(file.filename)[0] if file.filename else "upload"

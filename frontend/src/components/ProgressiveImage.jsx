@@ -19,19 +19,22 @@ export default function ProgressiveImage({
   loading = 'lazy',
   ...props
 }) {
-  const [imgSrc, setImgSrc] = useState(blurDataURL || fallback);
-  const [isLoading, setIsLoading] = useState(true);
+  const [prevSrc, setPrevSrc] = useState(src);
+  const [imgSrc, setImgSrc] = useState(() => (src ? (blurDataURL || fallback) : fallback));
+  const [isLoading, setIsLoading] = useState(() => Boolean(src));
   const [hasError, setHasError] = useState(false);
+
+  if (src !== prevSrc) {
+    setPrevSrc(src);
+    setImgSrc(src ? (blurDataURL || fallback) : fallback);
+    setIsLoading(Boolean(src));
+    setHasError(false);
+  }
 
   useEffect(() => {
     if (!src) {
-      setImgSrc(fallback);
-      setIsLoading(false);
       return;
     }
-
-    setIsLoading(true);
-    setHasError(false);
 
     let isMounted = true;
     let objectUrlToRevoke = null;

@@ -95,7 +95,7 @@ export default function MobileNav({ user, onLogout }) {
         {/* Header: Solid */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-orange-400 flex items-center justify-center text-white shadow-md shadow-rose-200 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center text-white shadow-md shadow-rose-200 shrink-0">
               <Compass size={18} />
             </div>
             <div>
@@ -105,7 +105,7 @@ export default function MobileNav({ user, onLogout }) {
           </div>
           <button
             onClick={close}
-            className="w-10 h-10 grid place-items-center rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors touch-manipulation"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] grid place-items-center rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors touch-manipulation"
             aria-label="Tutup menu"
           >
             <X size={18} />
@@ -114,7 +114,7 @@ export default function MobileNav({ user, onLogout }) {
 
         {/* User Card */}
         {user && (
-          <div className="mx-4 mt-4 p-3.5 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-100 flex items-center gap-3 shrink-0">
+          <div className="mx-4 mt-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-3 shrink-0">
             <img
               src={getAvatarUrl(user.avatar || user.foto_profil, user.full_name || user.username || 'User')}
               alt={user.full_name || user.username}
@@ -189,7 +189,7 @@ export default function MobileNav({ user, onLogout }) {
               <Link
                 to="/register"
                 onClick={close}
-                className="w-full flex items-center justify-center py-2.5 rounded-xl text-slate-600 font-medium text-xs hover:bg-slate-50 transition-colors"
+                className="w-full flex items-center justify-center py-2.5 rounded-xl text-slate-600 font-medium text-xs hover:bg-slate-50 transition-colors min-h-[44px]"
               >
                 Belum punya akun? Daftar gratis
               </Link>

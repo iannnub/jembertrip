@@ -49,6 +49,10 @@ export const getImageUrl = (input, fallback = FALLBACK_PLACEHOLDER) => {
       }
 
       const url = new URL(path);
+      // Jika URL mengarah ke static uploaded /images/..., gunakan local bundle path
+      if (url.pathname.startsWith("/images/")) {
+        return url.pathname;
+      }
       // Jika URL ngrok dari sesi lama/berbeda, sesuaikan ke BACKEND_URL saat ini
       if (url.hostname.includes("ngrok") && !path.startsWith(BACKEND_URL)) {
         return `${BACKEND_URL}${url.pathname}${url.search}`;
@@ -63,8 +67,8 @@ export const getImageUrl = (input, fallback = FALLBACK_PLACEHOLDER) => {
   // Path relatif: /uploads/..., uploads/..., /images/..., atau assets/...
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
-  // Kalau path lokal di public bundle (/assets/images/...), biarkan apa adanya
-  if (cleanPath.startsWith("/assets/")) {
+  // Kalau path lokal di public bundle (/assets/images/... atau /images/...), biarkan apa adanya
+  if (cleanPath.startsWith("/assets/") || cleanPath.startsWith("/images/")) {
     return cleanPath;
   }
 

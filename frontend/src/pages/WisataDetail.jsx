@@ -7,8 +7,9 @@ import Breadcrumb from '../components/Breadcrumb';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { trackEvent } from '../utils/analytics';
+import { getImageUrl } from '../utils/imageHelper';
 // Import Icon Modern
-import { MapPin, ArrowLeft, Tag, Info, DollarSign, Star, Sparkles, Compass, Clock } from 'lucide-react';
+import { MapPin, ArrowLeft, Tag, Info, DollarSign, Star, Sparkles, Compass, Clock, AlertTriangle } from 'lucide-react';
 // Import Animasi
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
@@ -27,43 +28,43 @@ function WisataDetail() {
   const fetchRekomendasiAI = async (queryText) => {
     setLoadingRek(true);
     try {
-        const res = await axios.post(`${API_BASE_URL}/api/v1/rekomendasi`, { 
-            query: queryText, 
-            k: 15 
-        });
-        
-        const rawResults = res.data.results;
-        
-        let candidates = rawResults
-            .map(item => item.metadata)
-            .filter(item => String(item.id) !== String(id));
+      const res = await axios.post(`${API_BASE_URL}/api/v1/rekomendasi`, { 
+        query: queryText, 
+        k: 15 
+      });
+      
+      const rawResults = res.data.results;
+      
+      let candidates = rawResults
+        .map(item => item.metadata)
+        .filter(item => String(item.id) !== String(id));
 
-        for (let i = candidates.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-        }
+      for (let i = candidates.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+      }
 
-        const finalResults = candidates.slice(0, 3);
-        setRekomendasiList(finalResults);
+      const finalResults = candidates.slice(0, 3);
+      setRekomendasiList(finalResults);
     } catch (err) {
-        console.error("Gagal fetch rekomendasi:", err);
+      console.error("Gagal fetch rekomendasi:", err);
     } finally {
-        setLoadingRek(false);
+      setLoadingRek(false);
     }
   };
 
   const recordHistory = async (dataWisata) => {
-      const token = localStorage.getItem('token');
-      if (!token) return; 
-      
-      try {
-          await axios.post(`${API_BASE_URL}/api/history`,
-              { wisata_id: String(dataWisata.id), wisata_name: dataWisata.nama_wisata },
-              { headers: { Authorization: `Bearer ${token}` } }
-          );
-      } catch (err) {
-          console.error("Gagal mencatat history:", err);
-      }
+    const token = localStorage.getItem('token');
+    if (!token) return; 
+    
+    try {
+      await axios.post(`${API_BASE_URL}/api/history`,
+        { wisata_id: String(dataWisata.id), wisata_name: dataWisata.nama_wisata },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("Gagal mencatat history:", err);
+    }
   };
 
   // 1. Fetch Detail & Logic
@@ -73,24 +74,40 @@ function WisataDetail() {
       setRekomendasiList([]); 
       
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/v1/wisata/${id}`);
+        const response = await axios.get(`${API_BASE_URL}/api/v1/wisata/${id}`, { timeout: 6000 });
         const dataWisata = response.data.data;
         setWisata(dataWisata);
         setLoading(false); 
 
         if (dataWisata) {
-            fetchRekomendasiAI(dataWisata.nama_wisata + " " + dataWisata.kategori);
-            recordHistory(dataWisata);
-            trackEvent('view_wisata_detail', {
-              wisata_id: dataWisata.id,
-              wisata_name: dataWisata.nama_wisata,
-              kategori: dataWisata.kategori
-            });
+          fetchRekomendasiAI(dataWisata.nama_wisata + " " + dataWisata.kategori);
+          recordHistory(dataWisata);
+          trackEvent('view_wisata_detail', {
+            wisata_id: dataWisata.id,
+            wisata_name: dataWisata.nama_wisata,
+            kategori: dataWisata.kategori
+          });
         }
-      } catch (err) {
-        console.error(err);
-        setError("Gagal mengambil data detail wisata.");
-        setLoading(false);
+      } catch {
+        try {
+          const fallbackRes = await axios.get('/data/wisata-fallback.json');
+          const found = Array.isArray(fallbackRes.data)
+            ? fallbackRes.data.find(item => String(item.id) === String(id))
+            : null;
+          if (found) {
+            setWisata(found);
+            const similar = fallbackRes.data
+              .filter(item => String(item.id) !== String(id) && item.kategori === found.kategori)
+              .slice(0, 3);
+            setRekomendasiList(similar);
+          } else {
+            setError("Gagal mengambil data detail wisata.");
+          }
+        } catch {
+          setError("Gagal mengambil data detail wisata.");
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
@@ -107,24 +124,6 @@ function WisataDetail() {
     }
   }, [wisata]);
 
-  const getImageUrl = (gambarPath) => {
-      if (!gambarPath) return "https://placehold.co/800x600?text=No+Image";
-      
-      // Jika URL eksternal / ngrok / http
-      if (gambarPath.startsWith('http')) {
-          return gambarPath;
-      }
-
-      // Jika upload path (/uploads/... atau /images/...)
-      if (gambarPath.startsWith('/uploads') || gambarPath.startsWith('uploads/') || gambarPath.startsWith('/images') || gambarPath.startsWith('images/')) {
-          const cleanPath = gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
-          return `${API_BASE_URL}${cleanPath}`;
-      }
-      
-      // Gambar lokal yang ada di public/assets/...
-      return gambarPath.startsWith('/') ? gambarPath : `/${gambarPath}`;
-  };
-
   const getMapsUrl = (nama, alamat) => {
     const query = encodeURIComponent(`${nama}, ${alamat}, Jember`);
     return `https://www.google.com/maps/search/?api=1&query=${query}`;
@@ -133,22 +132,24 @@ function WisataDetail() {
   // --- UI LOADING ---
   if (loading) return (
     <div className="flex flex-col justify-center items-center min-h-[60vh] bg-page-bg">
-        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-        <p className="text-text-muted font-medium">Memuat informasi wisata...</p>
+      <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+      <p className="text-text-muted font-medium">Memuat informasi wisata...</p>
     </div>
   );
 
   // --- UI ERROR ---
   if (error || !wisata) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center bg-page-bg p-6">
-        <div className="bg-white p-8 rounded-3xl shadow-xl text-center max-w-md border border-red-100">
-            <div className="w-16 h-16 bg-red-50 text-primary rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">⚠️</div>
-            <h2 className="text-xl font-bold text-text-main mb-2">Wisata Tidak Ditemukan</h2>
-            <p className="text-text-muted mb-6 text-sm">Data wisata yang kamu cari mungkin sudah dihapus atau tautan salah.</p>
-            <Link to="/" className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-soft transition-all min-h-[44px]">
-                <ArrowLeft size={18} /> Kembali ke Home
-            </Link>
+      <div className="liquid-card p-8 rounded-3xl text-center max-w-md">
+        <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle size={32} />
         </div>
+        <h2 className="text-xl font-bold text-text-main mb-2">Wisata Tidak Ditemukan</h2>
+        <p className="text-text-muted mb-6 text-sm">Data wisata yang kamu cari mungkin sudah dihapus atau tautan salah.</p>
+        <Link to="/" className="ios-press inline-flex items-center gap-2 bg-rose-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-rose-700 transition-all min-h-[44px]">
+          <ArrowLeft size={18} /> Kembali ke Home
+        </Link>
+      </div>
     </div>
   );
 
@@ -158,8 +159,8 @@ function WisataDetail() {
     "@type": "TouristAttraction",
     "name": wisata.nama_wisata,
     "description": wisata.deskripsi,
-    "image": wisata.gambar?.startsWith('http') ? wisata.gambar : `https://jembertrip.id/${wisata.gambar?.replace(/^\//, '')}`,
-    "url": `https://jembertrip.id/wisata/${wisata.id}`,
+    "image": wisata.gambar?.startsWith('http') ? wisata.gambar : `https://jembertrip.vercel.app/${wisata.gambar?.replace(/^\//, '')}`,
+    "url": `https://jembertrip.vercel.app/wisata/${wisata.id}`,
     "address": {
       "@type": "PostalAddress",
       "streetAddress": wisata.alamat,
@@ -186,197 +187,198 @@ function WisataDetail() {
         description={(wisata.deskripsi || '').substring(0, 155)}
         keywords={`${wisata.nama_wisata}, wisata ${wisata.kategori?.toLowerCase()}, jember, ${wisata.alamat}`}
         image={getImageUrl(wisata.gambar, 1200)}
-        url={`https://jembertrip.id/wisata/${wisata.id}`}
+        url={`https://jembertrip.vercel.app/wisata/${wisata.id}`}
         type="article"
         schema={schema}
       />
 
       <motion.div 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          className="min-h-screen bg-page-bg pb-16 pt-6 md:pt-10"
+        initial={{ opacity: 0, y: 12 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className="min-h-screen bg-page-bg pb-16 pt-6 md:pt-10"
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           
           {/* BREADCRUMB & BACK BUTTON */}
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <Breadcrumb
-                items={[
-                  { label: wisata.kategori, href: `/?kategori=${encodeURIComponent(wisata.kategori)}` },
-                  { label: wisata.nama_wisata }
-                ]}
-              />
-              <Link to="/" className="inline-flex items-center text-text-muted hover:text-primary font-medium transition-colors gap-2 bg-white px-4 py-2 rounded-full shadow-xs border border-gray-100 group min-h-[40px] shrink-0 self-start sm:self-auto">
-                  <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Kembali ke Home
-              </Link>
+            <Breadcrumb
+              items={[
+                { label: wisata.kategori, href: `/?kategori=${encodeURIComponent(wisata.kategori)}` },
+                { label: wisata.nama_wisata }
+              ]}
+            />
+            <Link to="/" className="liquid-glass-pill ios-press inline-flex items-center text-slate-700 hover:text-rose-600 font-semibold transition-colors gap-2 px-4 py-2 rounded-full group min-h-[44px] shrink-0 self-start sm:self-auto">
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Kembali ke Home
+            </Link>
           </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
             
             {/* --- KOLOM KIRI: GAMBAR UTAMA & DESKRIPSI --- */}
             <div className="lg:col-span-2 space-y-6 md:space-y-8">
-                {/* Gambar Hero - Responsive Aspect Ratio (video on mobile, 21/9 on desktop) */}
-                <div className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-xl shadow-primary/5 bg-gray-200 aspect-video md:aspect-[21/9] group">
-                    <NgrokImage 
-                        src={getImageUrl(wisata.gambar)} 
-                        alt={wisata.nama_wisata} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              {/* Gambar Hero - Responsive Aspect Ratio (video on mobile, 21/9 on desktop) */}
+              <div className="relative rounded-3xl md:rounded-[2rem] overflow-hidden shadow-xl bg-slate-200 aspect-video md:aspect-[21/9] group border border-white/80">
+                <NgrokImage 
+                  src={getImageUrl(wisata.gambar)} 
+                  alt={wisata.nama_wisata} 
+                  className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+                />
+                <div className="absolute top-4 left-4 md:top-6 md:left-6">
+                  <span className="liquid-glass-pill text-rose-700 text-xs md:text-sm font-extrabold px-3.5 py-1.5 md:px-4 md:py-2 rounded-full uppercase tracking-wider flex items-center gap-2">
+                    <Tag size={14} className="text-rose-600" /> {wisata.kategori}
+                  </span>
+                </div>
+              </div>
+
+              {/* Deskripsi */}
+              <div className="liquid-card rounded-3xl p-6 md:p-8">
+                <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+                  <Info className="text-rose-600" /> Tentang Destinasi
+                </h2>
+                <p className="text-slate-700 leading-relaxed text-base md:text-lg whitespace-pre-wrap font-normal text-justify">
+                  {wisata.deskripsi || "Tidak ada deskripsi detail."}
+                </p>
+              </div>
+
+              {/* PETA LOKASI INTERAKTIF (MOBILE-READY) */}
+              {wisata.latitude && wisata.longitude && (
+                <div className="liquid-card rounded-3xl p-6 md:p-8">
+                  <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+                    <MapPin className="text-rose-600" /> Peta Lokasi
+                  </h2>
+                  <div className="w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-inner border border-slate-200">
+                    <iframe
+                      title={`Peta ${wisata.nama_wisata}`}
+                      src={`https://maps.google.com/maps?q=${wisata.latitude},${wisata.longitude}&hl=id&z=14&output=embed`}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      aria-label="Peta Google Maps"
                     />
-                    <div className="absolute top-4 left-4 md:top-6 md:left-6">
-                        <span className="bg-white/95 backdrop-blur-md text-primary text-xs md:text-sm font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-xl shadow-md uppercase tracking-wider flex items-center gap-2 border border-white/50">
-                            <Tag size={14} className="text-primary" /> {wisata.kategori}
-                        </span>
-                    </div>
+                  </div>
                 </div>
+              )}
 
-                {/* Deskripsi */}
-                <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xs border border-gray-100">
-                    <h2 className="text-xl md:text-2xl font-bold text-text-main mb-4 flex items-center gap-2">
-                        <Info className="text-primary" /> Tentang Destinasi
-                    </h2>
-                    <p className="text-text-main leading-relaxed text-base md:text-lg whitespace-pre-wrap font-light text-justify">
-                        {wisata.deskripsi || "Tidak ada deskripsi detail."}
-                    </p>
-                </div>
-
-                {/* PETA LOKASI INTERAKTIF (MOBILE-READY) */}
-                {wisata.latitude && wisata.longitude && (
-                  <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xs border border-gray-100">
-                    <h2 className="text-xl md:text-2xl font-bold text-text-main mb-4 flex items-center gap-2">
-                      <MapPin className="text-primary" /> Peta Lokasi
-                    </h2>
-                    <div className="w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-inner border border-gray-200">
-                      <iframe
-                        title={`Peta ${wisata.nama_wisata}`}
-                        src={`https://maps.google.com/maps?q=${wisata.latitude},${wisata.longitude}&hl=id&z=14&output=embed`}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0 }}
-                        loading="lazy"
-                        aria-label="Peta Google Maps"
-                      />
-                    </div>
+              {/* AI REKOMENDASI SECTION */}
+              <div className="pt-6 border-t border-slate-200">
+                <h3 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
+                  <Sparkles className="text-amber-500" /> Wisata Serupa
+                </h3>
+                
+                {loadingRek ? (
+                  <div className="flex items-center gap-3 text-slate-500 liquid-card p-4 rounded-2xl animate-pulse">
+                    <div className="w-5 h-5 bg-slate-200 rounded-full"></div>
+                    Sedang mencari rekomendasi terbaik...
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {rekomendasiList.map((rec, idx) => (
+                      <Link 
+                        to={`/wisata/${rec.id}`} 
+                        key={idx}
+                        onClick={() => trackEvent('click_recommendation', {
+                          recommendation_type: 'similar_wisata',
+                          source_wisata_id: wisata?.id,
+                          target_wisata_id: rec.id,
+                          target_wisata_name: rec.nama_wisata
+                        })} 
+                        className="group liquid-card rounded-2xl p-3 flex flex-col"
+                      >
+                        <div className="h-32 rounded-xl overflow-hidden bg-slate-100 mb-3 relative">
+                          <NgrokImage 
+                            src={getImageUrl(rec.gambar)} 
+                            alt={rec.nama_wisata} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                          />
+                          <div className="absolute top-2 right-2 liquid-glass-pill text-slate-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                            {rec.kategori}
+                          </div>
+                        </div>
+                        <h4 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-rose-600 transition-colors">
+                          {rec.nama_wisata}
+                        </h4>
+                        <p className="text-xs text-slate-500 line-clamp-1 mt-1">{rec.alamat}</p>
+                      </Link>
+                    ))}
                   </div>
                 )}
-
-                {/* AI REKOMENDASI SECTION */}
-                <div className="pt-6 border-t border-gray-200">
-                    <h3 className="text-xl font-bold text-text-main mb-6 flex items-center gap-2">
-                        <Sparkles className="text-accent" /> Wisata Serupa
-                    </h3>
-                    
-                    {loadingRek ? (
-                        <div className="flex items-center gap-3 text-text-muted bg-white p-4 rounded-xl animate-pulse border border-gray-100">
-                            <div className="w-5 h-5 bg-gray-200 rounded-full"></div>
-                            Sedang mencari rekomendasi terbaik...
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            {rekomendasiList.map((rec, idx) => (
-                                <Link 
-                                    to={`/wisata/${rec.id}`} 
-                                    key={idx}
-                                    onClick={() => trackEvent('click_recommendation', {
-                                        recommendation_type: 'similar_wisata',
-                                        source_wisata_id: wisata?.id,
-                                        target_wisata_id: rec.id,
-                                        target_wisata_name: rec.nama_wisata
-                                    })} 
-                                    className="group bg-white rounded-2xl p-3 border border-gray-100 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all flex flex-col"
-                                >
-                                    <div className="h-32 rounded-xl overflow-hidden bg-gray-100 mb-3 relative">
-                                        <NgrokImage 
-                                            src={getImageUrl(rec.gambar)} 
-                                            alt={rec.nama_wisata} 
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                                        />
-                                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
-                                            {rec.kategori}
-                                        </div>
-                                    </div>
-                                    <h4 className="font-bold text-text-main text-sm line-clamp-1 group-hover:text-primary transition-colors">
-                                        {rec.nama_wisata}
-                                    </h4>
-                                    <p className="text-xs text-text-muted line-clamp-1 mt-1">{rec.alamat}</p>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
-                    
-                    {!loadingRek && rekomendasiList.length === 0 && (
-                         <p className="text-text-muted text-sm italic">Belum ada rekomendasi tambahan.</p>
-                    )}
-                </div>
+                
+                {!loadingRek && rekomendasiList.length === 0 && (
+                  <p className="text-slate-500 text-sm italic">Belum ada rekomendasi tambahan.</p>
+                )}
+              </div>
             </div>
 
-            {/* --- KOLOM KANAN: INFO SIDEBAR (STICKY ON DESKTOP) --- */}
+            {/* --- KOLOM KANAN: INFO SIDEBAR (LIQUID GLASS STICKY ON DESKTOP) --- */}
             <div className="lg:col-span-1">
-                <div className="bg-white rounded-3xl p-6 shadow-lg shadow-primary/5 border border-gray-100 lg:sticky lg:top-28 space-y-6">
+              <div className="liquid-glass rounded-3xl p-6 lg:sticky lg:top-28 space-y-6">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2 leading-tight">
+                    {wisata.nama_wisata}
+                  </h1>
+                  
+                  <div className="flex items-center gap-1 tabular-nums">
+                    {[1,2,3,4,5].map(i => <Star key={i} size={16} className="text-amber-500 fill-amber-500" />)}
+                    <span className="text-sm text-slate-600 ml-2 font-semibold">4.8 (Review)</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Box Lokasi */}
+                  <div className="flex gap-4 items-start p-4 bg-rose-50/80 rounded-2xl border border-rose-100">
+                    <MapPin className="text-rose-600 shrink-0 mt-1" />
                     <div>
-                      <h1 className="text-2xl md:text-3xl font-extrabold text-text-main mb-2 leading-tight">
-                          {wisata.nama_wisata}
-                      </h1>
-                      
-                      <div className="flex items-center gap-1">
-                          {[1,2,3,4,5].map(i => <Star key={i} size={16} className="text-accent fill-accent" />)}
-                          <span className="text-sm text-text-muted ml-2 font-medium">4.8 (Review)</span>
+                      <p className="text-xs font-extrabold text-rose-700 uppercase tracking-wider mb-1">Lokasi</p>
+                      <p className="text-slate-900 font-medium text-sm leading-snug">{wisata.alamat}</p>
+                    </div>
+                  </div>
+
+                  {/* Box Jam Operasional */}
+                  {(wisata.jam_buka || wisata.jam_tutup) && (
+                    <div className="flex gap-4 items-start p-4 bg-sky-50/80 rounded-2xl border border-sky-100">
+                      <Clock className="text-sky-700 shrink-0 mt-1" />
+                      <div>
+                        <p className="text-xs font-extrabold text-sky-700 uppercase tracking-wider mb-1">Jam Buka</p>
+                        <p className="text-slate-900 font-bold text-sm tabular-nums">
+                          {wisata.jam_buka ? `${wisata.jam_buka} - ${wisata.jam_tutup || 'Selesai'}` : "Setiap Hari"}
+                        </p>
                       </div>
                     </div>
+                  )}
 
-                    <div className="space-y-4">
-                        {/* Box Lokasi */}
-                        <div className="flex gap-4 items-start p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                            <MapPin className="text-primary shrink-0 mt-1" />
-                            <div>
-                                <p className="text-xs font-bold text-primary/70 uppercase tracking-wider mb-1">Lokasi</p>
-                                <p className="text-text-main font-medium text-sm leading-snug">{wisata.alamat}</p>
-                            </div>
-                        </div>
-
-                        {/* Box Jam Operasional */}
-                        {(wisata.jam_buka || wisata.jam_tutup) && (
-                            <div className="flex gap-4 items-start p-4 bg-blue-50/60 rounded-2xl border border-blue-100">
-                                <Clock className="text-blue-600 shrink-0 mt-1" />
-                                <div>
-                                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Jam Buka</p>
-                                    <p className="text-text-main font-bold text-sm">
-                                        {wisata.jam_buka ? `${wisata.jam_buka} - ${wisata.jam_tutup || 'Selesai'}` : "Setiap Hari"}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Box Harga */}
-                        <div className="flex gap-4 items-start p-4 bg-secondary/10 rounded-2xl border border-secondary/20">
-                            <DollarSign className="text-secondary shrink-0 mt-1" />
-                            <div>
-                                <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Harga Tiket</p>
-                                <p className="text-text-main font-bold text-lg">
-                                    {wisata.harga_tiket ? `Rp ${Number(wisata.harga_tiket).toLocaleString('id-ID')}` : "Gratis / Info -"}
-                                </p>
-                            </div>
-                        </div>
+                  {/* Box Harga */}
+                  <div className="flex gap-4 items-start p-4 bg-emerald-50/80 rounded-2xl border border-emerald-100">
+                    <DollarSign className="text-emerald-700 shrink-0 mt-1" />
+                    <div>
+                      <p className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider mb-1">Harga Tiket</p>
+                      <p className="text-slate-900 font-extrabold text-lg tabular-nums">
+                        {wisata.harga_tiket ? (isNaN(Number(wisata.harga_tiket)) ? wisata.harga_tiket : `Rp ${Number(wisata.harga_tiket).toLocaleString('id-ID')}`) : "Gratis / Info -"}
+                      </p>
                     </div>
-
-                    {/* TOMBOL NAVIGASI MAPS */}
-                    <a 
-                        href={getMapsUrl(wisata.nama_wisata, wisata.alamat)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => trackEvent('open_google_maps', {
-                            wisata_id: wisata.id,
-                            wisata_name: wisata.nama_wisata
-                        })}
-                        className="w-full mt-6 bg-gradient-to-r from-primary to-primary-soft text-white py-4 rounded-xl font-bold text-base md:text-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer min-h-[48px]"
-                    >
-                        <Compass size={20} /> Buka Google Maps
-                    </a>
+                  </div>
                 </div>
+
+                {/* TOMBOL NAVIGASI MAPS */}
+                <a 
+                  href={getMapsUrl(wisata.nama_wisata, wisata.alamat)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackEvent('open_google_maps', {
+                    wisata_id: wisata.id,
+                    wisata_name: wisata.nama_wisata
+                  })}
+                  className="ios-press w-full mt-6 bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-2xl font-bold text-base md:text-lg shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer min-h-[48px]"
+                >
+                  <Compass size={20} /> Buka Google Maps
+                </a>
+              </div>
             </div>
 
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
     </>
   );
 }

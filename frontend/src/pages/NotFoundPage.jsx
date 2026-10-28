@@ -1,6 +1,7 @@
 // src/pages/NotFoundPage.jsx
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { Home, ArrowLeft, Compass, MapPin } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -23,13 +24,13 @@ export default function NotFoundPage() {
         >
           {/* Ilustrasi 404 */}
           <div className="relative mb-8 inline-block">
-            <div className="w-40 h-40 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full flex items-center justify-center mx-auto border-2 border-dashed border-primary/20">
+            <div className="w-40 h-40 bg-rose-50 rounded-full flex items-center justify-center mx-auto border-2 border-dashed border-rose-200">
               <MapPin size={64} className="text-primary/40" />
             </div>
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-              className="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/20 text-white font-bold text-sm"
+              className="absolute -top-2 -right-2 w-12 h-12 bg-rose-600 rounded-full flex items-center justify-center shadow-lg shadow-rose-600/20 text-white font-bold text-sm"
             >
               404
             </motion.div>
@@ -43,14 +44,14 @@ export default function NotFoundPage() {
             Halaman yang kamu cari tidak ditemukan atau mungkin sudah dipindahkan.
           </p>
           <p className="text-text-muted text-sm mb-8">
-            Jangan khawatir, Cak Jember siap memandu kamu kembali! 🗺️
+            Jangan khawatir, Cak Jember siap memandu kamu kembali ke jalur yang benar.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               to="/"
-              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-primary to-primary-soft text-white font-bold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all min-h-[48px] text-sm"
+              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl shadow-lg shadow-rose-600/25 hover:shadow-rose-600/40 hover:-translate-y-0.5 transition-all min-h-[48px] text-sm"
             >
               <Home size={18} />
               Kembali ke Beranda

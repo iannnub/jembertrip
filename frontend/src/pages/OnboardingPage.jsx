@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, MapPin, CheckCircle2 } from 'lucide-react';
+import { 
+  Sparkles, MapPin, CheckCircle2,
+  Waves, Compass, Sprout, BookOpen, Landmark, Trees, Droplets, Mountain 
+} from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
@@ -10,15 +13,15 @@ import { trackEvent } from '../utils/analytics';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 const CATEGORIES = [
-  { id: "Pantai", name: "Pantai", icon: "🌊" },
-  { id: "Rekreasi", name: "Rekreasi", icon: "🎡" },
-  { id: "Agrowisata", name: "Agrowisata", icon: "🍓" },
-  { id: "Edukasi", name: "Edukasi", icon: "📚" },
-  { id: "Religi", name: "Religi", icon: "🕌" },
-  { id: "Rural Tourism", name: "Pedesaan", icon: "🌾" },
-  { id: "Air Terjun", name: "Air Terjun", icon: "💧" },
-  { id: "Situs", name: "Situs Sejarah", icon: "🏛️" },
-  { id: "Panorama", name: "Panorama Alam", icon: "🏔️" },
+  { id: "Pantai", name: "Pantai", icon: Waves },
+  { id: "Rekreasi", name: "Rekreasi", icon: Compass },
+  { id: "Agrowisata", name: "Agrowisata", icon: Sprout },
+  { id: "Edukasi", name: "Edukasi", icon: BookOpen },
+  { id: "Religi", name: "Religi", icon: Landmark },
+  { id: "Rural Tourism", name: "Pedesaan", icon: Trees },
+  { id: "Air Terjun", name: "Air Terjun", icon: Droplets },
+  { id: "Situs", name: "Situs Sejarah", icon: Landmark },
+  { id: "Panorama", name: "Panorama Alam", icon: Mountain },
 ];
 
 function OnboardingPage() {
@@ -40,7 +43,7 @@ function OnboardingPage() {
 
   const handleSave = async () => {
     if (selected.length !== 3) {
-      toast.error("Pilih tepat 3 kategori agar AI kami bisa bekerja maksimal!");
+      toast.error("Pilih tepat 3 kategori agar rekomendasi wisata lebih akurat.");
       return;
     }
 
@@ -86,8 +89,8 @@ function OnboardingPage() {
           <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Sparkles size={32} />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-text-main mb-3">Tunggu Sebentar, Petualang!</h1>
-          <p className="text-text-muted text-lg">Pilih <span className="font-bold text-primary">3 kategori favoritmu</span>, dan biarkan AI kami meracik rekomendasi rahasia khusus untukmu.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-text-main mb-3">Pilih Minat Wisatamu</h1>
+          <p className="text-text-muted text-lg">Pilih <span className="font-bold text-primary">3 kategori favoritmu</span> untuk menyesuaikan rekomendasi wisata di beranda.</p>
         </motion.div>
 
         <motion.div 
@@ -98,12 +101,13 @@ function OnboardingPage() {
         >
           {CATEGORIES.map((cat) => {
             const isSelected = selected.includes(cat.id);
+            const IconComponent = cat.icon;
             return (
               <button 
                 type="button"
                 key={cat.id}
                 onClick={() => toggleCategory(cat.id)}
-                className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 h-32 touch-manipulation
+                className={`relative cursor-pointer p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2.5 h-32 touch-manipulation
                   ${isSelected ? 'bg-primary/5 border-primary shadow-lg shadow-primary/20 scale-105' : 'bg-white border-gray-100 hover:border-primary/30 hover:shadow-md'}`}
                 style={{ touchAction: 'manipulation' }}
                 aria-pressed={isSelected}
@@ -113,8 +117,10 @@ function OnboardingPage() {
                     <CheckCircle2 size={20} className="fill-white" />
                   </div>
                 )}
-                <span className="text-4xl">{cat.icon}</span>
-                <span className={`font-bold ${isSelected ? 'text-primary' : 'text-text-main'}`}>{cat.name}</span>
+                <div className={`p-3 rounded-2xl transition-all duration-200 ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/30' : 'bg-slate-50 text-slate-600'}`}>
+                  <IconComponent size={26} />
+                </div>
+                <span className={`text-xs font-bold ${isSelected ? 'text-primary' : 'text-text-main'}`}>{cat.name}</span>
               </button>
             );
           })}
@@ -132,11 +138,11 @@ function OnboardingPage() {
             disabled={loading || selected.length !== 3}
             className={`w-full md:w-auto px-12 py-4 rounded-full font-bold text-lg shadow-xl transition-all duration-300 flex items-center justify-center gap-2 mx-auto touch-manipulation min-h-[48px]
               ${selected.length === 3 
-                ? 'bg-gradient-to-r from-primary to-accent text-white hover:scale-105 hover:shadow-primary/40 cursor-pointer' 
+                ? 'bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 hover:shadow-rose-600/40 cursor-pointer' 
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
             style={{ touchAction: 'manipulation' }}
           >
-            {loading ? "Menyiapkan AI..." : (
+            {loading ? "Menyimpan preferensi..." : (
               <>
                 Mulai Petualangan <MapPin size={20} />
               </>

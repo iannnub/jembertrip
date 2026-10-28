@@ -13,51 +13,51 @@ function WisataCard({ wisata }) {
       {isVisible ? (
         <Link
           to={`/wisata/${wisata.id}`}
-          className="group block h-full bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 overflow-hidden"
+          className="liquid-card group flex flex-col h-full rounded-3xl overflow-hidden"
         >
           {/* Image Container */}
-          <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden rounded-t-2xl">
+          <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden rounded-t-3xl">
             <ProgressiveImage
               src={getImageUrl(wisata.gambar)}
               alt={wisata.nama_wisata}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
               fallback="/placeholder-wisata.svg"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity pointer-events-none" />
-            <div className="absolute top-4 left-4 pointer-events-none">
-              <span className="bg-white/90 backdrop-blur-md text-text-main text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm tracking-wide uppercase">
+            
+            <div className="absolute top-3.5 left-3.5 pointer-events-none">
+              <span className="liquid-glass-pill text-slate-900 text-[10px] font-extrabold px-3 py-1.5 rounded-full tracking-wide uppercase">
                 {wisata.kategori || 'Umum'}
               </span>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-4 flex flex-col flex-1">
-            <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+          <div className="p-4.5 flex flex-col flex-1">
+            <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-1 group-hover:text-rose-600 transition-colors">
               {wisata.nama_wisata}
             </h3>
 
-            <div className="flex items-start gap-1.5 text-xs text-slate-500 leading-relaxed line-clamp-2 mt-1 mb-3">
+            <div className="flex items-start gap-1.5 text-xs text-slate-600 leading-relaxed line-clamp-2 mt-1.5 mb-3">
               <MapPin size={14} className="text-slate-400 mt-0.5 flex-shrink-0" />
               <p className="line-clamp-2">{wisata.alamat}</p>
             </div>
 
-            <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
-              <div className="flex items-center gap-1">
-                <Star size={14} className="text-accent fill-accent" />
-                <span className="text-xs font-bold text-text-main">
+            <div className="mt-auto flex items-center justify-between pt-3.5 border-t border-slate-100">
+              <div className="flex items-center gap-1 tabular-nums">
+                <Star size={14} className="text-amber-500 fill-amber-500" />
+                <span className="text-xs font-bold text-slate-900">
                   {wisata.rating && wisata.rating !== '[Unverified]' ? wisata.rating : '4.8'}
                 </span>
-                <span className="text-[10px] text-text-muted">(Review)</span>
+                <span className="text-[10px] text-slate-500">(Review)</span>
               </div>
-              <div className="h-8 w-8 rounded-full bg-page-bg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors border border-primary/10">
+              <div className="h-8 w-8 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-colors border border-rose-100">
                 <Sparkles size={14} />
               </div>
             </div>
           </div>
         </Link>
       ) : (
-        <div className="h-full min-h-[340px] bg-slate-50 border border-slate-100 rounded-3xl p-4 flex flex-col justify-between animate-pulse">
+        <div className="h-full min-h-[340px] liquid-card rounded-3xl p-4 flex flex-col justify-between animate-pulse">
           <div className="aspect-[4/3] bg-slate-200 rounded-2xl w-full" />
           <div className="space-y-3 mt-4">
             <div className="h-4 bg-slate-200 rounded w-3/4" />

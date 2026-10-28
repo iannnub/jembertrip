@@ -16,26 +16,36 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000
 
 function ProfilePage() {
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(() => {
+        try {
+            const storedUser = localStorage.getItem('user');
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch {
+            return null;
+        }
+    });
     const [loading, setLoading] = useState(false);
     
     // State Form Data Diri
-    const [formData, setFormData] = useState({ full_name: '', email: '' });
+    const [formData, setFormData] = useState(() => {
+        try {
+            const storedUser = localStorage.getItem('user');
+            const parsed = storedUser ? JSON.parse(storedUser) : {};
+            return { full_name: parsed.full_name || '', email: parsed.email || '' };
+        } catch {
+            return { full_name: '', email: '' };
+        }
+    });
     
     // State Form Password
     const [passData, setPassData] = useState({ old_password: '', new_password: '' });
 
-    // Load Data Awal
+    // Redirect jika belum login
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (!storedUser) {
+        if (!user) {
             navigate('/login');
-            return;
         }
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setFormData({ full_name: parsedUser.full_name, email: parsedUser.email });
-    }, [navigate]);
+    }, [user, navigate]);
 
     // --- 1. HANDLE UPLOAD AVATAR ---
     const handleAvatarChange = async (e) => {
@@ -132,8 +142,8 @@ function ProfilePage() {
                     className="md:col-span-1 space-y-6"
                 >
                     <div className="bg-white rounded-3xl shadow-xl shadow-primary/5 p-8 text-center border border-gray-100 relative overflow-hidden">
-                        {/* Header Gradient: Pink ke Emas */}
-                        <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-primary to-accent"></div>
+                        {/* Header Banner: Solid Slate */}
+                        <div className="absolute top-0 left-0 w-full h-24 bg-slate-900"></div>
                         
                         <div className="relative mt-8 mb-4 group inline-block">
                             <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-page-bg mx-auto">

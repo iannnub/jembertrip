@@ -112,7 +112,7 @@ function LoginPage() {
     }`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-page-bg to-pink-100 px-4 relative overflow-x-hidden overflow-y-auto py-20 text-text-main">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 relative overflow-x-hidden overflow-y-auto py-20 text-text-main">
       <SEO
         title="Masuk Akun Wisatawan"
         description="Masuk ke akun JemberTrip untuk menyimpan riwayat wisata, personalisasi rekomendasi destinasi, dan konsultasi AI Cak Jember."
@@ -121,8 +121,8 @@ function LoginPage() {
       />
 
       {/* Background Shape Hiasan */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-accent/20 rounded-full blur-3xl"></div>
+      
+      
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -228,7 +228,7 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-primary to-primary-soft text-white font-bold py-4 rounded-xl hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-none mt-4"
+            className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-4 rounded-xl hover:shadow-lg hover:shadow-rose-600/30 hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-none mt-4"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">

@@ -1,20 +1,29 @@
-# JemberTrip Robots.txt
+# JemberTrip Robots.txt — Search & AI Answer Engine Readiness
 User-agent: *
 Allow: /
-Disallow: /admin/
+Disallow: /admin
 Disallow: /api/
-Disallow: /profile/
-Disallow: /onboard/
+Disallow: /profile
+Disallow: /onboard
 
-# Crawl delay untuk sopan ke server
-Crawl-delay: 1
+# Explicit Allow for Search & AI Answer Engines (GEO)
+User-agent: Googlebot
+Allow: /
 
-# Sitemap location
-Sitemap: https://jembertrip.id/sitemap.xml
+User-agent: OAI-SearchBot
+Allow: /
 
-# Block bad bots (optional)
-User-agent: AhrefsBot
-Disallow: /
+User-agent: ChatGPT-User
+Allow: /
 
-User-agent: SemrushBot
-Disallow: /
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# Sitemap & LLMs Discovery
+Sitemap: https://jembertrip.vercel.app/sitemap.xml

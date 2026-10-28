@@ -25,6 +25,72 @@
   }
 }
 
+/* ===== IPHONE LIQUID GLASS & DYNAMIC ISLAND SYSTEM (ZERO GRADIENTS) ===== */
+.liquid-glass {
+  background-color: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.92),
+    0 12px 32px -8px rgba(15, 23, 42, 0.08),
+    0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+.liquid-glass-pill {
+  background-color: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    0 6px 20px -4px rgba(15, 23, 42, 0.08);
+}
+
+.liquid-glass-dark {
+  background-color: rgba(15, 23, 42, 0.76);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+    0 16px 36px -8px rgba(0, 0, 0, 0.35);
+}
+
+.liquid-card {
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 1),
+    0 8px 24px -6px rgba(15, 23, 42, 0.05);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.25s ease;
+}
+
+.liquid-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(225, 29, 72, 0.25);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 1),
+    0 20px 38px -12px rgba(15, 23, 42, 0.12);
+}
+
+.liquid-card:active {
+  transform: scale(0.985);
+}
+
+/* iOS Tactile Button Press */
+.ios-press {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.ios-press:active {
+  transform: scale(0.96);
+}
+
 /* ===== MOBILE SCROLL & TOUCH UX ===== */
 html {
   scroll-behavior: smooth;
@@ -55,6 +121,16 @@ body.drawer-open {
 button, a, [role="button"] {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+/* Focus-visible accessibility ring (WCAG 2.4.7) */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #E11D48;
+  outline-offset: 2px;
 }
 
 /* Prevent iOS auto-zoom on input focus */
@@ -103,11 +179,31 @@ img {
 
 /* Smooth category pill transition */
 .category-pill {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: background-color, transform;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease, background-color 0.2s ease;
+  will-change: transform;
 }
 
 .category-pill:active {
   transform: scale(0.95);
 }
 
+/* ===== VIEW TRANSITIONS & REDUCED MOTION (MODERN WEB GUIDANCE) ===== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.28s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .liquid-card,
+  .ios-press,
+  .category-pill {
+    transition: none !important;
+    transform: none !important;
+  }
+}

@@ -10,7 +10,11 @@ from passlib.context import CryptContext
 load_dotenv()
 
 # --- KONFIGURASI KEAMANAN ---
-SECRET_KEY = os.getenv("SECRET_KEY", "jembertrip_rahasia_banget_kuncinya_jangan_disebar_luas")
+DEFAULT_SECRET = "jembertrip_rahasia_banget_kuncinya_jangan_disebar_luas"
+SECRET_KEY = os.getenv("SECRET_KEY", DEFAULT_SECRET)
+if SECRET_KEY == DEFAULT_SECRET and os.getenv("ENVIRONMENT") == "production":
+    import logging
+    logging.getLogger("uvicorn").warning("PERINGATAN KEAMANAN: SECRET_KEY masih menggunakan nilai default di environment production!")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 24 * 60 
 

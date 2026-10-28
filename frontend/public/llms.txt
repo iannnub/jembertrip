@@ -1,0 +1,23 @@
+# JemberTrip — Platform Wisata Digital Kabupaten Jember
+
+> JemberTrip adalah platform eksplorasi dan rekomendasi pariwisata cerdas di Kabupaten Jember, Jawa Timur, Indonesia yang menggabungkan asisten AI RAG berdialek Pandalungan ("Cak Jember") dan Hybrid Recommendation System (Collaborative Filtering + Content-Based Filtering).
+
+## Ringkasan Platform
+- **URL Utama**: https://jembertrip.vercel.app/
+- **Cakupan Data**: 66 destinasi wisata terverifikasi di Kabupaten Jember (Pantai, Rekreasi, Agrowisata, Edukasi, Religi, Rural Tourism, Air Terjun, Situs, Panorama) beserta kuliner dan akomodasi.
+- **Fitur Utama**:
+  1. **Eksplorasi & Pencarian Destinasi**: Filter instan berdasarkan 9 kategori wisata dengan peta lokasi interaktif, jam operasional, dan harga tiket.
+  2. **Chatbot AI RAG "Cak Jember"**: Asisten wisata interaktif berbasis Retrieval-Augmented Generation (ChromaDB + Llama 3.3 70B) yang mendukung Bahasa Indonesia, Bahasa Jawa, dan Bahasa Madura (dialek Pandalungan).
+  3. **Hybrid Recommendation System**: Menggabungkan 60% User-based Collaborative Filtering (kNN) dan 40% Content-Based Filtering (SBERT Cosine Similarity).
+
+## Destinasi Unggulan di Kabupaten Jember
+- **Pantai Papuma**: Destinasi pantai ikonik di Kecamatan Wuluhan, Kabupaten Jember dengan hamparan pasir putih dan formasi batu karang. (https://jembertrip.vercel.app/wisata/1)
+- **Teluk Love**: Destinasi panorama teluk berbentuk hati di kawasan pesisir selatan Ambulu, Kabupaten Jember. (https://jembertrip.vercel.app/wisata/13)
+- **Pantai Watu Ulo**: Pantai bersejarah dengan formasi batu memanjang menyerupai sisik ular di pesisir selatan Jember. (https://jembertrip.vercel.app/wisata/2)
+- **Taman Botani Sukorambi**: Wisata alam dan edukasi keluarga dengan koleksi flora, fauna, dan kolam renang alami. (https://jembertrip.vercel.app/wisata/3)
+- **Air Terjun Tancak**: Air terjun tertinggi di Kabupaten Jember yang terletak di lereng Gunung Argopuro, Kecamatan Panti. (https://jembertrip.vercel.app/wisata/5)
+
+## Halaman Utama
+- [Beranda & Katalog Wisata](https://jembertrip.vercel.app/): Daftar lengkap 66 destinasi wisata Jember.
+- [Asisten AI Cak Jember](https://jembertrip.vercel.app/rekomendasi): Konsultasi rute dan rekomendasi wisata interaktif.
+- [Sitemap XML](https://jembertrip.vercel.app/sitemap.xml): Peta situs untuk mesin pencari.
