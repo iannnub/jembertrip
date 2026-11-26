@@ -1,0 +1,28 @@
+# Backend Environment Variables
+.env
+.env.*
+*.env
+!*.env.example
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.bin
+jembertrip.db
+db_jembertrip/
+db_jembertrip_v2/
+db_vektor_jembertrip/
+db_*/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/

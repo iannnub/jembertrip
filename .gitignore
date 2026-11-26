@@ -1,27 +1,126 @@
-# Python
-backend/venv/
-backend/__pycache__/
-backend/uploads/
-backend/backups/
-*.db.gz
-*.sql.gz
-*.py[cod]
+# ==============================================================================
+# JEMBERTRIP - KEAMANAN DAN IGNORE REPOSITORY PUBLIK
+# ==============================================================================
 
-# Node
+# 1. ENVIRONMENT VARIABLES & SECRETS (SANGAT RAHASIA!)
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.cert
+*.crt
+id_rsa
+id_rsa.pub
+
+# 2. DATABASE & VECTOR STORE (JANGAN UPLOAD DATA USER & EMBEDDINGS)
+*.db
+*.db-journal
+*.db.gz
+*.sqlite
+*.sqlite3
+*.sql
+*.sql.gz
+backend/jembertrip.db
+backend/db_jembertrip/
+backend/db_jembertrip_v2/
+backend/db_vektor_jembertrip/
+**/db_jembertrip*/
+**/db_vektor*/
+*.bin
+
+# 3. UPLOADS PENGGUNA (AVATAR & FOTO USER)
+backend/uploads/*
+**/uploads/*
+!backend/uploads/.gitkeep
+!**/uploads/.gitkeep
+
+# 4. PYTHON & VIRTUAL ENVIRONMENT
+venv/
+.venv/
+env/
+backend/venv/
+backend/.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 5. TESTING & COVERAGE
+.pytest_cache/
+**/.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# 6. NODE & FRONTEND BUILD ARTIFACTS
+node_modules/
+**/node_modules/
 frontend/node_modules/
 frontend/dist/
+dist/
+dist-ssr/
+*.local
 
-# Environment Variables (RAHASIA!)
-.env
-.env.local
+# 7. LOGS & TEMPORARY FILES
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# System
-.DS_Store
-
-# Dokumen & Markdown (Kecuali README.md utama)
+# 8. CATATAN INTERNAL, REPORTS & AUDIT ARTIFACTS
+reports/
+**/reports/
+docs/
+**/docs/
 *.pdf
 **/*.pdf
-*.md
-**/*.md
-!/README.md
-!/readme.md
+HOTFIX_*.md
+LAUNCH_*.md
+PROJECT_*.md
+AGENTS.md
+SKILL*.md
+
+# 9. IDE & SYSTEM FILES
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
